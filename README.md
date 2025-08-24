@@ -1,29 +1,18 @@
 # sivil-system
 
-## 📚 Sistema de Venta e Intercambio de Libros
+## 📚 Sistema de Venta de libros
 
-Una plataforma digital para modernizar el comercio de libros usados.
+Una plataforma digital para el comercio de libros de forma presencial y online.
 
 ## 📝 Descripción del Proyecto
 
-Este proyecto surge como respuesta a la necesidad de digitalizar y formalizar el comercio tradicional de libros usados en San Salvador. La plataforma busca proporcionar una solución tecnológica para los vendedores afectados por el plan de renovación del Centro Histórico, iniciado en 2023.
+Este proyecto surge como la necesidad de digitalizar el comercio tradicional de libros. La plataforma busca proporcionar una solución tecnológica para la empresa SIVIL y que pueda operar de forma física y tenga presencial online y expandir su mercado a nuevos clientes.
 
 ## 🎯 Objetivos
 
-- Crear una plataforma especializada para la venta de libros usados
-- Facilitar la transición del comercio informal a un modelo digital estructurado
-- Mantener la accesibilidad de precios característica del mercado de segunda mano
-- Mejorar la experiencia de compra-venta de libros usados
-
-## 💡 Problemática
-
-El proyecto aborda los siguientes desafíos:
-
-- Ausencia de una plataforma especializada para libros usados
-- Desalojo de vendedores informales del centro histórico
-- Falta de presencia digital de los comerciantes tradicionales
-- Calidad variable de los productos
-- Precios no estandarizados
+- Crear una plataforma especializada para la venta de libros
+- Mantener la accesibilidad de precios característica del mercado
+- Mejorar la experiencia de compra de libros
 
 ## 👥 Equipo de Desarrollo
 
