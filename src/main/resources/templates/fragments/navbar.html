@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/}">
+                            <i class="bi bi-house"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-book"></i> Libros
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" th:href="@{/libros}">Ver Todos</a></li>
+                            <li><a class="dropdown-item" th:href="@{/libros/activos}">Libros Activos</a></li>
+                            <li><a class="dropdown-item" th:href="@{/libros/disponibles}">Disponibles</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" th:href="@{/libros/buscar}">Buscar Libros</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-cart"></i> Ventas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-bag"></i> Compras
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <form class="d-flex me-3">
+                        <input class="form-control me-2" type="search" placeholder="Buscar..." id="searchInput">
+                        <button class="btn btn-outline-primary" type="button" onclick="buscarLibros()">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+</body>
+</html>
