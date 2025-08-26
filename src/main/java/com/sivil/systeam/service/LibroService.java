@@ -22,7 +22,7 @@ public class LibroService {
 
     // Obtener solo libros activos
     public List<Libro> obtenerLibrosActivos() {
-        return libroRepository.findByEstado(Estado.ACTIVO);
+        return libroRepository.findByEstado(Estado.activo);
     }
 
     // Obtener libro por ID

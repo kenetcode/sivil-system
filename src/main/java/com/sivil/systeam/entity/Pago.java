@@ -3,11 +3,7 @@ package com.sivil.systeam.entity;
 import com.sivil.systeam.enums.EstadoPago;
 import com.sivil.systeam.enums.MetodoPago;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.Check;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,27 +32,22 @@ public class Pago {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "metodo_pago", nullable = false)
-    @NotNull
     private MetodoPago metodoPago;
 
     @Column(name = "monto", precision = 10, scale = 2, nullable = false)
-    @DecimalMin(value = "0.00")
-    @NotNull
     private BigDecimal monto;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado_pago")
-    private EstadoPago estadoPago = EstadoPago.PENDIENTE;
+    private EstadoPago estadoPago = EstadoPago.pendiente;
 
     @Column(name = "datos_tarjeta_encriptados", columnDefinition = "TEXT")
     private String datosTarjetaEncriptados;
 
-    @CreationTimestamp
-    @Column(name = "fecha_pago")
+    @Column(name = "fecha_pago", insertable = false, updatable = false)
     private LocalDateTime fechaPago;
 
     @Column(name = "referencia_transaccion", unique = true, length = 100)
-    @Size(max = 100)
     private String referenciaTransaccion;
 
     // Relaciones

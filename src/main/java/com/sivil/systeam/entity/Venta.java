@@ -3,12 +3,6 @@ package com.sivil.systeam.entity;
 import com.sivil.systeam.enums.EstadoVenta;
 import com.sivil.systeam.enums.MetodoPago;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,65 +18,49 @@ public class Venta {
     private Integer idVenta;
 
     @Column(name = "numero_factura", unique = true, nullable = false, length = 50)
-    @NotBlank
-    @Size(max = 50)
     private String numeroFactura;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_vendedor", nullable = false,
             foreignKey = @ForeignKey(name = "fk_ventas_vendedor"))
-    @NotNull
     private Usuario vendedor;
 
     @Column(name = "nombre_cliente", nullable = false, length = 150)
-    @NotBlank
-    @Size(max = 150)
     private String nombreCliente;
 
     @Column(name = "contacto_cliente", length = 100)
-    @Size(max = 100)
     private String contactoCliente;
 
     @Column(name = "identificacion_cliente", length = 50)
-    @Size(max = 50)
     private String identificacionCliente;
 
     @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
-    @DecimalMin(value = "0.00")
-    @NotNull
     private BigDecimal subtotal;
 
     @Column(name = "descuento_aplicado", precision = 10, scale = 2)
-    @DecimalMin(value = "0.00")
     private BigDecimal descuentoAplicado = BigDecimal.ZERO;
 
     @Column(name = "impuestos", precision = 10, scale = 2)
-    @DecimalMin(value = "0.00")
     private BigDecimal impuestos = BigDecimal.ZERO;
 
     @Column(name = "total", precision = 10, scale = 2, nullable = false)
-    @DecimalMin(value = "0.00")
-    @NotNull
     private BigDecimal total;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_pago", nullable = false)
-    @NotNull
     private MetodoPago tipoPago;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado")
-    private EstadoVenta estado = EstadoVenta.ACTIVA;
+    private EstadoVenta estado = EstadoVenta.activa;
 
     @Column(name = "motivo_inactivacion", columnDefinition = "TEXT")
     private String motivoInactivacion;
 
-    @CreationTimestamp
-    @Column(name = "fecha_venta")
+    @Column(name = "fecha_venta", insertable = false, updatable = false)
     private LocalDateTime fechaVenta;
 
-    @UpdateTimestamp
-    @Column(name = "fecha_ultima_actualizacion")
+    @Column(name = "fecha_ultima_actualizacion", insertable = false, updatable = false)
     private LocalDateTime fechaUltimaActualizacion;
 
     // Relaciones

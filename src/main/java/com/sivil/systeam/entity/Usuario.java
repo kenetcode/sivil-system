@@ -3,12 +3,6 @@ package com.sivil.systeam.entity;
 import com.sivil.systeam.enums.Estado;
 import com.sivil.systeam.enums.TipoUsuario;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,28 +17,18 @@ public class Usuario {
     private Integer idUsuario;
 
     @Column(name = "nombre_usuario", unique = true, nullable = false, length = 50)
-    @NotBlank
-    @Size(max = 50)
     private String nombreUsuario;
 
     @Column(name = "email", unique = true, nullable = false, length = 100)
-    @Email
-    @NotBlank
-    @Size(max = 100)
     private String email;
 
-    @Column(name = "contraseña", nullable = false)
-    @NotBlank
-    @Size(max = 255)
+    @Column(name = "contraseña", nullable = false, length = 255)
     private String contraseña;
 
     @Column(name = "nombre_completo", nullable = false, length = 150)
-    @NotBlank
-    @Size(max = 150)
     private String nombreCompleto;
 
     @Column(name = "telefono", length = 15)
-    @Size(max = 15)
     private String telefono;
 
     @Column(name = "direccion", columnDefinition = "TEXT")
@@ -52,19 +36,16 @@ public class Usuario {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_usuario", nullable = false)
-    @NotNull
     private TipoUsuario tipoUsuario;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado")
-    private Estado estado = Estado.ACTIVO;
+    private Estado estado = Estado.activo;
 
-    @CreationTimestamp
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", insertable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
-    @UpdateTimestamp
-    @Column(name = "fecha_ultima_actualizacion")
+    @Column(name = "fecha_ultima_actualizacion", insertable = false, updatable = false)
     private LocalDateTime fechaUltimaActualizacion;
 
     // Relaciones

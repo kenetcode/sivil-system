@@ -2,9 +2,6 @@ package com.sivil.systeam.entity;
 
 import com.sivil.systeam.enums.Estado;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -20,59 +17,43 @@ public class Libro {
     private Integer idLibro;
 
     @Column(name = "codigo_libro", unique = true, nullable = false, length = 20)
-    @NotBlank
-    @Size(max = 20)
     private String codigoLibro;
 
     @Column(name = "titulo", nullable = false, length = 200)
-    @NotBlank
-    @Size(max = 200)
     private String titulo;
 
     @Column(name = "autor", nullable = false, length = 100)
-    @NotBlank
-    @Size(max = 100)
     private String autor;
 
     @Column(name = "año_publicacion")
-    @Min(1900)
-    @Max(2024) // Se puede actualizar según el año actual
     private Integer añoPublicacion;
 
     @Column(name = "precio", precision = 10, scale = 2, nullable = false)
-    @DecimalMin(value = "0.01", message = "El precio debe ser mayor que 0")
-    @NotNull
     private BigDecimal precio;
 
     @Column(name = "cantidad_stock")
-    @Min(0)
     private Integer cantidadStock = 0;
 
     @Column(name = "categoria", length = 50)
-    @Size(max = 50)
     private String categoria;
 
     @Column(name = "editorial", length = 100)
-    @Size(max = 100)
     private String editorial;
 
     @Column(name = "descripcion", columnDefinition = "TEXT")
     private String descripcion;
 
     @Column(name = "imagen_url", length = 500)
-    @Size(max = 500)
     private String imagenUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado")
-    private Estado estado = Estado.ACTIVO;
+    private Estado estado = Estado.activo;
 
-    @CreationTimestamp
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", insertable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
-    @UpdateTimestamp
-    @Column(name = "fecha_ultima_actualizacion")
+    @Column(name = "fecha_ultima_actualizacion", insertable = false, updatable = false)
     private LocalDateTime fechaUltimaActualizacion;
 
     // Relaciones

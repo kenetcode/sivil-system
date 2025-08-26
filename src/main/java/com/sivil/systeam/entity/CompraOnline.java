@@ -3,12 +3,6 @@ package com.sivil.systeam.entity;
 import com.sivil.systeam.enums.EstadoCompra;
 import com.sivil.systeam.enums.MetodoPago;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,28 +18,20 @@ public class CompraOnline {
     private Integer idCompra;
 
     @Column(name = "numero_orden", unique = true, nullable = false, length = 50)
-    @NotBlank
-    @Size(max = 50)
     private String numeroOrden;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_comprador", nullable = false,
             foreignKey = @ForeignKey(name = "fk_compras_comprador"))
-    @NotNull
     private Usuario comprador;
 
     @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
-    @DecimalMin(value = "0.00")
-    @NotNull
     private BigDecimal subtotal;
 
     @Column(name = "impuestos", precision = 10, scale = 2)
-    @DecimalMin(value = "0.00")
     private BigDecimal impuestos = BigDecimal.ZERO;
 
     @Column(name = "total", precision = 10, scale = 2, nullable = false)
-    @DecimalMin(value = "0.00")
-    @NotNull
     private BigDecimal total;
 
     @Column(name = "direccion_entrega", columnDefinition = "TEXT")
@@ -53,18 +39,16 @@ public class CompraOnline {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado_compra")
-    private EstadoCompra estadoCompra = EstadoCompra.PENDIENTE;
+    private EstadoCompra estadoCompra = EstadoCompra.pendiente;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "metodo_pago")
-    private MetodoPago metodoPago = MetodoPago.TARJETA;
+    private MetodoPago metodoPago = MetodoPago.tarjeta;
 
-    @CreationTimestamp
-    @Column(name = "fecha_compra")
+    @Column(name = "fecha_compra", insertable = false, updatable = false)
     private LocalDateTime fechaCompra;
 
-    @UpdateTimestamp
-    @Column(name = "fecha_ultima_actualizacion")
+    @Column(name = "fecha_ultima_actualizacion", insertable = false, updatable = false)
     private LocalDateTime fechaUltimaActualizacion;
 
     // Relaciones
