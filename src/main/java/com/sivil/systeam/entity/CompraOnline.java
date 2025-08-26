@@ -14,42 +14,39 @@ public class CompraOnline {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_compra")
-    private Integer idCompra;
+    private Integer id_compra;
 
-    @Column(name = "numero_orden", unique = true, nullable = false, length = 50)
-    private String numeroOrden;
+    @Column(unique = true, nullable = false, length = 50)
+    private String numero_orden;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_comprador", nullable = false,
             foreignKey = @ForeignKey(name = "fk_compras_comprador"))
     private Usuario comprador;
 
-    @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
+    @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal subtotal;
 
     @Column(name = "impuestos", precision = 10, scale = 2)
     private BigDecimal impuestos = BigDecimal.ZERO;
 
-    @Column(name = "total", precision = 10, scale = 2, nullable = false)
+    @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal total;
 
-    @Column(name = "direccion_entrega", columnDefinition = "TEXT")
-    private String direccionEntrega;
+    @Column(columnDefinition = "TEXT")
+    private String direccion_entrega;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado_compra")
-    private EstadoCompra estadoCompra = EstadoCompra.pendiente;
+    private EstadoCompra estado_compra = EstadoCompra.pendiente;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "metodo_pago")
-    private MetodoPago metodoPago = MetodoPago.tarjeta;
+    private MetodoPago metodo_pago = MetodoPago.tarjeta;
 
-    @Column(name = "fecha_compra", insertable = false, updatable = false)
-    private LocalDateTime fechaCompra;
+    @Column(insertable = false, updatable = false)
+    private LocalDateTime fecha_compra;
 
-    @Column(name = "fecha_ultima_actualizacion", insertable = false, updatable = false)
-    private LocalDateTime fechaUltimaActualizacion;
+    @Column(insertable = false, updatable = false)
+    private LocalDateTime fecha_ultima_actualizacion;
 
     // Relaciones
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL,
@@ -63,20 +60,20 @@ public class CompraOnline {
     // Constructores
     public CompraOnline() {}
 
-    public CompraOnline(String numeroOrden, Usuario comprador,
+    public CompraOnline(String numero_orden, Usuario comprador,
                         BigDecimal subtotal, BigDecimal total) {
-        this.numeroOrden = numeroOrden;
+        this.numero_orden = numero_orden;
         this.comprador = comprador;
         this.subtotal = subtotal;
         this.total = total;
     }
 
     // Getters y Setters
-    public Integer getIdCompra() { return idCompra; }
-    public void setIdCompra(Integer idCompra) { this.idCompra = idCompra; }
+    public Integer getId_compra() { return id_compra; }
+    public void setId_compra(Integer id_compra) { this.id_compra = id_compra; }
 
-    public String getNumeroOrden() { return numeroOrden; }
-    public void setNumeroOrden(String numeroOrden) { this.numeroOrden = numeroOrden; }
+    public String getNumero_orden() { return numero_orden; }
+    public void setNumero_orden(String numero_orden) { this.numero_orden = numero_orden; }
 
     public Usuario getComprador() { return comprador; }
     public void setComprador(Usuario comprador) { this.comprador = comprador; }
@@ -90,20 +87,20 @@ public class CompraOnline {
     public BigDecimal getTotal() { return total; }
     public void setTotal(BigDecimal total) { this.total = total; }
 
-    public String getDireccionEntrega() { return direccionEntrega; }
-    public void setDireccionEntrega(String direccionEntrega) { this.direccionEntrega = direccionEntrega; }
+    public String getDireccion_entrega() { return direccion_entrega; }
+    public void setDireccion_entrega(String direccion_entrega) { this.direccion_entrega = direccion_entrega; }
 
-    public EstadoCompra getEstadoCompra() { return estadoCompra; }
-    public void setEstadoCompra(EstadoCompra estadoCompra) { this.estadoCompra = estadoCompra; }
+    public EstadoCompra getEstado_compra() { return estado_compra; }
+    public void setEstado_compra(EstadoCompra estado_compra) { this.estado_compra = estado_compra; }
 
-    public MetodoPago getMetodoPago() { return metodoPago; }
-    public void setMetodoPago(MetodoPago metodoPago) { this.metodoPago = metodoPago; }
+    public MetodoPago getMetodo_pago() { return metodo_pago; }
+    public void setMetodo_pago(MetodoPago metodo_pago) { this.metodo_pago = metodo_pago; }
 
-    public LocalDateTime getFechaCompra() { return fechaCompra; }
-    public void setFechaCompra(LocalDateTime fechaCompra) { this.fechaCompra = fechaCompra; }
+    public LocalDateTime getFecha_compra() { return fecha_compra; }
+    public void setFecha_compra(LocalDateTime fecha_compra) { this.fecha_compra = fecha_compra; }
 
-    public LocalDateTime getFechaUltimaActualizacion() { return fechaUltimaActualizacion; }
-    public void setFechaUltimaActualizacion(LocalDateTime fechaUltimaActualizacion) { this.fechaUltimaActualizacion = fechaUltimaActualizacion; }
+    public LocalDateTime getFecha_ultima_actualizacion() { return fecha_ultima_actualizacion; }
+    public void setFecha_ultima_actualizacion(LocalDateTime fecha_ultima_actualizacion) { this.fecha_ultima_actualizacion = fecha_ultima_actualizacion; }
 
     public List<DetalleCompra> getDetallesCompra() { return detallesCompra; }
     public void setDetallesCompra(List<DetalleCompra> detallesCompra) { this.detallesCompra = detallesCompra; }

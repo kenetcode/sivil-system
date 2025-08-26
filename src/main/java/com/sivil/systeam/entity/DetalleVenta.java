@@ -1,9 +1,6 @@
 package com.sivil.systeam.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
@@ -13,51 +10,42 @@ public class DetalleVenta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_detalle_venta")
-    private Integer idDetalleVenta;
+    private Integer id_detalle_venta;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_venta", nullable = false,
             foreignKey = @ForeignKey(name = "fk_detalle_venta_venta"))
-    @NotNull
     private Venta venta;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_libro", nullable = false,
             foreignKey = @ForeignKey(name = "fk_detalle_venta_libro"))
-    @NotNull
     private Libro libro;
 
-    @Column(name = "cantidad", nullable = false)
-    @Min(value = 1, message = "La cantidad debe ser mayor que 0")
-    @NotNull
+    @Column(nullable = false)
     private Integer cantidad;
 
-    @Column(name = "precio_unitario", precision = 10, scale = 2, nullable = false)
-    @DecimalMin(value = "0.00")
-    @NotNull
-    private BigDecimal precioUnitario;
+    @Column(precision = 10, scale = 2, nullable = false)
+    private BigDecimal precio_unitario;
 
-    @Column(name = "subtotal_item", precision = 10, scale = 2, nullable = false)
-    @DecimalMin(value = "0.00")
-    @NotNull
-    private BigDecimal subtotalItem;
+    @Column(precision = 10, scale = 2, nullable = false)
+    private BigDecimal subtotal_item;
 
     // Constructores
     public DetalleVenta() {}
 
     public DetalleVenta(Venta venta, Libro libro, Integer cantidad,
-                        BigDecimal precioUnitario, BigDecimal subtotalItem) {
+                        BigDecimal precio_unitario, BigDecimal subtotal_item) {
         this.venta = venta;
         this.libro = libro;
         this.cantidad = cantidad;
-        this.precioUnitario = precioUnitario;
-        this.subtotalItem = subtotalItem;
+        this.precio_unitario = precio_unitario;
+        this.subtotal_item = subtotal_item;
     }
 
     // Getters y Setters
-    public Integer getIdDetalleVenta() { return idDetalleVenta; }
-    public void setIdDetalleVenta(Integer idDetalleVenta) { this.idDetalleVenta = idDetalleVenta; }
+    public Integer getId_detalle_venta() { return id_detalle_venta; }
+    public void setId_detalle_venta(Integer id_detalle_venta) { this.id_detalle_venta = id_detalle_venta; }
 
     public Venta getVenta() { return venta; }
     public void setVenta(Venta venta) { this.venta = venta; }
@@ -68,9 +56,9 @@ public class DetalleVenta {
     public Integer getCantidad() { return cantidad; }
     public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
 
-    public BigDecimal getPrecioUnitario() { return precioUnitario; }
-    public void setPrecioUnitario(BigDecimal precioUnitario) { this.precioUnitario = precioUnitario; }
+    public BigDecimal getPrecio_unitario() { return precio_unitario; }
+    public void setPrecio_unitario(BigDecimal precio_unitario) { this.precio_unitario = precio_unitario; }
 
-    public BigDecimal getSubtotalItem() { return subtotalItem; }
-    public void setSubtotalItem(BigDecimal subtotalItem) { this.subtotalItem = subtotalItem; }
+    public BigDecimal getSubtotal_item() { return subtotal_item; }
+    public void setSubtotal_item(BigDecimal subtotal_item) { this.subtotal_item = subtotal_item; }
 }

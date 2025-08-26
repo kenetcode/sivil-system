@@ -13,40 +13,38 @@ public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_usuario")
-    private Integer idUsuario;
+    private Integer id_usuario;
 
-    @Column(name = "nombre_usuario", unique = true, nullable = false, length = 50)
-    private String nombreUsuario;
+    @Column(unique = true, nullable = false, length = 50)
+    private String nombre_usuario;
 
-    @Column(name = "email", unique = true, nullable = false, length = 100)
+    @Column(unique = true, nullable = false, length = 100)
     private String email;
 
-    @Column(name = "contraseña", nullable = false, length = 255)
+    @Column(nullable = false, length = 255)
     private String contraseña;
 
-    @Column(name = "nombre_completo", nullable = false, length = 150)
-    private String nombreCompleto;
+    @Column(nullable = false, length = 150)
+    private String nombre_completo;
 
-    @Column(name = "telefono", length = 15)
+    @Column(length = 15)
     private String telefono;
 
-    @Column(name = "direccion", columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String direccion;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_usuario", nullable = false)
-    private TipoUsuario tipoUsuario;
+    @Column(nullable = false)
+    private TipoUsuario tipo_usuario;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado")
     private Estado estado = Estado.activo;
 
-    @Column(name = "fecha_creacion", insertable = false, updatable = false)
-    private LocalDateTime fechaCreacion;
+    @Column(insertable = false, updatable = false)
+    private LocalDateTime fecha_creacion;
 
-    @Column(name = "fecha_ultima_actualizacion", insertable = false, updatable = false)
-    private LocalDateTime fechaUltimaActualizacion;
+    @Column(insertable = false, updatable = false)
+    private LocalDateTime fecha_ultima_actualizacion;
 
     // Relaciones
     @OneToMany(mappedBy = "vendedor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -58,21 +56,21 @@ public class Usuario {
     // Constructores
     public Usuario() {}
 
-    public Usuario(String nombreUsuario, String email, String contraseña,
-                   String nombreCompleto, TipoUsuario tipoUsuario) {
-        this.nombreUsuario = nombreUsuario;
+    public Usuario(String nombre_usuario, String email, String contraseña,
+                   String nombre_completo, TipoUsuario tipo_usuario) {
+        this.nombre_usuario = nombre_usuario;
         this.email = email;
         this.contraseña = contraseña;
-        this.nombreCompleto = nombreCompleto;
-        this.tipoUsuario = tipoUsuario;
+        this.nombre_completo = nombre_completo;
+        this.tipo_usuario = tipo_usuario;
     }
 
     // Getters y Setters
-    public Integer getIdUsuario() { return idUsuario; }
-    public void setIdUsuario(Integer idUsuario) { this.idUsuario = idUsuario; }
+    public Integer getId_usuario() { return id_usuario; }
+    public void setId_usuario(Integer id_usuario) { this.id_usuario = id_usuario; }
 
-    public String getNombreUsuario() { return nombreUsuario; }
-    public void setNombreUsuario(String nombreUsuario) { this.nombreUsuario = nombreUsuario; }
+    public String getNombre_usuario() { return nombre_usuario; }
+    public void setNombre_usuario(String nombre_usuario) { this.nombre_usuario = nombre_usuario; }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
@@ -80,8 +78,8 @@ public class Usuario {
     public String getContraseña() { return contraseña; }
     public void setContraseña(String contraseña) { this.contraseña = contraseña; }
 
-    public String getNombreCompleto() { return nombreCompleto; }
-    public void setNombreCompleto(String nombreCompleto) { this.nombreCompleto = nombreCompleto; }
+    public String getNombre_completo() { return nombre_completo; }
+    public void setNombre_completo(String nombre_completo) { this.nombre_completo = nombre_completo; }
 
     public String getTelefono() { return telefono; }
     public void setTelefono(String telefono) { this.telefono = telefono; }
@@ -89,17 +87,17 @@ public class Usuario {
     public String getDireccion() { return direccion; }
     public void setDireccion(String direccion) { this.direccion = direccion; }
 
-    public TipoUsuario getTipoUsuario() { return tipoUsuario; }
-    public void setTipoUsuario(TipoUsuario tipoUsuario) { this.tipoUsuario = tipoUsuario; }
+    public TipoUsuario getTipo_usuario() { return tipo_usuario; }
+    public void setTipo_usuario(TipoUsuario tipo_usuario) { this.tipo_usuario = tipo_usuario; }
 
     public Estado getEstado() { return estado; }
     public void setEstado(Estado estado) { this.estado = estado; }
 
-    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
-    public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+    public LocalDateTime getFecha_creacion() { return fecha_creacion; }
+    public void setFecha_creacion(LocalDateTime fecha_creacion) { this.fecha_creacion = fecha_creacion; }
 
-    public LocalDateTime getFechaUltimaActualizacion() { return fechaUltimaActualizacion; }
-    public void setFechaUltimaActualizacion(LocalDateTime fechaUltimaActualizacion) { this.fechaUltimaActualizacion = fechaUltimaActualizacion; }
+    public LocalDateTime getFecha_ultima_actualizacion() { return fecha_ultima_actualizacion; }
+    public void setFecha_ultima_actualizacion(LocalDateTime fecha_ultima_actualizacion) { this.fecha_ultima_actualizacion = fecha_ultima_actualizacion; }
 
     public List<Venta> getVentas() { return ventas; }
     public void setVentas(List<Venta> ventas) { this.ventas = ventas; }

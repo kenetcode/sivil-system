@@ -13,48 +13,44 @@ public class Libro {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_libro")
-    private Integer idLibro;
+    private Integer id_libro;
 
-    @Column(name = "codigo_libro", unique = true, nullable = false, length = 20)
-    private String codigoLibro;
+    @Column(unique = true, nullable = false, length = 20)
+    private String codigo_libro;
 
-    @Column(name = "titulo", nullable = false, length = 200)
+    @Column(nullable = false, length = 200)
     private String titulo;
 
-    @Column(name = "autor", nullable = false, length = 100)
+    @Column(nullable = false, length = 100)
     private String autor;
 
-    @Column(name = "año_publicacion")
-    private Integer añoPublicacion;
+    private Integer año_publicacion;
 
-    @Column(name = "precio", precision = 10, scale = 2, nullable = false)
+    @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal precio;
 
-    @Column(name = "cantidad_stock")
-    private Integer cantidadStock = 0;
+    private Integer cantidad_stock = 0;
 
-    @Column(name = "categoria", length = 50)
+    @Column(length = 50)
     private String categoria;
 
-    @Column(name = "editorial", length = 100)
+    @Column(length = 100)
     private String editorial;
 
-    @Column(name = "descripcion", columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(name = "imagen_url", length = 500)
-    private String imagenUrl;
+    @Column(length = 500)
+    private String imagen_url;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado")
     private Estado estado = Estado.activo;
 
-    @Column(name = "fecha_creacion", insertable = false, updatable = false)
-    private LocalDateTime fechaCreacion;
+    @Column(insertable = false, updatable = false)
+    private LocalDateTime fecha_creacion;
 
-    @Column(name = "fecha_ultima_actualizacion", insertable = false, updatable = false)
-    private LocalDateTime fechaUltimaActualizacion;
+    @Column(insertable = false, updatable = false)
+    private LocalDateTime fecha_ultima_actualizacion;
 
     // Relaciones
     @OneToMany(mappedBy = "libro", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -66,21 +62,21 @@ public class Libro {
     // Constructores
     public Libro() {}
 
-    public Libro(String codigoLibro, String titulo, String autor,
-                 Integer añoPublicacion, BigDecimal precio) {
-        this.codigoLibro = codigoLibro;
+    public Libro(String codigo_libro, String titulo, String autor,
+                 Integer año_publicacion, BigDecimal precio) {
+        this.codigo_libro = codigo_libro;
         this.titulo = titulo;
         this.autor = autor;
-        this.añoPublicacion = añoPublicacion;
+        this.año_publicacion = año_publicacion;
         this.precio = precio;
     }
 
     // Getters y Setters
-    public Integer getIdLibro() { return idLibro; }
-    public void setIdLibro(Integer idLibro) { this.idLibro = idLibro; }
+    public Integer getId_libro() { return id_libro; }
+    public void setId_libro(Integer id_libro) { this.id_libro = id_libro; }
 
-    public String getCodigoLibro() { return codigoLibro; }
-    public void setCodigoLibro(String codigoLibro) { this.codigoLibro = codigoLibro; }
+    public String getCodigo_libro() { return codigo_libro; }
+    public void setCodigo_libro(String codigo_libro) { this.codigo_libro = codigo_libro; }
 
     public String getTitulo() { return titulo; }
     public void setTitulo(String titulo) { this.titulo = titulo; }
@@ -88,14 +84,14 @@ public class Libro {
     public String getAutor() { return autor; }
     public void setAutor(String autor) { this.autor = autor; }
 
-    public Integer getAñoPublicacion() { return añoPublicacion; }
-    public void setAñoPublicacion(Integer añoPublicacion) { this.añoPublicacion = añoPublicacion; }
+    public Integer getAño_publicacion() { return año_publicacion; }
+    public void setAño_publicacion(Integer año_publicacion) { this.año_publicacion = año_publicacion; }
 
     public BigDecimal getPrecio() { return precio; }
     public void setPrecio(BigDecimal precio) { this.precio = precio; }
 
-    public Integer getCantidadStock() { return cantidadStock; }
-    public void setCantidadStock(Integer cantidadStock) { this.cantidadStock = cantidadStock; }
+    public Integer getCantidad_stock() { return cantidad_stock; }
+    public void setCantidad_stock(Integer cantidad_stock) { this.cantidad_stock = cantidad_stock; }
 
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
@@ -106,17 +102,17 @@ public class Libro {
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
 
-    public String getImagenUrl() { return imagenUrl; }
-    public void setImagenUrl(String imagenUrl) { this.imagenUrl = imagenUrl; }
+    public String getImagen_url() { return imagen_url; }
+    public void setImagen_url(String imagen_url) { this.imagen_url = imagen_url; }
 
     public Estado getEstado() { return estado; }
     public void setEstado(Estado estado) { this.estado = estado; }
 
-    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
-    public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+    public LocalDateTime getFecha_creacion() { return fecha_creacion; }
+    public void setFecha_creacion(LocalDateTime fecha_creacion) { this.fecha_creacion = fecha_creacion; }
 
-    public LocalDateTime getFechaUltimaActualizacion() { return fechaUltimaActualizacion; }
-    public void setFechaUltimaActualizacion(LocalDateTime fechaUltimaActualizacion) { this.fechaUltimaActualizacion = fechaUltimaActualizacion; }
+    public LocalDateTime getFecha_ultima_actualizacion() { return fecha_ultima_actualizacion; }
+    public void setFecha_ultima_actualizacion(LocalDateTime fecha_ultima_actualizacion) { this.fecha_ultima_actualizacion = fecha_ultima_actualizacion; }
 
     public List<DetalleVenta> getDetallesVenta() { return detallesVenta; }
     public void setDetallesVenta(List<DetalleVenta> detallesVenta) { this.detallesVenta = detallesVenta; }

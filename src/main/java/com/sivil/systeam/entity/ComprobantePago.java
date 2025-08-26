@@ -10,57 +10,55 @@ public class ComprobantePago {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_comprobante")
-    private Integer idComprobante;
+    private Integer id_comprobante;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_pago", nullable = false,
             foreignKey = @ForeignKey(name = "fk_comprobantes_pago"))
     private Pago pago;
 
-    @Column(name = "nombre_archivo", nullable = false)
-    private String nombreArchivo;
+    @Column(nullable = false)
+    private String nombre_archivo;
 
-    @Column(name = "ruta_archivo", nullable = false, length = 500)
-    private String rutaArchivo;
+    @Column(nullable = false, length = 500)
+    private String ruta_archivo;
 
-    @Column(name = "tipo_archivo", length = 10)
-    private String tipoArchivo = "PDF";
+    @Column(length = 10)
+    private String tipo_archivo = "PDF";
 
-    @Column(name = "tamaño_archivo")
-    private Integer tamañoArchivo;
+    private Integer tamaño_archivo;
 
-    @Column(name = "fecha_subida", insertable = false, updatable = false)
-    private LocalDateTime fechaSubida;
+    @Column(insertable = false, updatable = false)
+    private LocalDateTime fecha_subida;
 
     // Constructores
     public ComprobantePago() {}
 
-    public ComprobantePago(Pago pago, String nombreArchivo, String rutaArchivo) {
+    public ComprobantePago(Pago pago, String nombre_archivo, String ruta_archivo) {
         this.pago = pago;
-        this.nombreArchivo = nombreArchivo;
-        this.rutaArchivo = rutaArchivo;
+        this.nombre_archivo = nombre_archivo;
+        this.ruta_archivo = ruta_archivo;
     }
 
     // Getters y Setters
-    public Integer getIdComprobante() { return idComprobante; }
-    public void setIdComprobante(Integer idComprobante) { this.idComprobante = idComprobante; }
+    public Integer getId_comprobante() { return id_comprobante; }
+    public void setId_comprobante(Integer id_comprobante) { this.id_comprobante = id_comprobante; }
 
     public Pago getPago() { return pago; }
     public void setPago(Pago pago) { this.pago = pago; }
 
-    public String getNombreArchivo() { return nombreArchivo; }
-    public void setNombreArchivo(String nombreArchivo) { this.nombreArchivo = nombreArchivo; }
+    public String getNombre_archivo() { return nombre_archivo; }
+    public void setNombre_archivo(String nombre_archivo) { this.nombre_archivo = nombre_archivo; }
 
-    public String getRutaArchivo() { return rutaArchivo; }
-    public void setRutaArchivo(String rutaArchivo) { this.rutaArchivo = rutaArchivo; }
+    public String getRuta_archivo() { return ruta_archivo; }
+    public void setRuta_archivo(String ruta_archivo) { this.ruta_archivo = ruta_archivo; }
 
-    public String getTipoArchivo() { return tipoArchivo; }
-    public void setTipoArchivo(String tipoArchivo) { this.tipoArchivo = tipoArchivo; }
+    public String getTipo_archivo() { return tipo_archivo; }
+    public void setTipo_archivo(String tipo_archivo) { this.tipo_archivo = tipo_archivo; }
 
-    public Integer getTamañoArchivo() { return tamañoArchivo; }
-    public void setTamañoArchivo(Integer tamañoArchivo) { this.tamañoArchivo = tamañoArchivo; }
+    public Integer getTamaño_archivo() { return tamaño_archivo; }
+    public void setTamaño_archivo(Integer tamaño_archivo) { this.tamaño_archivo = tamaño_archivo; }
 
-    public LocalDateTime getFechaSubida() { return fechaSubida; }
-    public void setFechaSubida(LocalDateTime fechaSubida) { this.fechaSubida = fechaSubida; }
+    public LocalDateTime getFecha_subida() { return fecha_subida; }
+    public void setFecha_subida(LocalDateTime fecha_subida) { this.fecha_subida = fecha_subida; }
 }

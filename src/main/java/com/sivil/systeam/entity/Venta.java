@@ -14,54 +14,53 @@ public class Venta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_venta")
-    private Integer idVenta;
+    private Integer id_venta;
 
-    @Column(name = "numero_factura", unique = true, nullable = false, length = 50)
-    private String numeroFactura;
+    @Column(unique = true, nullable = false, length = 50)
+    private String numero_factura;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_vendedor", nullable = false,
             foreignKey = @ForeignKey(name = "fk_ventas_vendedor"))
     private Usuario vendedor;
 
-    @Column(name = "nombre_cliente", nullable = false, length = 150)
-    private String nombreCliente;
+    @Column(nullable = false, length = 150)
+    private String nombre_cliente;
 
-    @Column(name = "contacto_cliente", length = 100)
-    private String contactoCliente;
+    @Column(length = 100)
+    private String contacto_cliente;
 
-    @Column(name = "identificacion_cliente", length = 50)
-    private String identificacionCliente;
+    @Column(length = 50)
+    private String identificacion_cliente;
 
-    @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
+    @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal subtotal;
 
-    @Column(name = "descuento_aplicado", precision = 10, scale = 2)
-    private BigDecimal descuentoAplicado = BigDecimal.ZERO;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal descuento_aplicado = BigDecimal.ZERO;
 
     @Column(name = "impuestos", precision = 10, scale = 2)
     private BigDecimal impuestos = BigDecimal.ZERO;
 
-    @Column(name = "total", precision = 10, scale = 2, nullable = false)
+    @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal total;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_pago", nullable = false)
-    private MetodoPago tipoPago;
+    @Column(nullable = false)
+    private MetodoPago tipo_pago;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado")
     private EstadoVenta estado = EstadoVenta.activa;
 
-    @Column(name = "motivo_inactivacion", columnDefinition = "TEXT")
-    private String motivoInactivacion;
+    @Column(columnDefinition = "TEXT")
+    private String motivo_inactivacion;
 
-    @Column(name = "fecha_venta", insertable = false, updatable = false)
-    private LocalDateTime fechaVenta;
+    @Column(insertable = false, updatable = false)
+    private LocalDateTime fecha_venta;
 
-    @Column(name = "fecha_ultima_actualizacion", insertable = false, updatable = false)
-    private LocalDateTime fechaUltimaActualizacion;
+    @Column(insertable = false, updatable = false)
+    private LocalDateTime fecha_ultima_actualizacion;
 
     // Relaciones
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL,
@@ -75,40 +74,40 @@ public class Venta {
     // Constructores
     public Venta() {}
 
-    public Venta(String numeroFactura, Usuario vendedor, String nombreCliente,
-                 BigDecimal subtotal, BigDecimal total, MetodoPago tipoPago) {
-        this.numeroFactura = numeroFactura;
+    public Venta(String numero_factura, Usuario vendedor, String nombre_cliente,
+                 BigDecimal subtotal, BigDecimal total, MetodoPago tipo_pago) {
+        this.numero_factura = numero_factura;
         this.vendedor = vendedor;
-        this.nombreCliente = nombreCliente;
+        this.nombre_cliente = nombre_cliente;
         this.subtotal = subtotal;
         this.total = total;
-        this.tipoPago = tipoPago;
+        this.tipo_pago = tipo_pago;
     }
 
     // Getters y Setters
-    public Integer getIdVenta() { return idVenta; }
-    public void setIdVenta(Integer idVenta) { this.idVenta = idVenta; }
+    public Integer getId_venta() { return id_venta; }
+    public void setId_venta(Integer id_venta) { this.id_venta = id_venta; }
 
-    public String getNumeroFactura() { return numeroFactura; }
-    public void setNumeroFactura(String numeroFactura) { this.numeroFactura = numeroFactura; }
+    public String getNumero_factura() { return numero_factura; }
+    public void setNumero_factura(String numero_factura) { this.numero_factura = numero_factura; }
 
     public Usuario getVendedor() { return vendedor; }
     public void setVendedor(Usuario vendedor) { this.vendedor = vendedor; }
 
-    public String getNombreCliente() { return nombreCliente; }
-    public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
+    public String getNombre_cliente() { return nombre_cliente; }
+    public void setNombre_cliente(String nombre_cliente) { this.nombre_cliente = nombre_cliente; }
 
-    public String getContactoCliente() { return contactoCliente; }
-    public void setContactoCliente(String contactoCliente) { this.contactoCliente = contactoCliente; }
+    public String getContacto_cliente() { return contacto_cliente; }
+    public void setContacto_cliente(String contacto_cliente) { this.contacto_cliente = contacto_cliente; }
 
-    public String getIdentificacionCliente() { return identificacionCliente; }
-    public void setIdentificacionCliente(String identificacionCliente) { this.identificacionCliente = identificacionCliente; }
+    public String getIdentificacion_cliente() { return identificacion_cliente; }
+    public void setIdentificacion_cliente(String identificacion_cliente) { this.identificacion_cliente = identificacion_cliente; }
 
     public BigDecimal getSubtotal() { return subtotal; }
     public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
 
-    public BigDecimal getDescuentoAplicado() { return descuentoAplicado; }
-    public void setDescuentoAplicado(BigDecimal descuentoAplicado) { this.descuentoAplicado = descuentoAplicado; }
+    public BigDecimal getDescuento_aplicado() { return descuento_aplicado; }
+    public void setDescuento_aplicado(BigDecimal descuento_aplicado) { this.descuento_aplicado = descuento_aplicado; }
 
     public BigDecimal getImpuestos() { return impuestos; }
     public void setImpuestos(BigDecimal impuestos) { this.impuestos = impuestos; }
@@ -116,20 +115,20 @@ public class Venta {
     public BigDecimal getTotal() { return total; }
     public void setTotal(BigDecimal total) { this.total = total; }
 
-    public MetodoPago getTipoPago() { return tipoPago; }
-    public void setTipoPago(MetodoPago tipoPago) { this.tipoPago = tipoPago; }
+    public MetodoPago getTipo_pago() { return tipo_pago; }
+    public void setTipo_pago(MetodoPago tipo_pago) { this.tipo_pago = tipo_pago; }
 
     public EstadoVenta getEstado() { return estado; }
     public void setEstado(EstadoVenta estado) { this.estado = estado; }
 
-    public String getMotivoInactivacion() { return motivoInactivacion; }
-    public void setMotivoInactivacion(String motivoInactivacion) { this.motivoInactivacion = motivoInactivacion; }
+    public String getMotivo_inactivacion() { return motivo_inactivacion; }
+    public void setMotivo_inactivacion(String motivo_inactivacion) { this.motivo_inactivacion = motivo_inactivacion; }
 
-    public LocalDateTime getFechaVenta() { return fechaVenta; }
-    public void setFechaVenta(LocalDateTime fechaVenta) { this.fechaVenta = fechaVenta; }
+    public LocalDateTime getFecha_venta() { return fecha_venta; }
+    public void setFecha_venta(LocalDateTime fecha_venta) { this.fecha_venta = fecha_venta; }
 
-    public LocalDateTime getFechaUltimaActualizacion() { return fechaUltimaActualizacion; }
-    public void setFechaUltimaActualizacion(LocalDateTime fechaUltimaActualizacion) { this.fechaUltimaActualizacion = fechaUltimaActualizacion; }
+    public LocalDateTime getFecha_ultima_actualizacion() { return fecha_ultima_actualizacion; }
+    public void setFecha_ultima_actualizacion(LocalDateTime fecha_ultima_actualizacion) { this.fecha_ultima_actualizacion = fecha_ultima_actualizacion; }
 
     public List<DetalleVenta> getDetallesVenta() { return detallesVenta; }
     public void setDetallesVenta(List<DetalleVenta> detallesVenta) { this.detallesVenta = detallesVenta; }

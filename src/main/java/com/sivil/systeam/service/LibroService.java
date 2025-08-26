@@ -47,6 +47,6 @@ public class LibroService {
 
     // Obtener libros con stock disponible
     public List<Libro> obtenerLibrosConStock() {
-        return libroRepository.findByCantidadStockGreaterThan(0);
+        return libroRepository.findByCantidad_stockGreaterThan(0);
     }
 }
