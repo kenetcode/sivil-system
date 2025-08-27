@@ -1,6 +1,6 @@
 -- =========================================
 -- SCRIPT DE CREACIÓN DE BASE DE DATOS SIVIL
--- PostgreSQL para Deploy en Render
+-- PostgreSQL - SCHEMA COMPLETO SIN ENUMs
 -- =========================================
 
 -- Limpiar tablas existentes si existen
@@ -13,21 +13,13 @@ DROP TABLE IF EXISTS ventas CASCADE;
 DROP TABLE IF EXISTS libros CASCADE;
 DROP TABLE IF EXISTS usuarios CASCADE;
 
--- Limpiar tipos ENUM existentes
+-- Limpiar tipos ENUM existentes si existen
 DROP TYPE IF EXISTS tipo_usuario_enum CASCADE;
 DROP TYPE IF EXISTS estado_enum CASCADE;
 DROP TYPE IF EXISTS estado_venta_enum CASCADE;
 DROP TYPE IF EXISTS estado_compra_enum CASCADE;
 DROP TYPE IF EXISTS metodo_pago_enum CASCADE;
 DROP TYPE IF EXISTS estado_pago_enum CASCADE;
-
--- Crear tipos ENUM personalizados
-CREATE TYPE tipo_usuario_enum AS ENUM ('comprador', 'vendedor', 'admin');
-CREATE TYPE estado_enum AS ENUM ('activo', 'inactivo');
-CREATE TYPE estado_venta_enum AS ENUM ('activa', 'inactiva', 'finalizada');
-CREATE TYPE estado_compra_enum AS ENUM ('pendiente', 'procesada', 'enviada', 'entregada');
-CREATE TYPE metodo_pago_enum AS ENUM ('tarjeta', 'efectivo');
-CREATE TYPE estado_pago_enum AS ENUM ('pendiente', 'completado', 'fallido');
 
 -- Función para actualizar timestamp automáticamente
 CREATE OR REPLACE FUNCTION update_timestamp()
@@ -49,8 +41,8 @@ CREATE TABLE usuarios (
     nombre_completo VARCHAR(150) NOT NULL,
     telefono VARCHAR(15),
     direccion TEXT,
-    tipo_usuario tipo_usuario_enum NOT NULL,
-    estado estado_enum DEFAULT 'activo',
+    tipo_usuario VARCHAR(20) NOT NULL CHECK (tipo_usuario IN ('comprador', 'vendedor', 'admin')),
+    estado VARCHAR(20) DEFAULT 'activo' CHECK (estado IN ('activo', 'inactivo')),
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -77,7 +69,7 @@ CREATE TABLE libros (
     editorial VARCHAR(100),
     descripcion TEXT,
     imagen_url VARCHAR(500),
-    estado estado_enum DEFAULT 'activo',
+    estado VARCHAR(20) DEFAULT 'activo' CHECK (estado IN ('activo', 'inactivo')),
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -103,8 +95,8 @@ CREATE TABLE ventas (
     descuento_aplicado DECIMAL(10,2) DEFAULT 0,
     impuestos DECIMAL(10,2) DEFAULT 0,
     total DECIMAL(10,2) NOT NULL,
-    tipo_pago metodo_pago_enum NOT NULL,
-    estado estado_venta_enum DEFAULT 'activa',
+    tipo_pago VARCHAR(20) NOT NULL CHECK (tipo_pago IN ('tarjeta', 'efectivo')),
+    estado VARCHAR(20) DEFAULT 'activa' CHECK (estado IN ('activa', 'inactiva', 'finalizada')),
     motivo_inactivacion TEXT,
     fecha_venta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -131,8 +123,8 @@ CREATE TABLE compras_online (
     impuestos DECIMAL(10,2) DEFAULT 0,
     total DECIMAL(10,2) NOT NULL,
     direccion_entrega TEXT,
-    estado_compra estado_compra_enum DEFAULT 'pendiente',
-    metodo_pago metodo_pago_enum DEFAULT 'tarjeta',
+    estado_compra VARCHAR(20) DEFAULT 'pendiente' CHECK (estado_compra IN ('pendiente', 'procesada', 'enviada', 'entregada')),
+    metodo_pago VARCHAR(20) DEFAULT 'tarjeta' CHECK (metodo_pago IN ('tarjeta', 'efectivo')),
     fecha_compra TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
@@ -188,9 +180,9 @@ CREATE TABLE pagos (
     id_pago SERIAL PRIMARY KEY,
     id_compra INTEGER,
     id_venta INTEGER,
-    metodo_pago metodo_pago_enum NOT NULL,
+    metodo_pago VARCHAR(20) NOT NULL CHECK (metodo_pago IN ('tarjeta', 'efectivo')),
     monto DECIMAL(10,2) NOT NULL,
-    estado_pago estado_pago_enum DEFAULT 'pendiente',
+    estado_pago VARCHAR(20) DEFAULT 'pendiente' CHECK (estado_pago IN ('pendiente', 'completado', 'fallido')),
     datos_tarjeta_encriptados TEXT,
     fecha_pago TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     referencia_transaccion VARCHAR(100) UNIQUE,
