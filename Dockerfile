@@ -20,8 +20,8 @@ COPY src ./src
 # Construir la aplicación
 RUN ./mvnw clean package -DskipTests
 
-# Exponer puerto
-EXPOSE 8080
+# Exponer puerto - Render usa PORT dinámico
+EXPOSE ${PORT:-10000}
 
 # Comando para ejecutar la aplicación
 CMD ["java", "-Dspring.profiles.active=prod", "-jar", "target/Sistema-digital-de-venta-de-libros-0.0.1-SNAPSHOT.jar"]
