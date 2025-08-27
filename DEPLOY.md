@@ -629,14 +629,6 @@ Dashboard Render → Service → **Manual Deploy** → **Deploy latest commit**
 
 ---
 
-## 📱 Contacto y Soporte
-
-**En caso de problemas**:
-1. Revisar logs en Render Dashboard
-2. Verificar variables de entorno
-3. Comprobar status de PostgreSQL service
-4. Hacer redeploy manual si es necesario
-
 **Documentación oficial**: 
 - [Render Docs](https://render.com/docs)
 - [Spring Boot Docs](https://spring.io/projects/spring-boot)
