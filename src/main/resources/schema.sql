@@ -3,13 +3,31 @@
 -- PostgreSQL para Deploy en Render
 -- =========================================
 
+-- Limpiar tablas existentes si existen
+DROP TABLE IF EXISTS comprobantes_pago CASCADE;
+DROP TABLE IF EXISTS pagos CASCADE;  
+DROP TABLE IF EXISTS detalle_compra CASCADE;
+DROP TABLE IF EXISTS detalle_venta CASCADE;
+DROP TABLE IF EXISTS compras_online CASCADE;
+DROP TABLE IF EXISTS ventas CASCADE;
+DROP TABLE IF EXISTS libros CASCADE;
+DROP TABLE IF EXISTS usuarios CASCADE;
+
+-- Limpiar tipos ENUM existentes
+DROP TYPE IF EXISTS tipo_usuario_enum CASCADE;
+DROP TYPE IF EXISTS estado_enum CASCADE;
+DROP TYPE IF EXISTS estado_venta_enum CASCADE;
+DROP TYPE IF EXISTS estado_compra_enum CASCADE;
+DROP TYPE IF EXISTS metodo_pago_enum CASCADE;
+DROP TYPE IF EXISTS estado_pago_enum CASCADE;
+
 -- Crear tipos ENUM personalizados
-CREATE TYPE IF NOT EXISTS tipo_usuario_enum AS ENUM ('comprador', 'vendedor', 'admin');
-CREATE TYPE IF NOT EXISTS estado_enum AS ENUM ('activo', 'inactivo');
-CREATE TYPE IF NOT EXISTS estado_venta_enum AS ENUM ('activa', 'inactiva', 'finalizada');
-CREATE TYPE IF NOT EXISTS estado_compra_enum AS ENUM ('pendiente', 'procesada', 'enviada', 'entregada');
-CREATE TYPE IF NOT EXISTS metodo_pago_enum AS ENUM ('tarjeta', 'efectivo');
-CREATE TYPE IF NOT EXISTS estado_pago_enum AS ENUM ('pendiente', 'completado', 'fallido');
+CREATE TYPE tipo_usuario_enum AS ENUM ('comprador', 'vendedor', 'admin');
+CREATE TYPE estado_enum AS ENUM ('activo', 'inactivo');
+CREATE TYPE estado_venta_enum AS ENUM ('activa', 'inactiva', 'finalizada');
+CREATE TYPE estado_compra_enum AS ENUM ('pendiente', 'procesada', 'enviada', 'entregada');
+CREATE TYPE metodo_pago_enum AS ENUM ('tarjeta', 'efectivo');
+CREATE TYPE estado_pago_enum AS ENUM ('pendiente', 'completado', 'fallido');
 
 -- Función para actualizar timestamp automáticamente
 CREATE OR REPLACE FUNCTION update_timestamp()
@@ -23,7 +41,7 @@ $$ language 'plpgsql';
 -- =========================================
 -- TABLA: USUARIOS
 -- =========================================
-CREATE TABLE IF NOT EXISTS usuarios (
+CREATE TABLE usuarios (
     id_usuario SERIAL PRIMARY KEY,
     nombre_usuario VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -47,7 +65,7 @@ CREATE TRIGGER update_usuarios_timestamp
 -- =========================================
 -- TABLA: LIBROS
 -- =========================================
-CREATE TABLE IF NOT EXISTS libros (
+CREATE TABLE libros (
     id_libro SERIAL PRIMARY KEY,
     codigo_libro VARCHAR(20) UNIQUE NOT NULL,
     titulo VARCHAR(200) NOT NULL,
@@ -74,7 +92,7 @@ CREATE TRIGGER update_libros_timestamp
 -- =========================================
 -- TABLA: VENTAS
 -- =========================================
-CREATE TABLE IF NOT EXISTS ventas (
+CREATE TABLE ventas (
     id_venta SERIAL PRIMARY KEY,
     numero_factura VARCHAR(50) UNIQUE NOT NULL,
     id_vendedor INTEGER NOT NULL,
@@ -105,7 +123,7 @@ CREATE TRIGGER update_ventas_timestamp
 -- =========================================
 -- TABLA: COMPRAS_ONLINE
 -- =========================================
-CREATE TABLE IF NOT EXISTS compras_online (
+CREATE TABLE compras_online (
     id_compra SERIAL PRIMARY KEY,
     numero_orden VARCHAR(50) UNIQUE NOT NULL,
     id_comprador INTEGER NOT NULL,
@@ -132,7 +150,7 @@ CREATE TRIGGER update_compras_timestamp
 -- =========================================
 -- TABLA: DETALLE_VENTA
 -- =========================================
-CREATE TABLE IF NOT EXISTS detalle_venta (
+CREATE TABLE detalle_venta (
     id_detalle_venta SERIAL PRIMARY KEY,
     id_venta INTEGER NOT NULL,
     id_libro INTEGER NOT NULL,
@@ -149,7 +167,7 @@ CREATE TABLE IF NOT EXISTS detalle_venta (
 -- =========================================
 -- TABLA: DETALLE_COMPRA
 -- =========================================
-CREATE TABLE IF NOT EXISTS detalle_compra (
+CREATE TABLE detalle_compra (
     id_detalle_compra SERIAL PRIMARY KEY,
     id_compra INTEGER NOT NULL,
     id_libro INTEGER NOT NULL,
@@ -166,7 +184,7 @@ CREATE TABLE IF NOT EXISTS detalle_compra (
 -- =========================================
 -- TABLA: PAGOS
 -- =========================================
-CREATE TABLE IF NOT EXISTS pagos (
+CREATE TABLE pagos (
     id_pago SERIAL PRIMARY KEY,
     id_compra INTEGER,
     id_venta INTEGER,
@@ -190,7 +208,7 @@ CREATE TABLE IF NOT EXISTS pagos (
 -- =========================================
 -- TABLA: COMPROBANTES_PAGO
 -- =========================================
-CREATE TABLE IF NOT EXISTS comprobantes_pago (
+CREATE TABLE comprobantes_pago (
     id_comprobante SERIAL PRIMARY KEY,
     id_pago INTEGER NOT NULL,
     nombre_archivo VARCHAR(255) NOT NULL,
@@ -206,14 +224,14 @@ CREATE TABLE IF NOT EXISTS comprobantes_pago (
 -- =========================================
 -- ÍNDICES PARA OPTIMIZACIÓN
 -- =========================================
-CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
-CREATE INDEX IF NOT EXISTS idx_usuarios_tipo ON usuarios(tipo_usuario);
-CREATE INDEX IF NOT EXISTS idx_libros_codigo ON libros(codigo_libro);
-CREATE INDEX IF NOT EXISTS idx_libros_titulo ON libros(titulo);
-CREATE INDEX IF NOT EXISTS idx_libros_autor ON libros(autor);
-CREATE INDEX IF NOT EXISTS idx_libros_estado_stock ON libros(estado, cantidad_stock);
-CREATE INDEX IF NOT EXISTS idx_ventas_fecha ON ventas(fecha_venta);
-CREATE INDEX IF NOT EXISTS idx_ventas_vendedor ON ventas(id_vendedor);
-CREATE INDEX IF NOT EXISTS idx_compras_fecha ON compras_online(fecha_compra);
-CREATE INDEX IF NOT EXISTS idx_compras_comprador ON compras_online(id_comprador);
-CREATE INDEX IF NOT EXISTS idx_pagos_referencia ON pagos(referencia_transaccion);
+CREATE INDEX idx_usuarios_email ON usuarios(email);
+CREATE INDEX idx_usuarios_tipo ON usuarios(tipo_usuario);
+CREATE INDEX idx_libros_codigo ON libros(codigo_libro);
+CREATE INDEX idx_libros_titulo ON libros(titulo);
+CREATE INDEX idx_libros_autor ON libros(autor);
+CREATE INDEX idx_libros_estado_stock ON libros(estado, cantidad_stock);
+CREATE INDEX idx_ventas_fecha ON ventas(fecha_venta);
+CREATE INDEX idx_ventas_vendedor ON ventas(id_vendedor);
+CREATE INDEX idx_compras_fecha ON compras_online(fecha_compra);
+CREATE INDEX idx_compras_comprador ON compras_online(id_comprador);
+CREATE INDEX idx_pagos_referencia ON pagos(referencia_transaccion);
