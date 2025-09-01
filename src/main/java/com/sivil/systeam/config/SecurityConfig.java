@@ -11,7 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Bean
+    /*@Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
@@ -27,5 +27,5 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable); // Deshabilitar CSRF para la API
 
         return http.build();
-    }
+    }*/
 }
