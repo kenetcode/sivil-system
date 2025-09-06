@@ -13,33 +13,36 @@
                             <i class="bi bi-house"></i> Inicio
                         </a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-book"></i> Libros
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" th:href="@{/libros}">Ver Todos</a></li>
-                            <li><a class="dropdown-item" th:href="@{/libros/activos}">Libros Activos</a></li>
-                            <li><a class="dropdown-item" th:href="@{/libros/disponibles}">Disponibles</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" th:href="@{/libros/buscar}">Buscar Libros</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
+                    <li class="nav-item" th:if="${tipoUsuario == 'admin' or tipoUsuario == 'vendedor'}">
                         <a class="nav-link" href="#">
-                            <i class="bi bi-cart"></i> Ventas
+                            <i class="bi bi-cash-register"></i> Punto de Venta
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" th:if="${tipoUsuario == 'admin' or tipoUsuario == 'vendedor'}">
                         <a class="nav-link" href="#">
-                            <i class="bi bi-bag"></i> Compras
+                            <i class="bi bi-shop"></i> Compras Online
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${tipoUsuario == 'admin' or tipoUsuario == 'vendedor'}">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-credit-card"></i> Gestión de Pagos
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${tipoUsuario == 'admin' or tipoUsuario == 'vendedor'}">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-boxes"></i> Stock
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${tipoUsuario == 'admin' or tipoUsuario == 'vendedor'}">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-people"></i> Administrar Usuarios
                         </a>
                     </li>
                 </ul>
                 <div class="d-flex">
-                    <form class="d-flex me-3">
-                        <input class="form-control me-2" type="search" placeholder="Buscar..." id="searchInput">
-                        <button class="btn btn-outline-primary" type="button" onclick="buscarLibros()">
+                    <form class="d-flex">
+                        <input class="form-control form-control-sm me-1" type="search" placeholder="Buscar..." id="searchInput" style="width: 200px;">
+                        <button class="btn btn-outline-primary btn-sm" type="button" onclick="buscarLibros()">
                             <i class="bi bi-search"></i>
                         </button>
                     </form>
