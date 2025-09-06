@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema SIVIL</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            animation: fadeIn 1.2s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes slideInUp {
+            0% { 
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounceIn {
+            0% { 
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            50% { 
+                transform: scale(1.05);
+            }
+            100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            min-height: 450px;
+            animation: slideInUp 0.8s ease-out;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .login-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+        
+        .system-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: bounceIn 1s ease-out 0.3s both;
+        }
+        
+        .system-logo {
+            font-size: 3rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+            animation: bounceIn 1.2s ease-out 0.5s both;
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        
+        .system-logo:hover {
+            transform: rotateY(360deg) scale(1.1);
+            color: #495057;
+        }
+        
+        .card-body {
+            padding: 2.5rem !important;
+        }
+        
+        .form-control {
+            height: 45px;
+            font-size: 1.1rem;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            animation: slideInUp 0.6s ease-out 0.7s both;
+        }
+        
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .btn-lg {
+            height: 50px;
+            font-size: 1.1rem;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            animation: slideInUp 0.6s ease-out 0.9s both;
+        }
+        
+        .btn-lg:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
+        }
+        
+        .alert {
+            border-radius: 15px;
+            animation: slideInUp 0.5s ease-out;
+        }
+        
+        .card-header {
+            border-radius: 25px 25px 0 0 !important;
+            animation: slideInUp 0.6s ease-out 0.4s both;
+        }
+        
+        /* Animación para labels */
+        .form-label {
+            animation: slideInUp 0.6s ease-out 0.6s both;
+            transition: color 0.3s ease;
+        }
+        
+        /* Footer animation */
+        .text-center.mt-3 {
+            animation: fadeIn 1.5s ease-out 1s both;
+        }
+        
+        /* Verde personalizado para seguridad */
+        .text-security {
+            color: #6c9a3f !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <!-- Header del Sistema -->
+                <div class="system-header">
+                    <div class="system-logo">
+                        <i class="bi bi-book-half"></i>
+                    </div>
+                    <h2 class="text-dark mb-1">Sistema SIVIL</h2>
+                    <p class="text-muted">Sistema de Venta de Libros</p>
+                </div>
+
+                <!-- Card de Login -->
+                <div class="card login-container">
+                    <div class="card-header text-center bg-primary text-white">
+                        <h4><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Mensaje de error -->
+                        <div th:if="${error}" class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i> <span th:text="${error}"></span>
+                        </div>
+
+                        <!-- Formulario de login -->
+                        <form th:action="@{/login}" method="post">
+                            
+                            <div class="mb-3">
+                                <label for="username" class="form-label">
+                                    <i class="bi bi-envelope"></i> Email
+                                </label>
+                                <input type="email" class="form-control" id="username" 
+                                       name="username" required placeholder="Ingresa tu email">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">
+                                    <i class="bi bi-lock"></i> Contraseña
+                                </label>
+                                <input type="password" class="form-control" id="password" 
+                                       name="password" required placeholder="Ingresa tu contraseña">
+                            </div>
+
+                            <div class="d-grid gap-2 mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-check-circle"></i> Ingresar al Sistema
+                                </button>
+                            </div>
+
+                        </form>
+
+                        <!-- Footer del formulario -->
+                        <div class="text-center">
+                            <small class="text-security">
+                                <i class="bi bi-shield-check text-security"></i> 
+                                Acceso seguro al sistema
+                            </small>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        © 2025 Sistema SIVIL - Todos los derechos reservados
+                    </small>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

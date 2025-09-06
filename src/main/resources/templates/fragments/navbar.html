@@ -8,34 +8,52 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/}">
-                            <i class="bi bi-house"></i> Inicio
+                    <li class="nav-item me-2">
+                        <a class="nav-link btn btn-outline-primary rounded-pill px-3 py-2" th:href="@{/}" 
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#0d6efd'; this.style.borderColor='#0d6efd'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#0d6efd'; this.style.color='#0d6efd';">
+                            <i class="bi bi-house me-1"></i> Inicio
                         </a>
                     </li>
-                    <li class="nav-item" th:if="${tipoUsuario == 'admin' or tipoUsuario == 'vendedor'}">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-cash-register"></i> Punto de Venta
+                    <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                        <a class="nav-link btn btn-outline-success rounded-pill px-3 py-2" href="#"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#198754'; this.style.borderColor='#198754'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#198754'; this.style.color='#198754';">
+                            <i class="bi bi-cash-register me-1"></i> Punto de Venta
                         </a>
                     </li>
-                    <li class="nav-item" th:if="${tipoUsuario == 'admin' or tipoUsuario == 'vendedor'}">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-shop"></i> Compras Online
+                    <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                        <a class="nav-link btn btn-outline-info rounded-pill px-3 py-2" href="#"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#0dcaf0'; this.style.borderColor='#0dcaf0'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#0dcaf0'; this.style.color='#0dcaf0';">
+                            <i class="bi bi-shop me-1"></i> Compras Online
                         </a>
                     </li>
-                    <li class="nav-item" th:if="${tipoUsuario == 'admin' or tipoUsuario == 'vendedor'}">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-credit-card"></i> Gestión de Pagos
+                    <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                        <a class="nav-link btn btn-outline-warning rounded-pill px-3 py-2" href="#"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#ffc107'; this.style.borderColor='#ffc107'; this.style.color='black';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#ffc107'; this.style.color='#ffc107';">
+                            <i class="bi bi-credit-card me-1"></i> Gestión de Pagos
                         </a>
                     </li>
-                    <li class="nav-item" th:if="${tipoUsuario == 'admin' or tipoUsuario == 'vendedor'}">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-boxes"></i> Stock
+                    <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                        <a class="nav-link btn btn-outline-secondary rounded-pill px-3 py-2" href="#"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#6c757d'; this.style.borderColor='#6c757d'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#6c757d'; this.style.color='#6c757d';">
+                            <i class="bi bi-boxes me-1"></i> Stock
                         </a>
                     </li>
-                    <li class="nav-item" th:if="${tipoUsuario == 'admin' or tipoUsuario == 'vendedor'}">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-people"></i> Administrar Usuarios
+                    <li class="nav-item me-2" th:if="${currentUser != null and currentUser.tipo_usuario.name() == 'admin'}">
+                        <a class="nav-link btn btn-outline-danger rounded-pill px-3 py-2" href="#"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#dc3545'; this.style.borderColor='#dc3545'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#dc3545'; this.style.color='#dc3545';">
+                            <i class="bi bi-people me-1"></i> Administrar Usuarios
                         </a>
                     </li>
                 </ul>

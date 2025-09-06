@@ -1,7 +1,9 @@
 package com.sivil.systeam.controller;
 
 import com.sivil.systeam.entity.Libro;
+import com.sivil.systeam.entity.Usuario;
 import com.sivil.systeam.service.LibroService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

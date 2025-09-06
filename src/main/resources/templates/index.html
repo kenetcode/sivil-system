@@ -9,71 +9,25 @@
         <!-- Header de la página -->
         <div class="row mb-4">
             <div class="col-12">
-                <h2><i class="bi bi-book"></i> Lista de Libros - Sistema SIVIL</h2>
-                <p class="text-muted">Catálogo de libros activos en el sistema</p>
+                <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
+                <p class="text-muted">Panel de control del sistema de libros SIVIL</p>
             </div>
         </div>
 
-        <!-- Tabla de libros -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Catálogo de Libros</h5>
-            </div>
-            <div class="card-body">
-                <!-- Mensaje cuando no hay datos -->
-                <div th:if="${#lists.isEmpty(libros)}" class="text-center py-4">
-                    <i class="bi bi-inbox display-4 text-muted"></i>
-                    <p class="text-muted mt-2">No hay libros disponibles</p>
-                </div>
-
-                <!-- Tabla de libros -->
-                <div th:if="${not #lists.isEmpty(libros)}" class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>Código</th>
-                                <th>Título</th>
-                                <th>Autor</th>
-                                <th>Año</th>
-                                <th>Precio</th>
-                                <th>Stock</th>
-                                <th>Categoría</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="libro : ${libros}">
-                                <td th:text="${libro.id_libro}">ID</td>
-                                <td><code th:text="${libro.codigo_libro ?: '-'}">CÓDIGO</code></td>
-                                <td><strong th:text="${libro.titulo ?: '-'}">TÍTULO</strong></td>
-                                <td th:text="${libro.autor ?: '-'}">AUTOR</td>
-                                <td th:text="${libro.año_publicacion ?: '-'}">AÑO</td>
-                                <td th:text="${libro.precio != null} ? '$' + ${#numbers.formatDecimal(libro.precio, 0, 'POINT', 0, 'COMMA')} : '-'">PRECIO</td>
-                                <td>
-                                    <span class="badge"
-                                          th:classappend="${libro.cantidad_stock > 0 ? 'bg-success' : 'bg-danger'}"
-                                          th:text="${libro.cantidad_stock}">0</span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info" th:text="${libro.categoria ?: '-'}">CATEGORÍA</span>
-                                </td>
-                                <td>
-                                    <span class="badge"
-                                          th:classappend="${libro.estado.name() == 'activo' ? 'bg-success' : 'bg-danger'}"
-                                          th:text="${libro.estado.name()}">ESTADO</span>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a th:href="@{/libros/detalle(id=${libro.id_libro})}" class="btn btn-outline-primary" title="Ver detalle">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+        <!-- Mensaje de construcción -->
+        <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+            <div class="text-center">
+                <i class="bi bi-tools display-1 text-primary mb-4"></i>
+                <h3 class="text-muted mb-3">Dashboard en Construcción</h3>
+                <p class="text-muted lead">
+                    Estamos trabajando en mostrar el catálogo completo de libros 
+                    disponibles en nuestra librería.
+                </p>
+                <div class="mt-4">
+                    <div class="spinner-border text-primary me-2" role="status" style="animation-duration: 10s;">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <span class="text-muted">Próximamente disponible...</span>
                 </div>
             </div>
         </div>
