@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class UsuarioController {
@@ -62,6 +63,50 @@ public class UsuarioController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/registro";
+        }
+    }
+    
+    @GetMapping("/usuarios")
+    public String mostrarUsuarios(Model model) {
+        model.addAttribute("usuarios", usuarioService.obtenerTodosLosUsuarios());
+        
+        // Configurar columnas para la tabla
+        List<Object> columnas = Arrays.asList(
+            Map.of("label", "ID", "getter", "id_usuario", "type", "text"),
+            Map.of("label", "Usuario", "getter", "nombre_usuario", "type", "strong"),
+            Map.of("label", "Email", "getter", "email", "type", "text"),
+            Map.of("label", "Nombre Completo", "getter", "nombre_completo", "type", "text"),
+            Map.of("label", "Tipo", "getter", "tipo_usuario", "type", "badge", "badgeClass", "bg-primary"),
+            Map.of("label", "Estado", "getter", "estado", "type", "conditional-badge"),
+            Map.of("label", "Teléfono", "getter", "telefono", "type", "text")
+        );
+        model.addAttribute("columnas", columnas);
+        
+        return "usuario/administrar-usuarios";
+    }
+    
+    @GetMapping("/usuarios/nuevo")
+    public String mostrarRegistroInterno(Model model) {
+        model.addAttribute("usuario", new Usuario());
+        // Para registro interno, permitir todos los tipos
+        model.addAttribute("tiposUsuario", TipoUsuario.values());
+        return "usuario/registro-interno-sistema";
+    }
+    
+    @PostMapping("/usuarios/nuevo")
+    public String procesarRegistroInterno(@ModelAttribute Usuario usuario, 
+                                         RedirectAttributes redirectAttributes,
+                                         Model model) {
+        try {
+            usuarioService.crearUsuario(usuario);
+            redirectAttributes.addFlashAttribute("mensaje", "Usuario creado exitosamente");
+            return "redirect:/usuarios";
+        } catch (RuntimeException e) {
+            // En lugar de redirigir, volver a mostrar el formulario con los datos
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("usuario", usuario); // Preservar los datos
+            model.addAttribute("tiposUsuario", TipoUsuario.values());
+            return "usuario/registro-interno-sistema"; // Volver al formulario sin redirect
         }
     }
 }
