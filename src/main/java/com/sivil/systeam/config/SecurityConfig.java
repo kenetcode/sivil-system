@@ -25,8 +25,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                // Permitir acceso libre al login y recursos estáticos
-                .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
+                // Permitir acceso libre al login, registro y recursos estáticos
+                .requestMatchers("/login", "/registro", "/css/**", "/js/**", "/images/**").permitAll()
                 // Cualquier otra ruta requiere autenticación
                 .anyRequest().authenticated()
             )

@@ -161,9 +161,13 @@
                         <h4><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</h4>
                     </div>
                     <div class="card-body p-4">
-                        <!-- Mensaje de error -->
+                        <!-- Mensajes -->
                         <div th:if="${error}" class="alert alert-danger" role="alert">
                             <i class="bi bi-exclamation-triangle"></i> <span th:text="${error}"></span>
+                        </div>
+                        
+                        <div th:if="${mensaje}" class="alert alert-success" role="alert">
+                            <i class="bi bi-check-circle"></i> <span th:text="${mensaje}"></span>
                         </div>
 
                         <!-- Formulario de login -->
@@ -193,8 +197,18 @@
 
                         </form>
 
+                        <!-- Enlaces -->
+                        <div class="text-center mt-3">
+                            <p class="mb-0">
+                                ¿No tienes cuenta? 
+                                <a th:href="@{/registro}" class="text-decoration-none fw-bold">
+                                    <i class="bi bi-person-plus"></i> Crear Cuenta
+                                </a>
+                            </p>
+                        </div>
+
                         <!-- Footer del formulario -->
-                        <div class="text-center">
+                        <div class="text-center mt-3">
                             <small class="text-security">
                                 <i class="bi bi-shield-check text-security"></i> 
                                 Acceso seguro al sistema
