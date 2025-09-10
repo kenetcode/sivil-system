@@ -7,22 +7,54 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
 public interface LibroRepository extends JpaRepository<Libro, Integer> {
 
-    // Métodos básicos que se heredan automáticamente:
-    // - findAll() - todos los libros
-    // - findById(Integer id) - libro por ID
-    // - save(Libro libro) - guardar libro
-    // - deleteById(Integer id) - eliminar por ID
+    // ======== VALIDACIONES / BÚSQUEDAS DIRECTAS (con underscore) ========
+    @Query("SELECT (COUNT(l) > 0) FROM Libro l WHERE l.codigo_libro = :codigo")
+    boolean existsByCodigo_libro(@Param("codigo") String codigo_libro);
 
-    // Métodos personalizados
-    List<Libro> findByEstado(Estado estado);
-    List<Libro> findByCategoria(String categoria);
-    List<Libro> findByTituloContainingIgnoreCase(String titulo);
-    List<Libro> findByAutorContainingIgnoreCase(String autor);
-    @Query("SELECT l FROM Libro l WHERE l.cantidad_stock > :cantidad")
-    List<Libro> findByCantidad_stockGreaterThan(@Param("cantidad") Integer cantidad);
+    @Query("SELECT l FROM Libro l WHERE l.codigo_libro = :codigo AND l.estado = :estado")
+    Libro findByCodigo_libroAndEstado(@Param("codigo") String codigo_libro, @Param("estado") Estado estado);
+
+    // ======== LISTADOS ORDENADOS (fecha_creacion tiene underscore) ========
+    @Query("SELECT l FROM Libro l WHERE l.estado = :estado ORDER BY l.fecha_creacion DESC")
+    List<Libro> findByEstadoOrderByFecha_creacionDesc(@Param("estado") Estado estado);
+
+    // ======== BÚSQUEDAS DE TEXTO (sin underscore) ========
+    List<Libro> findByTituloContainingIgnoreCaseAndEstado(String titulo, Estado estado);
+    List<Libro> findByAutorContainingIgnoreCaseAndEstado(String autor, Estado estado);
+    List<Libro> findByCategoriaAndEstado(String categoria, Estado estado);
+    List<Libro> findByEditorialContainingIgnoreCaseAndEstado(String editorial, Estado estado);
+
+    // ======== STOCK (cantidad_stock tiene underscore) ========
+    @Query("SELECT l FROM Libro l WHERE l.estado = :estado AND l.cantidad_stock > :cantidad")
+    List<Libro> findByEstadoAndCantidad_stockGreaterThan(@Param("estado") Estado estado, @Param("cantidad") int cantidad);
+
+    @Query("SELECT l FROM Libro l WHERE l.estado = :estado AND l.cantidad_stock < :cantidad")
+    List<Libro> findByEstadoAndCantidad_stockLessThan(@Param("estado") Estado estado, @Param("cantidad") int cantidad);
+
+    @Query("SELECT l FROM Libro l WHERE l.estado = :estado AND l.cantidad_stock = :cantidad")
+    List<Libro> findByEstadoAndCantidad_stock(@Param("estado") Estado estado, @Param("cantidad") int cantidad);
+
+    @Query("SELECT l FROM Libro l WHERE l.estado = :estado ORDER BY l.cantidad_stock ASC")
+    List<Libro> findByEstadoOrderByCantidad_stockAsc(@Param("estado") Estado estado);
+
+    // ======== ESTADÍSTICAS (tipos correctos) ========
+    long countByEstado(Estado estado);
+
+    @Query("SELECT COUNT(l) FROM Libro l WHERE l.estado = :estado AND l.cantidad_stock < :cantidad")
+    long countByEstadoAndCantidad_stockLessThan(@Param("estado") Estado estado, @Param("cantidad") int cantidad);
+
+    @Query("SELECT COUNT(l) FROM Libro l WHERE l.estado = :estado AND l.cantidad_stock = :cantidad")
+    long countByEstadoAndCantidad_stock(@Param("estado") Estado estado, @Param("cantidad") int cantidad);
+
+    @Query("SELECT SUM(l.cantidad_stock) FROM Libro l WHERE l.estado = :estado")
+    Long sumCantidadStockByEstado(@Param("estado") Estado estado);
+
+    @Query("SELECT SUM(l.precio * l.cantidad_stock) FROM Libro l WHERE l.estado = :estado")
+    BigDecimal sumValorInventarioByEstado(@Param("estado") Estado estado);
 }
