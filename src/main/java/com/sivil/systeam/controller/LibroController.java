@@ -70,4 +70,7 @@ public class LibroController {
         List<Libro> libros = libroService.obtenerLibrosConStock();
         return ResponseEntity.ok(libros);
     }
+    ///////////////////
+
+
 }
