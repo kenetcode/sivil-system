@@ -173,7 +173,7 @@ public class InventarioController {
      * Por ahora redirige al inventario principal
      */
     @GetMapping("/libros/{id}")
-    public String verLibro(@PathVariable Integer id, Model model) {
+    public String verLibro(@PathVariable("id") Integer id, Model model) {
         try {
             // TODO: Implementar vista de detalles de libro individual
             // Buscar libro por ID y mostrar información completa
@@ -190,7 +190,7 @@ public class InventarioController {
      * Por ahora redirige al inventario principal
      */
     @GetMapping("/libros/{id}/editar")
-    public String editarLibro(@PathVariable Integer id, Model model) {
+    public String editarLibro(@PathVariable("id") Integer id, Model model) {
         try {
             // TODO: Implementar HU014 - formulario de edición
             // 1. Buscar libro por ID
@@ -198,6 +198,41 @@ public class InventarioController {
             // 3. Permitir editar (excepto código si ya tiene ventas)
             return "redirect:/stock";
         } catch (Exception e) {
+            return "redirect:/stock";
+        }
+    }
+
+    /**
+     * ELIMINAR LIBRO DEL INVENTARIO
+     * Mapea: GET /libros/{id}/eliminar
+     * 
+     * Elimina físicamente el libro de la base de datos
+     * 
+     * @param id - ID del libro a eliminar
+     * @param redirectAttributes - Para mensajes flash
+     * @return Redirección al inventario principal
+     */
+    @GetMapping("/libros/{id}/eliminar")
+    public String eliminarLibro(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            // Eliminar el libro del inventario
+            inventarioService.eliminarLibro(id);
+            
+            // Mensaje de confirmación
+            redirectAttributes.addFlashAttribute("ok", 
+                    "Libro eliminado exitosamente del inventario");
+            
+            return "redirect:/stock";
+            
+        } catch (IllegalArgumentException e) {
+            // Error específico: libro no encontrado
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/stock";
+            
+        } catch (Exception e) {
+            // Cualquier otro error
+            redirectAttributes.addFlashAttribute("error", 
+                    "Error al eliminar el libro: " + e.getMessage());
             return "redirect:/stock";
         }
     }
@@ -216,7 +251,7 @@ public class InventarioController {
      */
     @GetMapping("/api/libros/verificar-codigo")
     @ResponseBody // Indica que la respuesta es JSON, no una vista HTML
-    public boolean verificarCodigoDisponible(@RequestParam String codigo) {
+    public boolean verificarCodigoDisponible(@RequestParam("codigo") String codigo) {
         try {
             // Consultar si existe un libro con ese código
             // Retornar true si NO existe (está disponible), false si ya existe

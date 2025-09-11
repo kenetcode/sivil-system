@@ -170,4 +170,28 @@ public class InventarioService {
         libro.setCantidad_stock(libro.getCantidad_stock() + cantidadAgregar);
         inventarioRepository.save(libro);
     }
+
+    // ============================================================
+    // ELIMINACIÓN DE LIBROS
+    // ============================================================
+
+    public void eliminarLibro(Integer id) {
+        Optional<Libro> libro = inventarioRepository.findById(id);
+        if (libro.isEmpty()) {
+            throw new IllegalArgumentException("No se encontró el libro con ID: " + id);
+        }
+        
+        // Eliminación física del libro de la base de datos
+        inventarioRepository.deleteById(id);
+    }
+
+    public void eliminarLibroPorCodigo(String codigo_libro) {
+        Libro libro = buscarPorCodigoLibro(codigo_libro);
+        if (libro == null) {
+            throw new IllegalArgumentException("No se encontró el libro con código: " + codigo_libro);
+        }
+        
+        // Eliminación física del libro de la base de datos
+        inventarioRepository.delete(libro);
+    }
 }
