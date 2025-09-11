@@ -33,7 +33,7 @@ public class LibroController {
 
     // GET /api/libros/{id} - Obtener libro por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Libro> obtenerLibroPorId(@PathVariable Integer id) {
+    public ResponseEntity<Libro> obtenerLibroPorId(@PathVariable("id") Integer id) {
         Optional<Libro> libro = libroService.obtenerLibroPorId(id);
 
         if (libro.isPresent()) {
@@ -45,21 +45,21 @@ public class LibroController {
 
     // GET /api/libros/categoria/{categoria} - Libros por categoría
     @GetMapping("/categoria/{categoria}")
-    public ResponseEntity<List<Libro>> obtenerPorCategoria(@PathVariable String categoria) {
+    public ResponseEntity<List<Libro>> obtenerPorCategoria(@PathVariable("categoria") String categoria) {
         List<Libro> libros = libroService.obtenerLibrosPorCategoria(categoria);
         return ResponseEntity.ok(libros);
     }
 
     // GET /api/libros/buscar/titulo?q=... - Buscar por título
     @GetMapping("/buscar/titulo")
-    public ResponseEntity<List<Libro>> buscarPorTitulo(@RequestParam String q) {
+    public ResponseEntity<List<Libro>> buscarPorTitulo(@RequestParam("q") String q) {
         List<Libro> libros = libroService.buscarPorTitulo(q);
         return ResponseEntity.ok(libros);
     }
 
     // GET /api/libros/buscar/autor?q=... - Buscar por autor
     @GetMapping("/buscar/autor")
-    public ResponseEntity<List<Libro>> buscarPorAutor(@RequestParam String q) {
+    public ResponseEntity<List<Libro>> buscarPorAutor(@RequestParam("q") String q) {
         List<Libro> libros = libroService.buscarPorAutor(q);
         return ResponseEntity.ok(libros);
     }

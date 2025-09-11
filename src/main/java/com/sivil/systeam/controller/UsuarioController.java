@@ -23,7 +23,7 @@ public class UsuarioController {
     private UsuarioService usuarioService;
     
     @GetMapping("/login")
-    public String mostrarLogin(@RequestParam(required = false) String error, Model model) {
+    public String mostrarLogin(@RequestParam(value = "error", required = false) String error, Model model) {
         if ("credenciales".equals(error)) {
             model.addAttribute("error", "Email o contraseña incorrectos");
         } else if ("sistema".equals(error)) {
@@ -43,13 +43,13 @@ public class UsuarioController {
     
     @GetMapping("/validar-nombre-usuario")
     @ResponseBody
-    public boolean validarNombreUsuario(@RequestParam String nombre_usuario) {
+    public boolean validarNombreUsuario(@RequestParam("nombre_usuario") String nombre_usuario) {
         return !usuarioService.existeNombreUsuario(nombre_usuario);
     }
     
     @GetMapping("/validar-email")
     @ResponseBody
-    public boolean validarEmail(@RequestParam String email) {
+    public boolean validarEmail(@RequestParam("email") String email) {
         return !usuarioService.existeEmail(email);
     }
     
