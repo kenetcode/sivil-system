@@ -83,8 +83,8 @@ public class InventarioController {
         // Thymeleaf usará: th:object="${form}" y th:field="*{codigo_libro}"
         model.addAttribute("form", new Libro());
 
-        // Retornar vista del formulario (templates/Libros/nuevo.html)
-        return "Libros/nuevo";
+        // Retornar vista del formulario (templates/libro/nuevo.html)
+        return "libro/nuevo";
     }
 
     /**
@@ -118,7 +118,7 @@ public class InventarioController {
                 model.addAttribute("form", libro); // Mantener datos del usuario
                 // Spring automáticamente pasará los errores a la vista
                 // Thymeleaf los mostrará con: th:errors="*{campo}"
-                return "Libros/nuevo"; // Regresar al formulario con errores visibles
+                return "libro/nuevo"; // Regresar al formulario con errores visibles
             }
 
             // CRITERIO DE ACEPTACIÓN: VALIDACIÓN DE CÓDIGO ÚNICO
@@ -130,7 +130,7 @@ public class InventarioController {
                         "El código del libro '" + libro.getCodigo_libro() +
                                 "' ya existe en el sistema");
                 model.addAttribute("form", libro); // Mantener otros datos del formulario
-                return "Libros/nuevo"; // Volver al formulario con error de código duplicado
+                return "libro/nuevo"; // Volver al formulario con error de código duplicado
             }
 
             // CRITERIO DE ACEPTACIÓN: REGISTRO EXITOSO
@@ -156,13 +156,13 @@ public class InventarioController {
             // - Stock negativo
             model.addAttribute("error", e.getMessage());
             model.addAttribute("form", libro); // Mantener datos del formulario
-            return "Libros/nuevo"; // Volver al formulario con error específico
+            return "libro/nuevo"; // Volver al formulario con error específico
 
         } catch (Exception e) {
             // Cualquier otro error no previsto (BD desconectada, etc.)
             model.addAttribute("error", "Error interno del servidor: " + e.getMessage());
             model.addAttribute("form", libro);
-            return "Libros/nuevo";
+            return "libro/nuevo";
         }
     }
 
@@ -203,36 +203,88 @@ public class InventarioController {
     }
 
     /**
-     * ELIMINAR LIBRO DEL INVENTARIO
+     * MOSTRAR PÁGINA DE CONFIRMACIÓN PARA ELIMINAR LIBRO
      * Mapea: GET /libros/{id}/eliminar
      * 
-     * Elimina físicamente el libro de la base de datos
+     * Muestra la página de confirmación con los datos del libro
+     * Valida que el libro exista y tenga stock cero antes de mostrar la confirmación
+     * 
+     * @param id - ID del libro a eliminar
+     * @param model - Para pasar datos a la vista
+     * @param redirectAttributes - Para mensajes flash en caso de error
+     * @return Vista de confirmación o redirección al inventario con error
+     */
+    @GetMapping("/libros/{id}/eliminar")
+    public String mostrarConfirmacionEliminacion(@PathVariable("id") Integer id, 
+                                               Model model, 
+                                               RedirectAttributes redirectAttributes) {
+        try {
+            // Obtener el libro para mostrar en la confirmación
+            var libroOpt = inventarioService.obtenerLibroPorId(id);
+            if (libroOpt.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Libro no encontrado");
+                return "redirect:/stock";
+            }
+            
+            Libro libro = libroOpt.get();
+            
+            // Validar que el libro esté activo
+            if (libro.getEstado() != com.sivil.systeam.enums.Estado.activo) {
+                redirectAttributes.addFlashAttribute("error", 
+                        "No se puede eliminar: el libro no está activo");
+                return "redirect:/stock";
+            }
+            
+            // Validar que el stock sea cero
+            if (libro.getCantidad_stock() > 0) {
+                redirectAttributes.addFlashAttribute("error", 
+                        "No se puede eliminar: tiene " + libro.getCantidad_stock() + " unidades en stock");
+                return "redirect:/stock";
+            }
+            
+            // Si todas las validaciones pasan, mostrar página de confirmación
+            model.addAttribute("libro", libro);
+            return "libro/confirmar-eliminacion";
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                    "Error del sistema: " + e.getMessage());
+            return "redirect:/stock";
+        }
+    }
+
+    /**
+     * PROCESAR ELIMINACIÓN CONFIRMADA DEL LIBRO
+     * Mapea: POST /libros/{id}/eliminar/confirmar
+     * 
+     * Elimina físicamente el libro de la base de datos después de la confirmación
      * 
      * @param id - ID del libro a eliminar
      * @param redirectAttributes - Para mensajes flash
      * @return Redirección al inventario principal
      */
-    @GetMapping("/libros/{id}/eliminar")
-    public String eliminarLibro(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
+    @PostMapping("/libros/{id}/eliminar/")
+    public String confirmarEliminacionLibro(@PathVariable("id") Integer id, 
+                                          RedirectAttributes redirectAttributes) {
         try {
             // Eliminar el libro del inventario
             inventarioService.eliminarLibro(id);
             
             // Mensaje de confirmación
             redirectAttributes.addFlashAttribute("ok", 
-                    "Libro eliminado exitosamente del inventario");
+                    "Libro eliminado correctamente");
             
             return "redirect:/stock";
             
         } catch (IllegalArgumentException e) {
-            // Error específico: libro no encontrado
+            // Errores de validación del servicio
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/stock";
             
         } catch (Exception e) {
-            // Cualquier otro error
+            // Cualquier otro error técnico
             redirectAttributes.addFlashAttribute("error", 
-                    "Error al eliminar el libro: " + e.getMessage());
+                    "Error del sistema: " + e.getMessage());
             return "redirect:/stock";
         }
     }

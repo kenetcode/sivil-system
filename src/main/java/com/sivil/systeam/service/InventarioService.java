@@ -176,9 +176,22 @@ public class InventarioService {
     // ============================================================
 
     public void eliminarLibro(Integer id) {
-        Optional<Libro> libro = inventarioRepository.findById(id);
-        if (libro.isEmpty()) {
-            throw new IllegalArgumentException("No se encontró el libro con ID: " + id);
+        Optional<Libro> libroOpt = inventarioRepository.findById(id);
+        if (libroOpt.isEmpty()) {
+            throw new IllegalArgumentException("Libro no encontrado");
+        }
+        
+        Libro libro = libroOpt.get();
+        
+        // Validar que el libro esté activo
+        if (libro.getEstado() != Estado.activo) {
+            throw new IllegalArgumentException("No se puede eliminar: el libro no está activo");
+        }
+        
+        // Validar que el stock sea cero
+        if (libro.getCantidad_stock() > 0) {
+            throw new IllegalArgumentException("No se puede eliminar: tiene " + 
+                    libro.getCantidad_stock() + " unidades en stock");
         }
         
         // Eliminación física del libro de la base de datos

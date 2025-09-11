@@ -21,6 +21,9 @@
 
     <!-- Mensaje de éxito -->
     <div th:if="${ok}" class="alert alert-success" th:text="${ok}"></div>
+    
+    <!-- Mensaje de error -->
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
     <!-- Tabla -->
     <div class="table-responsive">
