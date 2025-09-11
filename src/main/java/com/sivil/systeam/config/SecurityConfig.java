@@ -18,7 +18,7 @@ public class SecurityConfig {
                 // Permitir acceso público a recursos estáticos
                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                 // Permitir acceso público a las vistas
-                .requestMatchers("/", "/libros/**", "libro/lista").permitAll()
+                .requestMatchers("/", "/libros/**", "/libro/lista").permitAll()
                 // Permitir acceso público a la API (por ahora para desarrollo)
                 .requestMatchers("/api/**").permitAll()
                 // Cualquier otra petición requiere autenticación
