@@ -1,28 +1,58 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body>
-    <footer th:fragment="footer" class="bg-dark text-light py-4 mt-5">
+    <footer th:fragment="footer" class="bg-dark text-light py-1 mt-auto">
         <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>Sistema SIVIL</h5>
-                    <p class="mb-0">Sistema de Venta de Libros - Presencial y Online</p>
-                    <small class="text-muted">© 2025 Todos los derechos reservados</small>
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-book-fill me-2 fs-3 text-primary"></i>
+                        <div>
+                            <h6 class="mb-0">Sistema SIVIL</h6>
+                            <small class="text-muted d-block">Sistema Integral de Venta de Libros</small>
+                            <small class="text-muted d-block">Librería Digital y Presencial</small>
+                            <small class="text-info mt-1 d-block">
+                                <i class="bi bi-clock me-1"></i>Lun-Sáb: 8:00 AM - 6:00 PM
+                            </small>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <h6>Enlaces</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-light text-decoration-none">Soporte</a></li>
-                        <li><a href="#" class="text-light text-decoration-none">Documentación</a></li>
-                        <li><a href="#" class="text-light text-decoration-none">API</a></li>
-                    </ul>
+                <div class="col-md-4">
+                    <h6 class="mb-0 mt-2">Información</h6>
+                    <div class="d-flex flex-column gap-1">
+                        <small class="text-light">
+                            <i class="bi bi-geo-alt me-2"></i>Centro Comercial Metrocentro, Local 245
+                        </small>
+                        <small class="text-light">
+                            <i class="bi bi-geo me-2"></i>San Salvador, El Salvador
+                        </small>
+                        <small class="text-light">
+                            <i class="bi bi-truck me-2"></i>Entregas a domicilio disponibles
+                        </small>
+                        <a href="#" class="text-primary text-decoration-none small">
+                            <i class="bi bi-question-circle me-1"></i>Centro de Ayuda
+                        </a>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <h6>Contacto</h6>
-                    <small class="text-muted">
-                        Email: info@sivil.com<br>
-                        Tel: +503 1234-5678
-                    </small>
+                <div class="col-md-4">
+                    <h6 class="mb-0 mt-3">Contacto</h6>
+                    <div class="d-flex flex-column gap-1">
+                        <small class="text-light">
+                            <i class="bi bi-envelope me-2"></i>contacto@sivil.com.sv
+                        </small>
+                        <small class="text-light">
+                            <i class="bi bi-telephone me-2"></i>+503 2245-8900
+                        </small>
+                        <small class="text-light">
+                            <i class="bi bi-whatsapp me-2"></i>+503 7123-4567
+                        </small>
+                        <small class="text-success">
+                            <i class="bi bi-shield-check me-2"></i>Pagos seguros SSL
+                        </small>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">© 2025 Sistema SIVIL - Todos los derechos reservados</small>
+                    </div>
                 </div>
             </div>
         </div>

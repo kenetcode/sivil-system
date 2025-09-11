@@ -1,45 +1,77 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body>
-    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light border-bottom fixed-top" style="top: 90px; z-index: 1020;">
         <div class="container">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/}">
-                            <i class="bi bi-house"></i> Inicio
+                    <li class="nav-item me-2">
+                        <a class="nav-link btn btn-outline-primary rounded-pill px-3 py-2" th:href="@{/}" 
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#0d6efd'; this.style.borderColor='#0d6efd'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#0d6efd'; this.style.color='#0d6efd';">
+                            <i class="bi bi-house me-1"></i> Inicio
                         </a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-book"></i> Libros
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" th:href="@{/libros}">Ver Todos</a></li>
-                            <li><a class="dropdown-item" th:href="@{/libros/activos}">Libros Activos</a></li>
-                            <li><a class="dropdown-item" th:href="@{/libros/disponibles}">Disponibles</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" th:href="@{/libros/buscar}">Buscar Libros</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-cart"></i> Ventas
+                    <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                        <a class="nav-link btn btn-outline-success rounded-pill px-3 py-2" href="#"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#198754'; this.style.borderColor='#198754'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#198754'; this.style.color='#198754';">
+                            <i class="bi bi-cash-register me-1"></i> Punto de Venta
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-bag"></i> Compras
+                    <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                        <a class="nav-link btn btn-outline-info rounded-pill px-3 py-2" href="#"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#0dcaf0'; this.style.borderColor='#0dcaf0'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#0dcaf0'; this.style.color='#0dcaf0';">
+                            <i class="bi bi-shop me-1"></i> Compras Online
+                        </a>
+                    </li>
+                    <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                        <a class="nav-link btn btn-outline-warning rounded-pill px-3 py-2" href="#"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#ffc107'; this.style.borderColor='#ffc107'; this.style.color='black';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#ffc107'; this.style.color='#ffc107';">
+                            <i class="bi bi-credit-card me-1"></i> Gestión de Pagos
+                        </a>
+                    </li>
+                    <li class="nav-item me-2"
+                        th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                        <a class="nav-link btn btn-outline-secondary rounded-pill px-3 py-2"
+                           th:href="@{/stock}"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#6c757d'; this.style.borderColor='#6c757d'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#6c757d'; this.style.color='#6c757d';">
+                            <i class="bi bi-boxes me-1"></i> Stock
+                        </a>
+                    </li>
+
+                    <!-- <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                         <a class="nav-link btn btn-outline-secondary rounded-pill px-3 py-2" href="#"
+                            style="text-decoration: none;"
+                            onmouseover="this.style.backgroundColor='#6c757d'; this.style.borderColor='#6c757d'; this.style.color='white';"
+                            onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#6c757d'; this.style.color='#6c757d';">
+                             <i class="bi bi-boxes me-1"></i> Stock
+                         </a>
+                     </li>-->
+                    <li class="nav-item me-2" th:if="${currentUser != null and currentUser.tipo_usuario.name() == 'admin'}">
+                        <a class="nav-link btn btn-outline-danger rounded-pill px-3 py-2" th:href="@{/usuarios}"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#dc3545'; this.style.borderColor='#dc3545'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#dc3545'; this.style.color='#dc3545';">
+                            <i class="bi bi-people me-1"></i> Administrar Usuarios
                         </a>
                     </li>
                 </ul>
                 <div class="d-flex">
-                    <form class="d-flex me-3">
-                        <input class="form-control me-2" type="search" placeholder="Buscar..." id="searchInput">
-                        <button class="btn btn-outline-primary" type="button" onclick="buscarLibros()">
+                    <form class="d-flex">
+                        <input class="form-control form-control-sm me-1" type="search" placeholder="Buscar..." id="searchInput" style="width: 200px;">
+                        <button class="btn btn-outline-primary btn-sm" type="button" onclick="buscarLibros()">
                             <i class="bi bi-search"></i>
                         </button>
                     </form>
