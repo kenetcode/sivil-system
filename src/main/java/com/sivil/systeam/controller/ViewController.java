@@ -1,15 +1,11 @@
 package com.sivil.systeam.controller;
 
 import com.sivil.systeam.entity.Libro;
-import com.sivil.systeam.entity.Usuario;
-import com.sivil.systeam.service.LibroService;
-import jakarta.servlet.http.HttpSession;
+import com.sivil.systeam.service.InventarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.*;
 
@@ -21,7 +17,7 @@ import java.util.*;
 public class ViewController {
 
     @Autowired
-    private LibroService libroService;
+    private InventarioService inventarioService;
 
     /**
      * Página principal del sistema
@@ -29,7 +25,7 @@ public class ViewController {
     @GetMapping("/")
     public String index(Model model) {
         // Obtener todos los libros y pasarlos al modelo
-        List<Libro> libros = libroService.obtenerLibrosActivos();
+        List<Libro> libros = inventarioService.obtenerLibrosActivos();
         model.addAttribute("libros", libros);
         return "index";
     }

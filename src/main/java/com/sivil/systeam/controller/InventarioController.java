@@ -1,8 +1,7 @@
 package com.sivil.systeam.controller;
 
 import com.sivil.systeam.entity.Libro;
-import com.sivil.systeam.enums.Estado;
-import com.sivil.systeam.service.LibroService;
+import com.sivil.systeam.service.InventarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,7 +27,7 @@ public class InventarioController {
 
     // Inyección de dependencia del servicio que maneja la lógica de negocio de libros
     @Autowired
-    private LibroService libroService;
+    private InventarioService inventarioService;
 
     /**
      * MOSTRAR PÁGINA PRINCIPAL DEL INVENTARIO
@@ -43,7 +42,7 @@ public class InventarioController {
         try {
             // Obtener todos los libros con estado "activo" desde la base de datos
             // El service se conecta al repository que hace la consulta SQL
-            List<Libro> libros = libroService.obtenerTodosLosLibros();
+            List<Libro> libros = inventarioService.obtenerTodosLosLibros();
 
             // Agregar la lista de libros al modelo para que Thymeleaf pueda acceder
             // En la vista HTML usaremos: th:each="l : ${libros}"
@@ -124,7 +123,7 @@ public class InventarioController {
 
             // CRITERIO DE ACEPTACIÓN: VALIDACIÓN DE CÓDIGO ÚNICO
             // Verificar que no exista otro libro con el mismo código en la BD
-            if (libroService.existePorCodigoLibro(libro.getCodigo_libro())) {
+            if (inventarioService.existePorCodigoLibro(libro.getCodigo_libro())) {
                 // Si el código ya existe, mostrar mensaje de error específico
                 // Este es un error de negocio, no de validación de campo
                 model.addAttribute("error",
@@ -136,7 +135,7 @@ public class InventarioController {
 
             // CRITERIO DE ACEPTACIÓN: REGISTRO EXITOSO
             // Si llegamos aquí: campos válidos + código único = guardar libro
-            Libro libroGuardado = libroService.guardarLibro(libro);
+            Libro libroGuardado = inventarioService.guardarLibro(libro);
             // El service establecerá estado=activo y validará reglas de negocio
 
             // CRITERIO DE ACEPTACIÓN: MENSAJE DE CONFIRMACIÓN CON CÓDIGO GENERADO
@@ -221,7 +220,7 @@ public class InventarioController {
         try {
             // Consultar si existe un libro con ese código
             // Retornar true si NO existe (está disponible), false si ya existe
-            return !libroService.existePorCodigoLibro(codigo);
+            return !inventarioService.existePorCodigoLibro(codigo);
         } catch (Exception e) {
             // En caso de error (BD desconectada, etc.), asumir no disponible
             // Es más seguro fallar hacia el lado de "no disponible"
@@ -245,12 +244,12 @@ public class InventarioController {
         try {
             // Búsqueda por diferentes criterios según parámetros recibidos
             if (categoria != null && !categoria.trim().isEmpty()) {
-                return libroService.obtenerLibrosPorCategoria(categoria);
+                return inventarioService.obtenerLibrosPorCategoria(categoria);
             } else if (autor != null && !autor.trim().isEmpty()) {
-                return libroService.buscarPorAutor(autor);
+                return inventarioService.buscarPorAutor(autor);
             } else {
                 // Por defecto, retornar todos los libros activos
-                return libroService.obtenerLibrosActivos();
+                return inventarioService.obtenerLibrosActivos();
             }
         } catch (Exception e) {
             // En caso de error, retornar lista vacía en lugar de excepción
@@ -270,7 +269,7 @@ public class InventarioController {
     public String librosStockBajo(Model model) {
         try {
             // Obtener libros con stock crítico (menos de 5 unidades)
-            List<Libro> librosStockBajo = libroService.obtenerLibrosStockBajo();
+            List<Libro> librosStockBajo = inventarioService.obtenerLibrosStockBajo();
 
             // Usar la misma plantilla HTML pero con datos filtrados
             model.addAttribute("libros", librosStockBajo);
@@ -304,7 +303,7 @@ public class InventarioController {
         try {
             // Obtener estadísticas calculadas desde el servicio
             // El service hace consultas agregadas a la base de datos
-            var estadisticas = libroService.obtenerEstadisticasInventario();
+            var estadisticas = inventarioService.obtenerEstadisticasInventario();
             model.addAttribute("estadisticas", estadisticas);
 
             // Vista específica para estadísticas

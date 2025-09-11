@@ -79,5 +79,167 @@
             </div>
         </div>
     </nav>
+
+    <style>
+        /* Override Bootstrap y estilos inline para mantener estado activo persistente */
+        .nav-link.btn {
+            transition: all 0.3s ease !important;
+        }
+        
+        /* Estados hover normales - para que funcionen los onmouseover existentes */
+        .nav-link.btn.btn-outline-primary:hover:not(.active) {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            color: white !important;
+        }
+        .nav-link.btn.btn-outline-success:hover:not(.active) {
+            background-color: #198754 !important;
+            border-color: #198754 !important;
+            color: white !important;
+        }
+        .nav-link.btn.btn-outline-info:hover:not(.active) {
+            background-color: #0dcaf0 !important;
+            border-color: #0dcaf0 !important;
+            color: white !important;
+        }
+        .nav-link.btn.btn-outline-warning:hover:not(.active) {
+            background-color: #ffc107 !important;
+            border-color: #ffc107 !important;
+            color: black !important;
+        }
+        .nav-link.btn.btn-outline-secondary:hover:not(.active) {
+            background-color: #6c757d !important;
+            border-color: #6c757d !important;
+            color: white !important;
+        }
+        .nav-link.btn.btn-outline-danger:hover:not(.active) {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: white !important;
+        }
+        
+        /* Estados activos - tienen máxima prioridad */
+        .nav-link.btn.btn-outline-primary.active,
+        .nav-link.btn.btn-outline-primary.active:hover,
+        .nav-link.btn.btn-outline-primary.active:focus,
+        .nav-link.btn.btn-outline-primary.active:active {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            color: white !important;
+            outline: none !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1) !important;
+            transform: translateY(1px) !important;
+        }
+        
+        .nav-link.btn.btn-outline-success.active,
+        .nav-link.btn.btn-outline-success.active:hover,
+        .nav-link.btn.btn-outline-success.active:focus,
+        .nav-link.btn.btn-outline-success.active:active {
+            background-color: #198754 !important;
+            border-color: #198754 !important;
+            color: white !important;
+            outline: none !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1) !important;
+            transform: translateY(1px) !important;
+        }
+        
+        .nav-link.btn.btn-outline-info.active,
+        .nav-link.btn.btn-outline-info.active:hover,
+        .nav-link.btn.btn-outline-info.active:focus,
+        .nav-link.btn.btn-outline-info.active:active {
+            background-color: #0dcaf0 !important;
+            border-color: #0dcaf0 !important;
+            color: white !important;
+            outline: none !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1) !important;
+            transform: translateY(1px) !important;
+        }
+        
+        .nav-link.btn.btn-outline-warning.active,
+        .nav-link.btn.btn-outline-warning.active:hover,
+        .nav-link.btn.btn-outline-warning.active:focus,
+        .nav-link.btn.btn-outline-warning.active:active {
+            background-color: #ffc107 !important;
+            border-color: #ffc107 !important;
+            color: black !important;
+            outline: none !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1) !important;
+            transform: translateY(1px) !important;
+        }
+        
+        .nav-link.btn.btn-outline-secondary.active,
+        .nav-link.btn.btn-outline-secondary.active:hover,
+        .nav-link.btn.btn-outline-secondary.active:focus,
+        .nav-link.btn.btn-outline-secondary.active:active {
+            background-color: #6c757d !important;
+            border-color: #6c757d !important;
+            color: white !important;
+            outline: none !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1) !important;
+            transform: translateY(1px) !important;
+        }
+        
+        .nav-link.btn.btn-outline-danger.active,
+        .nav-link.btn.btn-outline-danger.active:hover,
+        .nav-link.btn.btn-outline-danger.active:focus,
+        .nav-link.btn.btn-outline-danger.active:active {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: white !important;
+            outline: none !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1) !important;
+            transform: translateY(1px) !important;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navButtons = document.querySelectorAll('.navbar-nav .nav-link.btn');
+            
+            // Función para activar botón basado en la URL actual
+            function setActiveButton() {
+                const currentPath = window.location.pathname;
+                
+                navButtons.forEach(button => {
+                    button.classList.remove('active');
+                    
+                    // Comparar href del botón con la ruta actual
+                    if (button.href && button.href.includes(currentPath)) {
+                        button.classList.add('active');
+                    } else if (currentPath === '/' && button.href && button.href.endsWith('/')) {
+                        // Para la página de inicio
+                        button.classList.add('active');
+                    }
+                });
+            }
+            
+            // Activar botón al cargar la página
+            setActiveButton();
+            
+            // Manejar clicks en botones
+            navButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Remover clase active de todos los botones
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Agregar clase active al botón clickeado
+                    this.classList.add('active');
+                    
+                    // Guardar en localStorage para persistencia
+                    localStorage.setItem('activeNavButton', this.href || window.location.pathname);
+                });
+            });
+            
+            // Restaurar desde localStorage si no hay coincidencia por URL
+            const savedActiveButton = localStorage.getItem('activeNavButton');
+            if (savedActiveButton && !document.querySelector('.navbar-nav .nav-link.btn.active')) {
+                navButtons.forEach(button => {
+                    if (button.href === savedActiveButton) {
+                        button.classList.add('active');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

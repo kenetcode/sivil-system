@@ -2,7 +2,7 @@ package com.sivil.systeam.service;
 
 import com.sivil.systeam.entity.Libro;
 import com.sivil.systeam.enums.Estado;
-import com.sivil.systeam.repository.LibroRepository;
+import com.sivil.systeam.repository.InventarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,10 +13,10 @@ import java.util.*;
 
 @Service
 @Transactional
-public class LibroService {
+public class InventarioService {
 
     @Autowired
-    private LibroRepository libroRepository;
+    private InventarioRepository inventarioRepository;
 
     // ============================================================
     // MÉTODOS QUE USA TU LibroController
@@ -24,37 +24,37 @@ public class LibroService {
 
     @Transactional(readOnly = true)
     public List<Libro> obtenerTodosLosLibros() {
-        return libroRepository.findByEstadoOrderByFecha_creacionDesc(Estado.activo);
+        return inventarioRepository.findByEstadoOrderByFecha_creacionDesc(Estado.activo);
     }
 
     @Transactional(readOnly = true)
     public List<Libro> obtenerLibrosActivos() {
-        return libroRepository.findByEstadoOrderByFecha_creacionDesc(Estado.activo);
+        return inventarioRepository.findByEstadoOrderByFecha_creacionDesc(Estado.activo);
     }
 
     @Transactional(readOnly = true)
     public Optional<Libro> obtenerLibroPorId(Integer id) {
-        return libroRepository.findById(id);
+        return inventarioRepository.findById(id);
     }
 
     @Transactional(readOnly = true)
     public List<Libro> obtenerLibrosPorCategoria(String categoria) {
-        return libroRepository.findByCategoriaAndEstado(categoria, Estado.activo);
+        return inventarioRepository.findByCategoriaAndEstado(categoria, Estado.activo);
     }
 
     @Transactional(readOnly = true)
     public List<Libro> buscarPorTitulo(String titulo) {
-        return libroRepository.findByTituloContainingIgnoreCaseAndEstado(titulo, Estado.activo);
+        return inventarioRepository.findByTituloContainingIgnoreCaseAndEstado(titulo, Estado.activo);
     }
 
     @Transactional(readOnly = true)
     public List<Libro> buscarPorAutor(String autor) {
-        return libroRepository.findByAutorContainingIgnoreCaseAndEstado(autor, Estado.activo);
+        return inventarioRepository.findByAutorContainingIgnoreCaseAndEstado(autor, Estado.activo);
     }
 
     @Transactional(readOnly = true)
     public List<Libro> obtenerLibrosConStock() {
-        return libroRepository.findByEstadoAndCantidad_stockGreaterThan(Estado.activo, 0);
+        return inventarioRepository.findByEstadoAndCantidad_stockGreaterThan(Estado.activo, 0);
     }
 
     // ============================================================
@@ -84,18 +84,18 @@ public class LibroService {
         }
 
         // Guardar libro en BD
-        return libroRepository.save(libro);
+        return inventarioRepository.save(libro);
     }
 
 
     @Transactional(readOnly = true)
     public boolean existePorCodigoLibro(String codigo_libro) {
-        return libroRepository.existsByCodigo_libro(codigo_libro);
+        return inventarioRepository.existsByCodigo_libro(codigo_libro);
     }
 
     @Transactional(readOnly = true)
     public Libro buscarPorCodigoLibro(String codigo_libro) {
-        return libroRepository.findByCodigo_libroAndEstado(codigo_libro, Estado.activo);
+        return inventarioRepository.findByCodigo_libroAndEstado(codigo_libro, Estado.activo);
     }
 
     // ============================================================
@@ -104,26 +104,26 @@ public class LibroService {
 
     @Transactional(readOnly = true)
     public List<Libro> obtenerLibrosStockBajo() {
-        return libroRepository.findByEstadoAndCantidad_stockLessThan(Estado.activo, 5);
+        return inventarioRepository.findByEstadoAndCantidad_stockLessThan(Estado.activo, 5);
     }
 
     @Transactional(readOnly = true)
     public Map<String, Object> obtenerEstadisticasInventario() {
         Map<String, Object> stats = new HashMap<>();
 
-        long totalLibros = libroRepository.countByEstado(Estado.activo);
+        long totalLibros = inventarioRepository.countByEstado(Estado.activo);
         stats.put("totalLibros", totalLibros);
 
-        Long totalStock = libroRepository.sumCantidadStockByEstado(Estado.activo);
+        Long totalStock = inventarioRepository.sumCantidadStockByEstado(Estado.activo);
         stats.put("totalStock", totalStock != null ? totalStock : 0L);
 
-        long librosStockBajo = libroRepository.countByEstadoAndCantidad_stockLessThan(Estado.activo, 5);
+        long librosStockBajo = inventarioRepository.countByEstadoAndCantidad_stockLessThan(Estado.activo, 5);
         stats.put("librosStockBajo", librosStockBajo);
 
-        long librosSinStock = libroRepository.countByEstadoAndCantidad_stock(Estado.activo, 0);
+        long librosSinStock = inventarioRepository.countByEstadoAndCantidad_stock(Estado.activo, 0);
         stats.put("librosSinStock", librosSinStock);
 
-        BigDecimal valorInventario = libroRepository.sumValorInventarioByEstado(Estado.activo);
+        BigDecimal valorInventario = inventarioRepository.sumValorInventarioByEstado(Estado.activo);
         stats.put("valorTotalInventario", valorInventario != null ? valorInventario : BigDecimal.ZERO);
 
         return stats;
@@ -138,14 +138,14 @@ public class LibroService {
         if (libro == null) throw new IllegalArgumentException("No se encontró el libro con código: " + codigo_libro);
         if (nuevaCantidad < 0) throw new IllegalArgumentException("La cantidad no puede ser negativa");
         libro.setCantidad_stock(nuevaCantidad);
-        return libroRepository.save(libro);
+        return inventarioRepository.save(libro);
     }
 
     public Libro desactivarLibro(String codigo_libro) {
         Libro libro = buscarPorCodigoLibro(codigo_libro);
         if (libro == null) throw new IllegalArgumentException("No se encontró el libro con código: " + codigo_libro);
         libro.setEstado(Estado.inactivo);
-        return libroRepository.save(libro);
+        return inventarioRepository.save(libro);
     }
 
     @Transactional(readOnly = true)
@@ -161,13 +161,13 @@ public class LibroService {
             throw new IllegalArgumentException("Stock insuficiente. Disponible: " + libro.getCantidad_stock());
         }
         libro.setCantidad_stock(libro.getCantidad_stock() - cantidadVendida);
-        libroRepository.save(libro);
+        inventarioRepository.save(libro);
     }
 
     public void incrementarStock(String codigo_libro, int cantidadAgregar) {
         Libro libro = buscarPorCodigoLibro(codigo_libro);
         if (libro == null) throw new IllegalArgumentException("No se encontró el libro con código: " + codigo_libro);
         libro.setCantidad_stock(libro.getCantidad_stock() + cantidadAgregar);
-        libroRepository.save(libro);
+        inventarioRepository.save(libro);
     }
 }

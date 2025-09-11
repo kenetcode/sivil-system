@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
-public interface LibroRepository extends JpaRepository<Libro, Integer> {
+public interface InventarioRepository extends JpaRepository<Libro, Integer> {
 
     // ======== VALIDACIONES / BÚSQUEDAS DIRECTAS (con underscore) ========
     @Query("SELECT (COUNT(l) > 0) FROM Libro l WHERE l.codigo_libro = :codigo")
