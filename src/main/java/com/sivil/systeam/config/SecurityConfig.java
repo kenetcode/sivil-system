@@ -1,5 +1,6 @@
 package com.sivil.systeam.config;
 
+
 import com.sivil.systeam.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+
 
 @Configuration
 @EnableWebSecurity
@@ -68,7 +70,6 @@ public class SecurityConfig {
 
         return new ProviderManager(authProvider);
     }
-
 
 
 

@@ -185,7 +185,32 @@
               body: JSON.stringify(body)
             });
 
-            if (!res.ok) throw new Error(await res.text() || "Error al confirmar");
+      if (!res.ok) {
+  let err;
+  try {
+    err = await res.json();
+  } catch {
+    err = { message: "Error inesperado" };
+  }
+
+  if (res.status === 409 && err.message?.includes("Stock insuficiente")) {
+    toast('warn', err.message);
+
+    // Buscar el máximo disponible en el mensaje
+    const regex = /Máximo disponible:\s*(\d+)/;
+    const match = err.message.match(regex);
+    if (match) {
+      const max = parseInt(match[1], 10);
+      toast('info', `La cantidad seleccionada excede la cantidad solicitada,Se ajustó automáticamente la cantidad al máximo disponible: ${max}.`);
+      await loadCart(); // recarga el carrito
+    }
+    return; // salir sin éxito
+  }
+
+  throw new Error(err.message || "Error al confirmar");
+}
+
+
 
             const data = await res.json();
             toast('ok', `¡Compra realizada! Orden: <strong>${data.numeroOrden}</strong>. Total: <strong>$${money(data.total)}</strong>.`);
