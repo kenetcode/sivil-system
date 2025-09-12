@@ -5,6 +5,28 @@
     <title>Realizar Venta - Sistema SIVIL</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        /* Estilos para mostrar el stock en el dropdown */
+        option[data-stock="0"] {
+            color: #dc3545 !important;
+            font-style: italic;
+            background-color: #f8d7da;
+        }
+
+        option[data-stock="0"]::after {
+            content: " - SIN STOCK";
+            font-weight: bold;
+        }
+
+        option[data-stock^="0"]:not([data-stock="0"]) {
+            color: #ffc107 !important;
+            font-weight: bold;
+        }
+
+        option[data-stock^="1"]:not([data-stock="10"]):not([data-stock="11"]):not([data-stock="12"]):not([data-stock="13"]):not([data-stock="14"]):not([data-stock="15"]):not([data-stock="16"]):not([data-stock="17"]):not([data-stock="18"]):not([data-stock="19"]) {
+            color: #ff9800 !important;
+        }
+    </style>
 </head>
 <body>
 <div th:fragment="content">
@@ -34,7 +56,8 @@
             <div class="col-md-6">
                 <div class="mb-3">
                     <label class="form-label">Número de factura:</label>
-                    <input type="text" th:field="*{numero_factura}" class="form-control" required>
+                    <input type="text" th:field="*{numero_factura}" class="form-control" readonly required>
+                    <small class="text-muted">Número generado automáticamente</small>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Nombre cliente:</label>
@@ -91,7 +114,10 @@
                                 th:value="${libro.id_libro}"
                                 th:data-precio="${libro.precio}"
                                 th:data-titulo="${libro.titulo}"
-                                th:text="${libro.titulo + ' - $' + libro.precio}"></option>
+                                th:data-stock="${libro.cantidad_stock}"
+                                th:text="${libro.titulo + ' - $' + libro.precio + ' (Stock: ' + libro.cantidad_stock + ')'}">
+
+                        </option>
                     </select>
                     <input type="number" min="1" id="cantidadLibro" class="form-control" placeholder="Cantidad" value="1">
                     <button type="button" id="agregarLibro" class="btn btn-primary">Agregar</button>
@@ -119,6 +145,9 @@
 
         <div class="mt-3">
             <button type="submit" class="btn btn-success">Crear Venta</button>
+            <button type="button" class="btn btn-secondary ms-2" id="limpiarFormulario">
+                <i class="bi bi-eraser"></i> Limpiar Formulario
+            </button>
         </div>
     </form>
 
@@ -136,6 +165,27 @@
             const ventaForm = document.getElementById('ventaForm');
 
             let librosAgregados = [];
+
+            // Función para verificar stock
+            async function verificarStock(idLibro, cantidad) {
+                try {
+                    const response = await fetch(`/ventas/api/libros/${idLibro}/stock`);
+                    if (!response.ok) {
+                        throw new Error('Error al verificar stock');
+                    }
+                    const data = await response.json();
+
+                    if (data.stock < cantidad) {
+                        alert(`❌ Stock insuficiente para "${data.titulo}"\nStock disponible: ${data.stock} unidades`);
+                        return false;
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('Error al verificar stock:', error);
+                    alert('Error al verificar el stock del libro');
+                    return false;
+                }
+            }
 
             function actualizarTotales() {
                 let subtotal = 0;
@@ -186,7 +236,8 @@
                 actualizarTotales();
             }
 
-            agregarBtn.addEventListener('click', () => {
+            // Modificar el evento click para verificar stock antes de agregar
+            agregarBtn.addEventListener('click', async () => {
                 const id = libroSelect.value;
                 const titulo = libroSelect.options[libroSelect.selectedIndex].getAttribute('data-titulo');
                 const precio = parseFloat(libroSelect.options[libroSelect.selectedIndex].getAttribute('data-precio'));
@@ -197,11 +248,25 @@
                     return;
                 }
 
+                // Verificar stock antes de agregar
+                const stockDisponible = await verificarStock(id, cantidad);
+                if (!stockDisponible) {
+                    return;
+                }
+
                 // Verificar si el libro ya existe en la lista
                 const libroExistenteIndex = librosAgregados.findIndex(l => l.id == id);
 
                 if (libroExistenteIndex !== -1) {
-                    // Si ya existe, aumentar la cantidad
+                    // Verificar stock total si ya existe el libro
+                    const stockTotalNecesario = librosAgregados[libroExistenteIndex].cantidad + cantidad;
+                    const stockDisponibleTotal = await verificarStock(id, stockTotalNecesario);
+
+                    if (!stockDisponibleTotal) {
+                        return;
+                    }
+
+                    // Si ya existe y hay stock, aumentar la cantidad
                     librosAgregados[libroExistenteIndex].cantidad += cantidad;
                 } else {
                     // Si no existe, agregar nuevo libro
@@ -228,7 +293,54 @@
                     alert('Debe agregar al menos un libro para realizar la venta.');
                 }
             });
+
+                   // Agregar validación en tiempo real de la cantidad
+        cantidadInput.addEventListener('change', async function() {
+            const id = libroSelect.value;
+            const cantidad = parseInt(this.value);
+
+            if (id && cantidad > 0) {
+                const stockDisponible = await verificarStock(id, cantidad);
+                if (!stockDisponible) {
+                    this.value = '1';
+                }
+            }
         });
+
+
+        function limpiarFormulario() {
+            // Limpiar campos del formulario principal
+            document.getElementById('ventaForm').reset();
+
+            // Limpiar tabla de libros agregados
+            librosAgregados = [];
+            renderTabla();
+
+            // Limpiar campos calculados
+            subtotalInput.value = '0.00';
+            descuentoInput.value = '0.00';
+            impuestosInput.value = '0.00';
+            totalInput.value = '0.00';
+            librosDataInput.value = '';
+
+            // Restablecer el select de libros
+            libroSelect.selectedIndex = 0;
+            cantidadInput.value = '1';
+
+            // Cerrar alertas si están abiertas
+            const alertas = document.querySelectorAll('.alert');
+            alertas.forEach(alerta => {
+                const bsAlert = new bootstrap.Alert(alerta);
+                bsAlert.close();
+            });
+
+
+        }
+
+        // AGREGAR EVENT LISTENER PARA EL BOTÓN
+        document.getElementById('limpiarFormulario').addEventListener('click', limpiarFormulario);
+
+    });
     </script>
 </div>
 </body>

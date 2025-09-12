@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sivil.systeam.entity.*;
 import com.sivil.systeam.repository.*;
+import com.sivil.systeam.service.NumeracionFacturaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -34,12 +38,34 @@ public class VentaController {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // Mostrar el formulario para crear venta
+    @Autowired
+    private NumeracionFacturaService numeracionService;
+
     @GetMapping("/crear")
     public String mostrarFormularioCrearVenta(Model model) {
-        model.addAttribute("venta", new Venta());
+        Venta venta = new Venta();
+
+        String numeroFactura = numeracionService.generarNumeroFactura(ventaRepository);
+        venta.setNumero_factura(numeroFactura);
+
+        model.addAttribute("venta", venta);
         model.addAttribute("libros", libroRepository.findAll());
-        return "venta/crear-venta"; // Asegúrate que esta ruta coincide con tu template
+        return "venta/crear-venta";
+    }
+
+    @GetMapping("/api/libros/{id}/stock")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> verificarStock(@PathVariable Integer id) {
+        Optional<Libro> libroOpt = libroRepository.findById(id);
+        if (libroOpt.isPresent()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", id);
+            response.put("titulo", libroOpt.get().getTitulo());
+            response.put("stock", libroOpt.get().getCantidad_stock());
+            response.put("disponible", libroOpt.get().getCantidad_stock() > 0);
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     // Recibir datos del formulario y procesar la venta
@@ -51,6 +77,8 @@ public class VentaController {
             Model model) {
 
         try {
+            // GENERAR EL NÚMERO DE FACTURA
+            venta.setNumero_factura(numeracionService.generarNumeroFactura(ventaRepository));
             // 1. Convertir JSON de libros a lista de objetos
             List<LibroVentaRequest> detallesRequest = objectMapper.readValue(
                     librosDataJson,
@@ -98,8 +126,11 @@ public class VentaController {
 
                 // Verificar stock suficiente
                 if (libro.getCantidad_stock() < detalleRequest.getCantidad()) {
-                    throw new RuntimeException("Stock insuficiente para: " + libro.getTitulo() +
-                            ". Stock disponible: " + libro.getCantidad_stock());
+                    model.addAttribute("error", "Stock insuficiente para: " + libro.getTitulo() +
+                            ". Stock disponible: " + libro.getCantidad_stock() +
+                            ". Cantidad solicitada: " + detalleRequest.getCantidad());
+                    model.addAttribute("libros", libroRepository.findAll());
+                    return "venta/crear-venta";
                 }
 
                 // Crear detalle de venta
