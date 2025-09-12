@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Compras</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:1100px;margin:24px auto;padding:0 16px}
+        h1{margin:0 0 12px}
+        table{width:100%;border-collapse:collapse;margin-top:12px}
+        th,td{border:1px solid #ddd;padding:8px;text-align:left}
+        th{background:#f5f5f5}
+        .pill{padding:4px 8px;border-radius:999px;background:#eef}
+    </style>
+</head>
+<body>
+<h1>Compras (resumen)</h1>
+<table id="tbl">
+    <thead>
+    <tr>
+        <th>Orden</th>
+        <th>Comprador</th>
+        <th>Subtotal</th>
+        <th>Impuestos</th>
+        <th>Total</th>
+        <th>Estado</th>
+        <th>Fecha</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+    const tbody = document.querySelector("#tbl tbody");
+    function money(n){ return (Number(n)||0).toFixed(2); }
+
+    async function cargar() {
+      const res = await fetch("/api/compra/listar");
+      const data = await res.json();
+      tbody.innerHTML = "";
+      data.forEach(c=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${c.numeroOrden}</td>
+          <td>${c.nombreComprador ?? "-"}</td>
+          <td>${money(c.subtotal)}</td>
+          <td>${money(c.impuestos)}</td>
+          <td><strong>${money(c.total)}</strong></td>
+          <td><span class="pill">${c.estado ?? "-"}</span></td>
+          <td>${c.fecha ?? "-"}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    cargar();
+</script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Checkout</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- CSRF como en carrito -->
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <style>
+        body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:980px;margin:24px auto;padding:0 16px}
+        h1{margin:0 0 12px}
+        table{width:100%;border-collapse:collapse;margin-top:12px}
+        th,td{border:1px solid #ddd;padding:8px;text-align:left}
+        th{background:#f5f5f5}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+        input,select,button,textarea{padding:8px}
+        .summary{margin-top:12px;padding:12px;border:1px solid #ddd;background:#fafafa}
+        .ok{color:#0a7d2c}
+        .warn{color:#b33}
+        .row{display:flex;gap:12px;align-items:center;margin-top:12px}
+        .btn{display:inline-block;padding:8px 14px;border:1px solid #ccc;border-radius:6px;background:#f8f9fa;text-decoration:none;color:#222}
+        .btn:hover{filter:brightness(0.97)}
+        .btn-secondary{background:#e9ecef}
+        .btn-primary{background:#0d6efd;color:#fff;border-color:#0d6efd}
+    </style>
+</head>
+<body>
+<h1>Checkout</h1>
+
+<table id="tbl">
+    <thead>
+    <tr>
+        <th>Libro</th><th>Precio</th><th>Cantidad</th><th>Subtotal</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<div class="summary">
+    <strong>Resumen:</strong>
+    <div>Subtotal: <span id="sSubtotal">0.00</span></div>
+    <div>Impuestos (13%): <span id="sImpuestos">0.00</span></div>
+    <div>Total: <span id="sTotal">0.00</span></div>
+</div>
+
+<h2>Datos para confirmar</h2>
+<div class="grid">
+    <div>
+        <label>Comprador ID</label>
+        <input id="compradorId" type="number" value="1" />
+    </div>
+    <div>
+        <label>Método de pago</label>
+        <select id="metodoPago">
+            <option value="tarjeta" selected>Tarjeta</option>
+            <option value="efectivo">Efectivo</option>
+        </select>
+    </div>
+    <div style="grid-column:1 / span 2">
+        <label>Dirección de entrega</label>
+        <textarea id="direccion" rows="2" placeholder="Dirección completa"></textarea>
+    </div>
+</div>
+
+<div class="row">
+    <a class="btn btn-secondary" th:href="@{/compras/carrito}" href="/compras/carrito">Volver al carrito</a>
+    <button id="btnConfirmar" class="btn btn-primary">Confirmar compra</button>
+</div>
+
+<div id="msg"></div>
+
+<script>
+    const $  = (s) => document.querySelector(s);
+    const tbody = $("#tbl tbody");
+    const msg   = $("#msg");
+
+    // === CSRF como en carrito ===
+    const CSRF_TOKEN  = document.querySelector('meta[name="_csrf"]')?.content;
+    const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content;
+    function withCsrf(headers = {}) {
+      if (CSRF_TOKEN && CSRF_HEADER) headers[CSRF_HEADER] = CSRF_TOKEN;
+      return headers;
+    }
+
+    function money(n){ return (Number(n)||0).toFixed(2); }
+
+    async function loadCart() {
+      const [itemsRes, summaryRes] = await Promise.all([
+        fetch("/api/cart/items",   { headers: withCsrf() }),
+        fetch("/api/cart/summary", { headers: withCsrf() }),
+      ]);
+      const items   = await itemsRes.json();
+      const summary = await summaryRes.json();
+
+      tbody.innerHTML = "";
+      items.forEach(i=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${i.titulo}</td>
+          <td>${money(i.precioUnitario)}</td>
+          <td>${i.cantidad}</td>
+          <td>${money(i.precioUnitario * i.cantidad)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      $("#sSubtotal").textContent = money(summary.subtotal);
+      $("#sImpuestos").textContent = money(summary.impuestos);
+      $("#sTotal").textContent     = money(summary.total);
+
+      return items;
+    }
+
+    async function confirmar() {
+      try {
+        msg.textContent = "";
+
+        const items = await (await fetch("/api/cart/items", { headers: withCsrf() })).json();
+        if (!items.length) {
+          msg.innerHTML = '<p class="warn">El carrito está vacío.</p>';
+          return;
+        }
+
+        const body = {
+          compradorId: parseInt($("#compradorId").value, 10),
+          direccionEntrega: $("#direccion").value,
+          metodoPago: $("#metodoPago").value,
+          items: items
+        };
+
+        const res = await fetch("/api/compra/checkout", {
+          method: "POST",
+          headers: withCsrf({ "Content-Type": "application/json" }),
+          body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(txt || "Error al confirmar");
+        }
+
+        const data = await res.json();
+        msg.innerHTML = `
+          <p class="ok">
+            ¡Compra realizada!<br/>
+            Orden: <strong>${data.numeroOrden}</strong><br/>
+            Total: <strong>${money(data.total)}</strong><br/>
+            Fecha: ${data.fecha}
+          </p>
+        `;
+
+        // Redirige a la lista de compras después de confirmar
+        setTimeout(() => { window.location.href = "/compras/lista"; }, 900);
+      } catch (e) {
+        msg.innerHTML = `<p class="warn">${e.message}</p>`;
+      }
+    }
+
+    $("#btnConfirmar").addEventListener("click", confirmar);
+    loadCart();
+</script>
+</body>
+</html>
