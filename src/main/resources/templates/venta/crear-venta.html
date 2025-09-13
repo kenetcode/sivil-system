@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout (~{::title}, ~{::content})}">
+<head>
+    <title>Realizar Venta - Sistema SIVIL</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        /* Estilos para mostrar el stock en el dropdown */
+        option[data-stock="0"] {
+            color: #dc3545 !important;
+            font-style: italic;
+            background-color: #f8d7da;
+        }
+
+        option[data-stock="0"]::after {
+            content: " - SIN STOCK";
+            font-weight: bold;
+        }
+
+        option[data-stock^="0"]:not([data-stock="0"]) {
+            color: #ffc107 !important;
+            font-weight: bold;
+        }
+
+        option[data-stock^="1"]:not([data-stock="10"]):not([data-stock="11"]):not([data-stock="12"]):not([data-stock="13"]):not([data-stock="14"]):not([data-stock="15"]):not([data-stock="16"]):not([data-stock="17"]):not([data-stock="18"]):not([data-stock="19"]) {
+            color: #ff9800 !important;
+        }
+    </style>
+</head>
+<body>
+<div th:fragment="content">
+    <!-- Header de la página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-cash-register"></i> Realizar Venta</h2>
+            <p class="text-muted">Ingrese los datos del cliente y seleccione los libros a vender</p>
+        </div>
+    </div>
+
+    <!-- Mensajes -->
+    <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i> <span th:text="${mensaje}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i> <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Formulario de Venta -->
+    <form th:action="@{/ventas/crear}" th:object="${venta}" method="post" id="ventaForm">
+        <div class="row g-3">
+            <!-- Columna 1 -->
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Número de factura:</label>
+                    <input type="text" th:field="*{numero_factura}" class="form-control" readonly required>
+                    <small class="text-muted">Número generado automáticamente</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nombre cliente:</label>
+                    <input type="text" th:field="*{nombre_cliente}" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Contacto cliente:</label>
+                    <input type="text" th:field="*{contacto_cliente}" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Identificación cliente:</label>
+                    <input type="text" th:field="*{identificacion_cliente}" class="form-control">
+                </div>
+            </div>
+
+            <!-- Columna 2 -->
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Tipo de pago:</label>
+                    <select th:field="*{tipo_pago}" class="form-select">
+                        <option th:each="pago : ${T(com.sivil.systeam.enums.MetodoPago).values()}"
+                                th:value="${pago}" th:text="${pago}"></option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Subtotal:</label>
+                    <input type="number" step="0.01" th:field="*{subtotal}" class="form-control" readonly id="subtotalInput">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descuento:</label>
+                    <input type="number" step="0.01" th:field="*{descuento_aplicado}" class="form-control" readonly id="descuentoInput">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Impuestos:</label>
+                    <input type="number" step="0.01" th:field="*{impuestos}" class="form-control" readonly id="impuestosInput">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Total:</label>
+                    <input type="number" step="0.01" th:field="*{total}" class="form-control" readonly id="totalInput">
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Selección de libros -->
+        <div class="row">
+            <div class="col-12">
+                <h5>Agregar libros</h5>
+                <div class="input-group mb-3">
+                    <select id="libroSelect" class="form-select">
+                        <option value="" selected disabled>Seleccione un libro</option>
+                        <option th:each="libro : ${libros}"
+                                th:value="${libro.id_libro}"
+                                th:data-precio="${libro.precio}"
+                                th:data-titulo="${libro.titulo}"
+                                th:data-stock="${libro.cantidad_stock}"
+                                th:text="${libro.titulo + ' - $' + libro.precio + ' (Stock: ' + libro.cantidad_stock + ')'}">
+
+                        </option>
+                    </select>
+                    <input type="number" min="1" id="cantidadLibro" class="form-control" placeholder="Cantidad" value="1">
+                    <button type="button" id="agregarLibro" class="btn btn-primary">Agregar</button>
+                </div>
+
+                <!-- Lista de libros agregados -->
+                <table class="table table-striped" id="tablaLibrosAgregados">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Libro</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Subtotal</th>
+                        <th>Acción</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+
+                <!-- Campo oculto para enviar los datos de los libros -->
+                <input type="hidden" id="librosData" name="librosData">
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-success">Crear Venta</button>
+            <button type="button" class="btn btn-secondary ms-2" id="limpiarFormulario">
+                <i class="bi bi-eraser"></i> Limpiar Formulario
+            </button>
+        </div>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const agregarBtn = document.getElementById('agregarLibro');
+            const libroSelect = document.getElementById('libroSelect');
+            const cantidadInput = document.getElementById('cantidadLibro');
+            const tablaBody = document.querySelector('#tablaLibrosAgregados tbody');
+            const subtotalInput = document.getElementById('subtotalInput');
+            const descuentoInput = document.getElementById('descuentoInput');
+            const impuestosInput = document.getElementById('impuestosInput');
+            const totalInput = document.getElementById('totalInput');
+            const librosDataInput = document.getElementById('librosData');
+            const ventaForm = document.getElementById('ventaForm');
+
+            let librosAgregados = [];
+
+            // Función para verificar stock
+            async function verificarStock(idLibro, cantidad) {
+                try {
+                    const response = await fetch(`/ventas/api/libros/${idLibro}/stock`);
+                    if (!response.ok) {
+                        throw new Error('Error al verificar stock');
+                    }
+                    const data = await response.json();
+
+                    if (data.stock < cantidad) {
+                        alert(`❌ Stock insuficiente para "${data.titulo}"\nStock disponible: ${data.stock} unidades`);
+                        return false;
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('Error al verificar stock:', error);
+                    alert('Error al verificar el stock del libro');
+                    return false;
+                }
+            }
+
+            function actualizarTotales() {
+                let subtotal = 0;
+
+                // Calcular subtotal sumando todos los libros
+                librosAgregados.forEach(libro => {
+                    subtotal += libro.precio * libro.cantidad;
+                });
+
+                // Por simplicidad, asumimos un descuento del 10% e impuestos del 15%
+                const descuento = subtotal * 0.1;
+                const impuestos = (subtotal - descuento) * 0.15;
+                const total = subtotal - descuento + impuestos;
+
+                // Actualizar los campos
+                subtotalInput.value = subtotal.toFixed(2);
+                descuentoInput.value = descuento.toFixed(2);
+                impuestosInput.value = impuestos.toFixed(2);
+                totalInput.value = total.toFixed(2);
+
+                // Actualizar el campo oculto con los datos de los libros
+                librosDataInput.value = JSON.stringify(librosAgregados);
+            }
+
+            function renderTabla() {
+                tablaBody.innerHTML = '';
+                librosAgregados.forEach((libro, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${libro.titulo}</td>
+                        <td>$${libro.precio.toFixed(2)}</td>
+                        <td>${libro.cantidad}</td>
+                        <td>$${(libro.precio * libro.cantidad).toFixed(2)}</td>
+                        <td><button type="button" class="btn btn-danger btn-sm eliminar-libro">Eliminar</button></td>
+                    `;
+                    tablaBody.appendChild(row);
+                });
+
+                // Agregar event listeners a los botones de eliminar
+                document.querySelectorAll('.eliminar-libro').forEach((button, index) => {
+                    button.addEventListener('click', () => {
+                        librosAgregados.splice(index, 1);
+                        renderTabla();
+                        actualizarTotales();
+                    });
+                });
+
+                actualizarTotales();
+            }
+
+            // Modificar el evento click para verificar stock antes de agregar
+            agregarBtn.addEventListener('click', async () => {
+                const id = libroSelect.value;
+                const titulo = libroSelect.options[libroSelect.selectedIndex].getAttribute('data-titulo');
+                const precio = parseFloat(libroSelect.options[libroSelect.selectedIndex].getAttribute('data-precio'));
+                const cantidad = parseInt(cantidadInput.value);
+
+                if (!id || isNaN(cantidad) || cantidad <= 0) {
+                    alert('Seleccione un libro y una cantidad válida.');
+                    return;
+                }
+
+                // Verificar stock antes de agregar
+                const stockDisponible = await verificarStock(id, cantidad);
+                if (!stockDisponible) {
+                    return;
+                }
+
+                // Verificar si el libro ya existe en la lista
+                const libroExistenteIndex = librosAgregados.findIndex(l => l.id == id);
+
+                if (libroExistenteIndex !== -1) {
+                    // Verificar stock total si ya existe el libro
+                    const stockTotalNecesario = librosAgregados[libroExistenteIndex].cantidad + cantidad;
+                    const stockDisponibleTotal = await verificarStock(id, stockTotalNecesario);
+
+                    if (!stockDisponibleTotal) {
+                        return;
+                    }
+
+                    // Si ya existe y hay stock, aumentar la cantidad
+                    librosAgregados[libroExistenteIndex].cantidad += cantidad;
+                } else {
+                    // Si no existe, agregar nuevo libro
+                    librosAgregados.push({
+                        id: id,
+                        titulo: titulo,
+                        precio: precio,
+                        cantidad: cantidad
+                    });
+                }
+
+                // Limpiar campos
+                cantidadInput.value = '1';
+                libroSelect.selectedIndex = 0;
+
+                // Actualizar la tabla y los totales
+                renderTabla();
+            });
+
+            // Prevenir envío del formulario si no hay libros agregados
+            ventaForm.addEventListener('submit', function(e) {
+                if (librosAgregados.length === 0) {
+                    e.preventDefault();
+                    alert('Debe agregar al menos un libro para realizar la venta.');
+                }
+            });
+
+                   // Agregar validación en tiempo real de la cantidad
+        cantidadInput.addEventListener('change', async function() {
+            const id = libroSelect.value;
+            const cantidad = parseInt(this.value);
+
+            if (id && cantidad > 0) {
+                const stockDisponible = await verificarStock(id, cantidad);
+                if (!stockDisponible) {
+                    this.value = '1';
+                }
+            }
+        });
+
+
+        function limpiarFormulario() {
+            // Limpiar campos del formulario principal
+            document.getElementById('ventaForm').reset();
+
+            // Limpiar tabla de libros agregados
+            librosAgregados = [];
+            renderTabla();
+
+            // Limpiar campos calculados
+            subtotalInput.value = '0.00';
+            descuentoInput.value = '0.00';
+            impuestosInput.value = '0.00';
+            totalInput.value = '0.00';
+            librosDataInput.value = '';
+
+            // Restablecer el select de libros
+            libroSelect.selectedIndex = 0;
+            cantidadInput.value = '1';
+
+            // Cerrar alertas si están abiertas
+            const alertas = document.querySelectorAll('.alert');
+            alertas.forEach(alerta => {
+                const bsAlert = new bootstrap.Alert(alerta);
+                bsAlert.close();
+            });
+
+
+        }
+
+        // AGREGAR EVENT LISTENER PARA EL BOTÓN
+        document.getElementById('limpiarFormulario').addEventListener('click', limpiarFormulario);
+
+    });
+    </script>
+</div>
+</body>
+</html>,

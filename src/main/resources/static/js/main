@@ -1,0 +1,2 @@
+// main.js vacío para evitar errores
+console.log("main.js cargado correctamente.");

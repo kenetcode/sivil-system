@@ -16,16 +16,24 @@
                             <i class="bi bi-house me-1"></i> Inicio
                         </a>
                     </li>
-                    <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
-                        <a class="nav-link btn btn-outline-success rounded-pill px-3 py-2" href="#"
+
+
+                    <li class="nav-item me-2"
+                        th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                        <a class="nav-link btn btn-outline-success rounded-pill px-3 py-2"
+                           th:href="@{/ventas/crear}"
                            style="text-decoration: none;"
                            onmouseover="this.style.backgroundColor='#198754'; this.style.borderColor='#198754'; this.style.color='white';"
                            onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#198754'; this.style.color='#198754';">
-                            <i class="bi bi-cash-register me-1"></i> Punto de Venta
+                            <i class="bi bi-cash-register me-1"></i> Realizar Venta
                         </a>
                     </li>
+
+
+
+
                     <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
-                        <a class="nav-link btn btn-outline-info rounded-pill px-3 py-2" href="#"
+                        <a class="nav-link btn btn-outline-info rounded-pill px-3 py-2" th:href="@{compras/carrito}"
                            style="text-decoration: none;"
                            onmouseover="this.style.backgroundColor='#0dcaf0'; this.style.borderColor='#0dcaf0'; this.style.color='white';"
                            onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#0dcaf0'; this.style.color='#0dcaf0';">
@@ -33,7 +41,7 @@
                         </a>
                     </li>
                     <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
-                        <a class="nav-link btn btn-outline-warning rounded-pill px-3 py-2" href="#"
+                        <a class="nav-link btn btn-outline-warning rounded-pill px-3 py-2" th:href="@{/pago/seleccion-metodo-pago}"
                            style="text-decoration: none;"
                            onmouseover="this.style.backgroundColor='#ffc107'; this.style.borderColor='#ffc107'; this.style.color='black';"
                            onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#ffc107'; this.style.color='#ffc107';">

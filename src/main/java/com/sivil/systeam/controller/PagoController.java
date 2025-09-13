@@ -1,0 +1,179 @@
+package com.sivil.systeam.controller;
+
+import com.sivil.systeam.entity.Pago;
+import com.sivil.systeam.service.PagoService;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+
+@Controller
+@RequestMapping("/pago")
+public class PagoController {
+
+    private final PagoService pagoService;
+
+    public PagoController(PagoService pagoService) {
+        this.pagoService = pagoService;
+    }
+
+    @GetMapping("/seleccion-metodo-pago")
+    public String mostrarSeleccionMetodoPago(Model model, 
+                                           @RequestParam(value = "monto", required = false) BigDecimal monto,
+                                           @RequestParam(value = "idCompra", required = false) Integer idCompra,
+                                           @RequestParam(value = "idVenta", required = false) Integer idVenta) {
+        // Pasar parámetros a la vista para mantenerlos en el flujo
+        if (monto != null) {
+            model.addAttribute("montoAPagar", monto);
+        }
+        if (idCompra != null) {
+            model.addAttribute("idCompra", idCompra);
+        }
+        if (idVenta != null) {
+            model.addAttribute("idVenta", idVenta);
+        }
+        
+        return "pago/seleccion-metodo-pago";
+    }
+
+    @GetMapping("/pago-tarjeta")
+    public String mostrarPagoTarjeta(Model model, 
+                                   @RequestParam(value = "monto", required = false) BigDecimal monto,
+                                   @RequestParam(value = "idCompra", required = false) Integer idCompra,
+                                   @RequestParam(value = "idVenta", required = false) Integer idVenta) {
+        model.addAttribute("pago", new Pago());
+        
+        // Si viene un monto desde otra vista, lo usamos
+        if (monto != null) {
+            model.addAttribute("montoAPagar", monto);
+        }
+        if (idCompra != null) {
+            model.addAttribute("idCompra", idCompra);
+        }
+        if (idVenta != null) {
+            model.addAttribute("idVenta", idVenta);
+        }
+        
+        return "pago/pago-tarjeta";
+    }
+
+    @GetMapping("/tarjeta")
+    public String mostrarFormulario(Model model, 
+                                  @RequestParam(value = "monto", required = false) BigDecimal monto,
+                                  @RequestParam(value = "idCompra", required = false) Integer idCompra,
+                                  @RequestParam(value = "idVenta", required = false) Integer idVenta) {
+        model.addAttribute("pago", new Pago());
+        
+        // Si viene un monto desde otra vista, lo usamos
+        if (monto != null) {
+            model.addAttribute("montoAPagar", monto);
+        }
+        if (idCompra != null) {
+            model.addAttribute("idCompra", idCompra);
+        }
+        if (idVenta != null) {
+            model.addAttribute("idVenta", idVenta);
+        }
+        
+        return "pago/pago-tarjeta";
+    }
+
+    @PostMapping("/procesar")
+    public String procesarPago(@RequestParam("numeroTarjeta") String numeroTarjeta,
+                             @RequestParam("fechaVencimiento") String fechaVencimiento,
+                             @RequestParam("cvv") String cvv,
+                             @RequestParam("nombreTitular") String nombreTitular,
+                             @RequestParam("email") String email,
+                             @RequestParam("direccion") String direccion,
+                             @RequestParam(value = "monto", required = false, defaultValue = "100.00") BigDecimal monto,
+                             @RequestParam(value = "idCompra", required = false) Integer idCompra,
+                             @RequestParam(value = "idVenta", required = false) Integer idVenta,
+                             Model model) {
+        try {
+            // Crear objeto Pago
+            Pago pago = new Pago();
+            pago.setMonto(monto);
+            
+            // Para cumplir con la restricción de BD, necesitamos asociar el pago
+            // a una compra O a una venta. Si no se proporcionan, creamos una venta simulada.
+            if (idCompra != null) {
+                // En una implementación real, buscarías la CompraOnline por ID
+                // CompraOnline compra = compraService.findById(idCompra);
+                // pago.setCompra(compra);
+                
+                // Por ahora, para simular, no seteamos la compra real
+                // pero manejamos el caso en el servicio
+            } else if (idVenta != null) {
+                // En una implementación real, buscarías la Venta por ID
+                // Venta venta = ventaService.findById(idVenta);
+                // pago.setVenta(venta);
+                
+                // Por ahora, para simular, no seteamos la venta real
+                // pero manejamos el caso en el servicio
+            }
+            
+            Pago pagoProcesado = pagoService.procesarPago(
+                numeroTarjeta, fechaVencimiento, cvv, 
+                nombreTitular, email, direccion, pago, idCompra, idVenta);
+
+            if (idCompra == null && idVenta == null) {
+                model.addAttribute("mensaje", "✅ Pago procesado correctamente");
+                model.addAttribute("esSimulacion", true);
+            } else {
+                model.addAttribute("mensaje", "✅ Pago procesado correctamente");
+            }
+            model.addAttribute("pago", pagoProcesado);
+            model.addAttribute("numeroTarjetaOculto", "****-****-****-" + numeroTarjeta.substring(numeroTarjeta.length() - 4));
+
+            return "pago/pago-confirmacion";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("pago", new Pago());
+            model.addAttribute("montoAPagar", monto);
+            
+            // Mantener datos del formulario (excepto datos sensibles)
+            model.addAttribute("nombreTitular", nombreTitular);
+            model.addAttribute("email", email);
+            model.addAttribute("direccion", direccion);
+            
+            return "pago/pago-tarjeta";
+        }
+    }
+
+    @PostMapping("/procesar-seleccion")
+    public String procesarSeleccionMetodoPago(@RequestParam("metodoPago") String metodoPago,
+                                            @RequestParam(value = "monto", required = false) BigDecimal monto,
+                                            @RequestParam(value = "idCompra", required = false) Integer idCompra,
+                                            @RequestParam(value = "idVenta", required = false) Integer idVenta,
+                                            Model model) {
+        
+        // Redirigir según el método seleccionado
+        if ("tarjeta".equals(metodoPago)) {
+            String redirect = "redirect:/pago/pago-tarjeta";
+            if (monto != null || idCompra != null || idVenta != null) {
+                redirect += "?";
+                boolean hasParam = false;
+                if (monto != null) {
+                    redirect += "monto=" + monto;
+                    hasParam = true;
+                }
+                if (idCompra != null) {
+                    redirect += (hasParam ? "&" : "") + "idCompra=" + idCompra;
+                    hasParam = true;
+                }
+                if (idVenta != null) {
+                    redirect += (hasParam ? "&" : "") + "idVenta=" + idVenta;
+                }
+            }
+            return redirect;
+        } else if ("efectivo".equals(metodoPago)) {
+            // Por ahora redirigir de vuelta con mensaje
+            model.addAttribute("mensaje", "Funcionalidad de pago en efectivo en desarrollo");
+            return "pago/seleccion-metodo-pago";
+        }
+        
+        // Si no se reconoce el método, volver a la selección
+        return "redirect:/pago/seleccion-metodo-pago";
+    }
+}

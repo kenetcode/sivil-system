@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout ('Confirmación de Pago', ~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .confirmation-card {
+            max-width: 600px;
+            margin: 2rem auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .success-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .success-icon {
+            font-size: 3rem;
+            color: #28a745;
+            animation: bounce 1s ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .info-value {
+            color: #212529;
+        }
+        
+        .transaction-code {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .card-number-masked {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card confirmation-card">
+                    <div class="card-header success-header text-center">
+                        <div class="success-icon mb-3">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <h2 class="mb-0">¡Pago Procesado Exitosamente!</h2>
+                        <p class="mb-0 mt-2">Su transacción ha sido completada correctamente</p>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Mensaje de confirmación -->
+                        <div class="alert alert-success text-center mb-4" th:if="${mensaje}">
+                            <span th:text="${mensaje}"></span>
+                        </div>
+                        
+                        <!-- Detalles de la transacción -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-receipt"></i> Detalles de la Transacción
+                                </h5>
+                            </div>
+                        </div>
+                        
+                        <!-- Información del pago -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <span class="info-label">Referencia de Transacción:</span><br>
+                                    <span class="transaction-code" th:text="${pago.referencia_transaccion}">TXN-ABC12345</span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <span class="info-label">Monto Pagado:</span><br>
+                                    <span class="info-value h4 text-success" th:text="${#numbers.formatCurrency(pago.monto)}">$0.00</span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <span class="info-label">Método de Pago:</span><br>
+                                    <span class="info-value">
+                                        <i class="bi bi-credit-card"></i> Tarjeta de Crédito/Débito
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <span class="info-label">Fecha y Hora:</span><br>
+                                    <span class="info-value" th:text="${#temporals.format(pago.fecha_pago, 'dd/MM/yyyy HH:mm:ss')}">01/01/2024 12:00:00</span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <span class="info-label">Estado del Pago:</span><br>
+                                    <span class="badge bg-success fs-6">
+                                        <i class="bi bi-check-circle"></i> Completado
+                                    </span>
+                                </div>
+                                
+                                <div class="mb-3" th:if="${numeroTarjetaOculto}">
+                                    <span class="info-label">Tarjeta Utilizada:</span><br>
+                                    <span class="card-number-masked" th:text="${numeroTarjetaOculto}">****-****-****-1234</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Información de seguridad -->
+                        <div class="alert alert-info">
+                            <i class="bi bi-shield-check"></i>
+                            <strong>Seguridad:</strong> Su información de pago ha sido procesada de forma segura. 
+                            Los datos sensibles de su tarjeta han sido protegidos y no se almacenan en nuestros sistemas.
+                        </div>
+                        
+                        <!-- Información adicional -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h6 class="mb-3">
+                                    <i class="bi bi-info-circle"></i> Información Importante
+                                </h6>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <i class="bi bi-check text-success"></i>
+                                        Guarde el número de referencia para sus registros: 
+                                        <strong th:text="${pago.referencia_transaccion}">TXN-ABC12345</strong>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-check text-success"></i>
+                                        La transacción aparecerá en su estado de cuenta bancario
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Botones de acción -->
+                        <div class="d-grid gap-2 mt-4">
+                            <a href="/" class="btn btn-primary btn-lg">
+                                <i class="bi bi-house"></i> Ir al Dashboard
+                            </a>
+                            
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <button onclick="window.print()" class="btn btn-outline-secondary w-100">
+                                        <i class="bi bi-printer"></i> Imprimir Comprobante
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button onclick="descargarComprobante()" class="btn btn-outline-info w-100">
+                                        <i class="bi bi-download"></i> Descargar PDF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para descargar comprobante (simulada)
+        function descargarComprobante() {
+            alert('Funcionalidad de descarga de PDF pendiente de implementación.');
+            // En una implementación real, aquí se llamaría a un endpoint para generar el PDF
+        }
+        
+        // Ocultar datos sensibles al imprimir
+        window.addEventListener('beforeprint', function() {
+            // Lógica adicional para preparar la página para impresión si es necesario
+        });
+        
+        // Auto-redirect después de 30 segundos (opcional)
+        setTimeout(function() {
+            const userWantsRedirect = confirm('¿Desea ser redirigido al dashboard principal?');
+            if (userWantsRedirect) {
+                window.location.href = '/';
+            }
+        }, 30000);
+    </script>
+</div>
+</body>
+</html>

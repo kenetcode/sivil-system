@@ -105,3 +105,4 @@ public class Usuario {
     public List<CompraOnline> getCompras() { return compras; }
     public void setCompras(List<CompraOnline> compras) { this.compras = compras; }
 }
+

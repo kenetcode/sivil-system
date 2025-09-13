@@ -11,6 +11,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link th:href="@{/css/main.css}" rel="stylesheet">
+
+    <!-- CSRF disponible para todas las vistas -->
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
+
 </head>
 <body class="d-flex flex-column min-vh-100">
     <!-- Header -->
@@ -32,6 +38,6 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
-    <script th:src="@{/js/main.js}"></script>
+
 </body>
 </html>
