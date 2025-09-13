@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- Fragment para tabla reutilizable -->
+    <div th:fragment="crud-table(title, subtitle, items, columns, showActions, showAddButton, showViewButton, showEditButton, showDeleteButton)" class="card">
+        <!-- Header de la tabla -->
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0" th:if="${title}" th:text="${title}">Título</h5>
+                <h5 class="text-muted" th:if="${subtitle}" th:text="${subtitle}">Subtítulo</h5>
+            </div>
+            <div>
+                <!-- Botón agregar -->
+                <button class="btn btn-primary btn-sm" th:if="${showAddButton}">
+                    <i class="bi bi-plus-circle"></i> Agregar
+                </button>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <!-- Mensaje cuando no hay datos -->
+            <div th:if="${#lists.isEmpty(items)}" class="text-center py-4">
+                <i class="bi bi-inbox display-4 text-muted"></i>
+                <p class="text-muted mt-2">No hay registros disponibles</p>
+                <button class="btn btn-primary btn-sm" th:if="${showAddButton}">
+                    <i class="bi bi-plus-circle"></i> Agregar el primer registro
+                </button>
+            </div>
+
+            <!-- Tabla de datos -->
+            <div th:if="${not #lists.isEmpty(items)}" class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <!-- Columnas dinámicas -->
+                            <th th:each="column : ${columns}" 
+                                th:text="${column.label}">Columna</th>
+                            <!-- Columna de acciones -->
+                            <th th:if="${showActions}" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${items}">
+                            <!-- Celdas dinámicas -->
+                            <td th:each="column : ${columns}">
+                                <!-- Texto normal -->
+                                <span th:if="${column.type == 'text'}" 
+                                      th:text="${item[column.getter] ?: '-'}">-</span>
+                                
+                                <!-- Texto con formato strong -->
+                                <strong th:if="${column.type == 'strong'}" 
+                                        th:text="${item[column.getter] ?: '-'}">-</strong>
+                                
+                                <!-- Código -->
+                                <code th:if="${column.type == 'code'}" 
+                                      th:text="${item[column.getter] ?: '-'}">-</code>
+                                
+                                <!-- Badge -->
+                                <span th:if="${column.type == 'badge'}" 
+                                      class="badge" 
+                                      th:classappend="${column.badgeClass ?: 'bg-secondary'}"
+                                      th:text="${item[column.getter] ?: '-'}">-</span>
+                                
+                                <!-- Badge condicional -->
+                                <span th:if="${column.type == 'conditional-badge'}" 
+                                      class="badge" 
+                                      th:classappend="${item[column.getter] > 0 ? 'bg-success' : 'bg-danger'}"
+                                      th:text="${item[column.getter]}">0</span>
+                                
+                                <!-- Precio -->
+                                <span th:if="${column.type == 'price'}" 
+                                      th:text="${item[column.getter] != null} ? '$' + ${#numbers.formatDecimal(item[column.getter], 0, 'POINT', 0, 'COMMA')} : '-'">$0</span>
+                            </td>
+                            
+                            <!-- Botones de acción -->
+                            <td th:if="${showActions}" class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <!-- Ver detalles -->
+                                    <button class="btn btn-outline-info" 
+                                            th:if="${showViewButton}"
+                                            title="Ver detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    
+                                    <!-- Editar -->
+                                    <button class="btn btn-outline-primary" 
+                                            th:if="${showEditButton}"
+                                            title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    
+                                    <!-- Eliminar -->
+                                    <button class="btn btn-outline-danger" 
+                                            th:if="${showDeleteButton}"
+                                            title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

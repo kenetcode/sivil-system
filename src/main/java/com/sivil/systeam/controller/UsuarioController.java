@@ -1,0 +1,112 @@
+package com.sivil.systeam.controller;
+
+import com.sivil.systeam.entity.Usuario;
+import com.sivil.systeam.enums.TipoUsuario;
+import com.sivil.systeam.service.UsuarioService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+public class UsuarioController {
+    
+    @Autowired
+    private UsuarioService usuarioService;
+    
+    @GetMapping("/login")
+    public String mostrarLogin(@RequestParam(value = "error", required = false) String error, Model model) {
+        if ("credenciales".equals(error)) {
+            model.addAttribute("error", "Email o contraseña incorrectos");
+        } else if ("sistema".equals(error)) {
+            model.addAttribute("error", "Error en el sistema");
+        }
+        return "login/login";
+    }
+    
+    @GetMapping("/registro")
+    public String mostrarRegistro(Model model) {
+        model.addAttribute("usuario", new Usuario());
+        // Solo permitir comprador y vendedor en el registro público
+        List<TipoUsuario> tiposPermitidos = Arrays.asList(TipoUsuario.comprador, TipoUsuario.vendedor);
+        model.addAttribute("tiposUsuario", tiposPermitidos);
+        return "usuario/registro";
+    }
+    
+    @GetMapping("/validar-nombre-usuario")
+    @ResponseBody
+    public boolean validarNombreUsuario(@RequestParam("nombre_usuario") String nombre_usuario) {
+        return !usuarioService.existeNombreUsuario(nombre_usuario);
+    }
+    
+    @GetMapping("/validar-email")
+    @ResponseBody
+    public boolean validarEmail(@RequestParam("email") String email) {
+        return !usuarioService.existeEmail(email);
+    }
+    
+    @PostMapping("/registro")
+    public String procesarRegistro(@ModelAttribute Usuario usuario, 
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            usuarioService.crearUsuario(usuario);
+            redirectAttributes.addFlashAttribute("mensaje", "Usuario registrado exitosamente");
+            return "redirect:/login";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/registro";
+        }
+    }
+    
+    @GetMapping("/usuarios")
+    public String mostrarUsuarios(Model model) {
+        model.addAttribute("usuarios", usuarioService.obtenerTodosLosUsuarios());
+        
+        // Configurar columnas para la tabla
+        List<Object> columnas = Arrays.asList(
+            Map.of("label", "ID", "getter", "id_usuario", "type", "text"),
+            Map.of("label", "Usuario", "getter", "nombre_usuario", "type", "strong"),
+            Map.of("label", "Email", "getter", "email", "type", "text"),
+            Map.of("label", "Nombre Completo", "getter", "nombre_completo", "type", "text"),
+            Map.of("label", "Tipo", "getter", "tipo_usuario", "type", "badge", "badgeClass", "bg-primary"),
+            Map.of("label", "Estado", "getter", "estado", "type", "conditional-badge"),
+            Map.of("label", "Teléfono", "getter", "telefono", "type", "text")
+        );
+        model.addAttribute("columnas", columnas);
+        
+        return "usuario/administrar-usuarios";
+    }
+    
+    @GetMapping("/usuarios/nuevo")
+    public String mostrarRegistroInterno(Model model) {
+        model.addAttribute("usuario", new Usuario());
+        // Para registro interno, permitir todos los tipos
+        model.addAttribute("tiposUsuario", TipoUsuario.values());
+        return "usuario/registro-interno-sistema";
+    }
+    
+    @PostMapping("/usuarios/nuevo")
+    public String procesarRegistroInterno(@ModelAttribute Usuario usuario, 
+                                         RedirectAttributes redirectAttributes,
+                                         Model model) {
+        try {
+            usuarioService.crearUsuario(usuario);
+            redirectAttributes.addFlashAttribute("mensaje", "Usuario creado exitosamente");
+            return "redirect:/usuarios";
+        } catch (RuntimeException e) {
+            // En lugar de redirigir, volver a mostrar el formulario con los datos
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("usuario", usuario); // Preservar los datos
+            model.addAttribute("tiposUsuario", TipoUsuario.values());
+            return "usuario/registro-interno-sistema"; // Volver al formulario sin redirect
+        }
+    }
+}

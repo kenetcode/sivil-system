@@ -1,45 +1,93 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body>
-    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light border-bottom fixed-top" style="top: 90px; z-index: 1020;">
         <div class="container">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/}">
-                            <i class="bi bi-house"></i> Inicio
+                    <li class="nav-item me-2">
+                        <a class="nav-link btn btn-outline-primary rounded-pill px-3 py-2" th:href="@{/}" 
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#0d6efd'; this.style.borderColor='#0d6efd'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#0d6efd'; this.style.color='#0d6efd';">
+                            <i class="bi bi-house me-1"></i> Inicio
                         </a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-book"></i> Libros
+
+
+                    <li class="nav-item me-2"
+                        th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                        <a class="nav-link btn btn-outline-success rounded-pill px-3 py-2"
+                           th:href="@{/ventas/crear}"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#198754'; this.style.borderColor='#198754'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#198754'; this.style.color='#198754';">
+                            <i class="bi bi-cash-register me-1"></i> Realizar Venta
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" th:href="@{/libros}">Ver Todos</a></li>
-                            <li><a class="dropdown-item" th:href="@{/libros/activos}">Libros Activos</a></li>
-                            <li><a class="dropdown-item" th:href="@{/libros/disponibles}">Disponibles</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" th:href="@{/libros/buscar}">Buscar Libros</a></li>
+                    </li>
+
+
+
+
+                    <li class="nav-item dropdown me-2" th:if="${currentUser != null}">
+                        <a class="nav-link btn btn-outline-info rounded-pill px-3 py-2 dropdown-toggle" href="#" id="comprasDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#0dcaf0'; this.style.borderColor='#0dcaf0'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#0dcaf0'; this.style.color='#0dcaf0';">
+                            <i class="bi bi-cart-plus me-1"></i> Compras Online
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="comprasDropdown">
+                            <li><a class="dropdown-item" th:href="@{/compra-online/crear}">
+                                <i class="bi bi-cart-plus me-2"></i>Realizar Compra
+                            </a></li>
+                            <li><a class="dropdown-item" th:href="@{/compra-online/mis-compras}">
+                                <i class="bi bi-bag-check me-2"></i>Mis Compras
+                            </a></li>
                         </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-cart"></i> Ventas
+                    <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                        <a class="nav-link btn btn-outline-warning rounded-pill px-3 py-2" th:href="@{/pago/seleccion-metodo-pago}"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#ffc107'; this.style.borderColor='#ffc107'; this.style.color='black';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#ffc107'; this.style.color='#ffc107';">
+                            <i class="bi bi-credit-card me-1"></i> Gestión de Pagos
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-bag"></i> Compras
+                    <li class="nav-item me-2"
+                        th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                        <a class="nav-link btn btn-outline-secondary rounded-pill px-3 py-2"
+                           th:href="@{/stock}"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#6c757d'; this.style.borderColor='#6c757d'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#6c757d'; this.style.color='#6c757d';">
+                            <i class="bi bi-boxes me-1"></i> Stock
+                        </a>
+                    </li>
+
+                    <!-- <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
+                         <a class="nav-link btn btn-outline-secondary rounded-pill px-3 py-2" href="#"
+                            style="text-decoration: none;"
+                            onmouseover="this.style.backgroundColor='#6c757d'; this.style.borderColor='#6c757d'; this.style.color='white';"
+                            onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#6c757d'; this.style.color='#6c757d';">
+                             <i class="bi bi-boxes me-1"></i> Stock
+                         </a>
+                     </li>-->
+                    <li class="nav-item me-2" th:if="${currentUser != null and currentUser.tipo_usuario.name() == 'admin'}">
+                        <a class="nav-link btn btn-outline-danger rounded-pill px-3 py-2" th:href="@{/usuarios}"
+                           style="text-decoration: none;"
+                           onmouseover="this.style.backgroundColor='#dc3545'; this.style.borderColor='#dc3545'; this.style.color='white';"
+                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#dc3545'; this.style.color='#dc3545';">
+                            <i class="bi bi-people me-1"></i> Administrar Usuarios
                         </a>
                     </li>
                 </ul>
                 <div class="d-flex">
-                    <form class="d-flex me-3">
-                        <input class="form-control me-2" type="search" placeholder="Buscar..." id="searchInput">
-                        <button class="btn btn-outline-primary" type="button" onclick="buscarLibros()">
+                    <form class="d-flex">
+                        <input class="form-control form-control-sm me-1" type="search" placeholder="Buscar..." id="searchInput" style="width: 200px;">
+                        <button class="btn btn-outline-primary btn-sm" type="button" onclick="buscarLibros()">
                             <i class="bi bi-search"></i>
                         </button>
                     </form>
@@ -47,5 +95,167 @@
             </div>
         </div>
     </nav>
+
+    <style>
+        /* Override Bootstrap y estilos inline para mantener estado activo persistente */
+        .nav-link.btn {
+            transition: all 0.3s ease !important;
+        }
+        
+        /* Estados hover normales - para que funcionen los onmouseover existentes */
+        .nav-link.btn.btn-outline-primary:hover:not(.active) {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            color: white !important;
+        }
+        .nav-link.btn.btn-outline-success:hover:not(.active) {
+            background-color: #198754 !important;
+            border-color: #198754 !important;
+            color: white !important;
+        }
+        .nav-link.btn.btn-outline-info:hover:not(.active) {
+            background-color: #0dcaf0 !important;
+            border-color: #0dcaf0 !important;
+            color: white !important;
+        }
+        .nav-link.btn.btn-outline-warning:hover:not(.active) {
+            background-color: #ffc107 !important;
+            border-color: #ffc107 !important;
+            color: black !important;
+        }
+        .nav-link.btn.btn-outline-secondary:hover:not(.active) {
+            background-color: #6c757d !important;
+            border-color: #6c757d !important;
+            color: white !important;
+        }
+        .nav-link.btn.btn-outline-danger:hover:not(.active) {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: white !important;
+        }
+        
+        /* Estados activos - tienen máxima prioridad */
+        .nav-link.btn.btn-outline-primary.active,
+        .nav-link.btn.btn-outline-primary.active:hover,
+        .nav-link.btn.btn-outline-primary.active:focus,
+        .nav-link.btn.btn-outline-primary.active:active {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            color: white !important;
+            outline: none !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1) !important;
+            transform: translateY(1px) !important;
+        }
+        
+        .nav-link.btn.btn-outline-success.active,
+        .nav-link.btn.btn-outline-success.active:hover,
+        .nav-link.btn.btn-outline-success.active:focus,
+        .nav-link.btn.btn-outline-success.active:active {
+            background-color: #198754 !important;
+            border-color: #198754 !important;
+            color: white !important;
+            outline: none !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1) !important;
+            transform: translateY(1px) !important;
+        }
+        
+        .nav-link.btn.btn-outline-info.active,
+        .nav-link.btn.btn-outline-info.active:hover,
+        .nav-link.btn.btn-outline-info.active:focus,
+        .nav-link.btn.btn-outline-info.active:active {
+            background-color: #0dcaf0 !important;
+            border-color: #0dcaf0 !important;
+            color: white !important;
+            outline: none !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1) !important;
+            transform: translateY(1px) !important;
+        }
+        
+        .nav-link.btn.btn-outline-warning.active,
+        .nav-link.btn.btn-outline-warning.active:hover,
+        .nav-link.btn.btn-outline-warning.active:focus,
+        .nav-link.btn.btn-outline-warning.active:active {
+            background-color: #ffc107 !important;
+            border-color: #ffc107 !important;
+            color: black !important;
+            outline: none !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1) !important;
+            transform: translateY(1px) !important;
+        }
+        
+        .nav-link.btn.btn-outline-secondary.active,
+        .nav-link.btn.btn-outline-secondary.active:hover,
+        .nav-link.btn.btn-outline-secondary.active:focus,
+        .nav-link.btn.btn-outline-secondary.active:active {
+            background-color: #6c757d !important;
+            border-color: #6c757d !important;
+            color: white !important;
+            outline: none !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1) !important;
+            transform: translateY(1px) !important;
+        }
+        
+        .nav-link.btn.btn-outline-danger.active,
+        .nav-link.btn.btn-outline-danger.active:hover,
+        .nav-link.btn.btn-outline-danger.active:focus,
+        .nav-link.btn.btn-outline-danger.active:active {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: white !important;
+            outline: none !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1) !important;
+            transform: translateY(1px) !important;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navButtons = document.querySelectorAll('.navbar-nav .nav-link.btn');
+            
+            // Función para activar botón basado en la URL actual
+            function setActiveButton() {
+                const currentPath = window.location.pathname;
+                
+                navButtons.forEach(button => {
+                    button.classList.remove('active');
+                    
+                    // Comparar href del botón con la ruta actual
+                    if (button.href && button.href.includes(currentPath)) {
+                        button.classList.add('active');
+                    } else if (currentPath === '/' && button.href && button.href.endsWith('/')) {
+                        // Para la página de inicio
+                        button.classList.add('active');
+                    }
+                });
+            }
+            
+            // Activar botón al cargar la página
+            setActiveButton();
+            
+            // Manejar clicks en botones
+            navButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Remover clase active de todos los botones
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Agregar clase active al botón clickeado
+                    this.classList.add('active');
+                    
+                    // Guardar en localStorage para persistencia
+                    localStorage.setItem('activeNavButton', this.href || window.location.pathname);
+                });
+            });
+            
+            // Restaurar desde localStorage si no hay coincidencia por URL
+            const savedActiveButton = localStorage.getItem('activeNavButton');
+            if (savedActiveButton && !document.querySelector('.navbar-nav .nav-link.btn.active')) {
+                navButtons.forEach(button => {
+                    if (button.href === savedActiveButton) {
+                        button.classList.add('active');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

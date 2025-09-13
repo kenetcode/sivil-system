@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{layout/base :: layout (~{::title}, ~{::content})}">
+<body>
+    <div th:fragment="content">
+        <!-- Tabla usando fragment -->
+        <div th:replace="~{fragments/table :: crud-table(title=${title}, subtitle=${subtitle}, items=${items}, columns=${columns}, showActions=${showActions}, showAddButton=${showAddButton}, showViewButton=${showViewButton}, showEditButton=${showEditButton}, showDeleteButton=${showDeleteButton})}">
+            <p>Cargando tabla...</p>
+        </div>
+    </div>
+</body>
+</html>

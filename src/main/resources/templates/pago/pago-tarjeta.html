@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout ('Pago con Tarjeta', ~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .card-form {
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .card-number-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .cvv-hidden {
+            font-family: 'Courier New', monospace;
+        }
+        
+        .error-message {
+            color: #dc3545 !important;
+            font-size: 0.875em;
+            margin-top: 5px;
+        }
+        
+        #numeroTarjetaError, #fechaError, #cvvError, #nombreError, #emailError, #direccionError, #montoError {
+            color: #dc3545 !important;
+            font-size: 0.875em;
+            margin-top: 5px;
+        }
+        
+        .error-message.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .success-icon {
+            color: #28a745;
+        }
+        
+        .amount-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .input-error {
+            border-color: #dc3545;
+        }
+        
+        .input-success {
+            border-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card card-form">
+                    <div class="card-header text-center">
+                        <h3><i class="bi bi-credit-card"></i> Pago con Tarjeta</h3>
+                        <p class="mb-0">Complete la información para procesar su pago</p>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Mostrar el monto a pagar -->
+                        <div class="alert alert-info text-center mb-4" th:if="${montoAPagar}">
+                            <i class="bi bi-cash-stack"></i>
+                            <strong>Total a Pagar: </strong>
+                            <span class="amount-display" th:text="'$' + ${#numbers.formatDecimal(montoAPagar, 1, 2)}">$0.00</span>
+                        </div>
+                        
+                        <!-- Mensajes de error -->
+                        <div class="alert alert-danger" th:if="${error}">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <span th:text="${error}"></span>
+                        </div>
+                        
+                        <!-- Formulario de pago -->
+                        <form th:action="@{/pago/procesar}" method="post" id="pagoForm" novalidate>
+                            <!-- Campos ocultos -->
+                            <input type="hidden" name="idCompra" th:value="${idCompra}" />
+                            <input type="hidden" name="idVenta" th:value="${idVenta}" />
+                            <input type="hidden" name="ventaPendiente" th:value="${ventaPendiente}" />
+                            <input type="hidden" name="compraPendiente" th:value="${compraPendiente}" />
+                            
+                            <!-- Información de la tarjeta -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="mb-3">
+                                        <i class="bi bi-credit-card-2-front"></i> Información de la Tarjeta
+                                    </h5>
+                                </div>
+                            </div>
+                            
+                            <!-- Número de tarjeta -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="numeroTarjeta" class="form-label">Número de Tarjeta <span class="text-danger">*</span> </label>
+                                    <input type="text" class="form-control" id="numeroTarjeta" name="numeroTarjeta" 
+                                           placeholder="1234 5678 9012 3456" maxlength="19" required
+                                           oninput="formatearNumeroTarjeta(this)" autocomplete="cc-number">
+                                    <div class="card-number-display" id="numeroDisplay">
+                                        **** **** **** ****
+                                    </div>
+                                    <div id="numeroTarjetaError" class="error-message"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Fecha de vencimiento y CVV -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="fechaVencimiento" class="form-label">Fecha de Vencimiento <span class="text-danger">*</span> </label>
+                                    <input type="text" class="form-control" id="fechaVencimiento" name="fechaVencimiento" 
+                                           placeholder="MM/AA" maxlength="5" required
+                                           oninput="formatearFecha(this)" autocomplete="cc-exp">
+                                    <div id="fechaError" class="error-message"></div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="cvv" class="form-label">CVV <span class="text-danger">*</span> </label>
+                                    <input type="password" class="form-control" id="cvv" name="cvv" 
+                                           placeholder="123" maxlength="3" required
+                                           oninput="validarCVV(this)" autocomplete="cc-csc">
+                                    <div class="cvv-hidden mt-1">
+                                        CVV: <span id="cvvDisplay">***</span>
+                                    </div>
+                                    <div id="cvvError" class="error-message"></div>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-4">
+                            
+                            <!-- Información del cliente -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="mb-3">
+                                        <i class="bi bi-person-circle"></i> Información del Cliente
+                                    </h5>
+                                </div>
+                            </div>
+                            
+                            <!-- Nombre del titular -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="nombreTitular" class="form-label">Nombre del Titular <span class="text-danger">*</span> </label>
+                                    <input type="text" class="form-control" id="nombreTitular" name="nombreTitular" 
+                                           th:value="${nombreTitular}" placeholder="Nombre completo como aparece en la tarjeta" 
+                                           required autocomplete="cc-name">
+                                    <div id="nombreError" class="error-message"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Email y dirección -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Correo Electrónico <span class="text-danger">*</span> </label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           th:value="${email}" placeholder="correo@ejemplo.com" required autocomplete="email">
+                                    <div id="emailError" class="error-message"></div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="direccion" class="form-label">Dirección de Facturación <span class="text-danger">*</span> </label>
+                                    <input type="text" class="form-control" id="direccion" name="direccion" 
+                                           th:value="${direccion}" placeholder="Dirección completa" required autocomplete="billing street-address">
+                                    <div id="direccionError" class="error-message"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Monto a pagar -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="montoVisible" class="form-label">Monto a Pagar <span class="text-danger">*</span> </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01" class="form-control" id="montoVisible" name="monto"
+                                               th:value="${montoAPagar != null ? montoAPagar : '100.00'}"
+                                               th:readonly="${idVenta != null or ventaPendiente != null or compraPendiente != null}"
+                                               placeholder="0.00" required min="0.01">
+                                    </div>
+                                    <div id="montoError" class="error-message"></div>
+                                    <small th:if="${idVenta != null or ventaPendiente != null or compraPendiente != null}" class="text-muted">
+                                        <i class="bi bi-lock"></i>
+                                        <span th:if="${compraPendiente != null}">Monto establecido desde la compra online</span>
+                                        <span th:if="${ventaPendiente != null}">Monto establecido desde la venta</span>
+                                        <span th:if="${idVenta != null and compraPendiente == null and ventaPendiente == null}">Monto establecido desde la venta</span>
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <!-- Método de pago -->
+                            <div class="alert alert-secondary">
+                                <i class="bi bi-shield-check"></i>
+                                <strong>Método de Pago Seleccionado:</strong> Pago con Tarjeta
+                            </div>
+                            
+                            <!-- Botón de envío -->
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg" id="procesarPagoBtn">
+                                    <i class="bi bi-credit-card-fill"></i>
+                                    Procesar Pago
+                                    <span th:if="${montoAPagar}" th:text="'$' + ${#numbers.formatDecimal(montoAPagar, 1, 2)}"></span>
+                                </button>
+                                <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Formatear número de tarjeta
+        function formatearNumeroTarjeta(input) {
+            let value = input.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            
+            input.value = formattedValue;
+            
+            // Actualizar display visual
+            const display = document.getElementById('numeroDisplay');
+            if (value.length === 0) {
+                display.textContent = '**** **** **** ****';
+            } else {
+                let displayValue = '';
+                for (let i = 0; i < 16; i += 4) {
+                    if (i < value.length) {
+                        displayValue += value.substring(i, Math.min(i + 4, value.length));
+                        if (value.length > i + 4) {
+                            displayValue += ' ';
+                        }
+                    } else {
+                        displayValue += ' ****';
+                    }
+                }
+                display.textContent = displayValue;
+            }
+            
+            // Validar longitud
+            validarNumeroTarjeta(input);
+        }
+        
+        // Formatear fecha MM/AA
+        function formatearFecha(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            input.value = value;
+            validarFecha(input);
+        }
+        
+        // Validar CVV y mostrar asteriscos
+        function validarCVV(input) {
+            let value = input.value.replace(/\D/g, '');
+            input.value = value;
+            
+            // Mostrar asteriscos
+            const cvvDisplay = document.getElementById('cvvDisplay');
+            cvvDisplay.textContent = '*'.repeat(value.length).padEnd(3, '*');
+            
+            // Validar longitud
+            const errorDiv = document.getElementById('cvvError');
+            if (value.length === 3) {
+                input.classList.remove('input-error');
+                input.classList.add('input-success');
+                errorDiv.textContent = '';
+            } else if (value.length > 0) {
+                input.classList.add('input-error');
+                input.classList.remove('input-success');
+                errorDiv.textContent = 'El CVV debe tener exactamente 3 dígitos';
+            } else {
+                input.classList.remove('input-error', 'input-success');
+                errorDiv.textContent = '';
+            }
+        }
+        
+        // Validar número de tarjeta
+        function validarNumeroTarjeta(input) {
+            const value = input.value.replace(/\s+/g, '');
+            const errorDiv = document.getElementById('numeroTarjetaError');
+            
+            if (value.length === 16) {
+                input.classList.remove('input-error');
+                input.classList.add('input-success');
+                errorDiv.textContent = '';
+            } else if (value.length > 0) {
+                input.classList.add('input-error');
+                input.classList.remove('input-success');
+                errorDiv.textContent = 'El número de tarjeta debe tener exactamente 16 dígitos';
+            } else {
+                input.classList.remove('input-error', 'input-success');
+                errorDiv.textContent = '';
+            }
+        }
+        
+        // Validar fecha
+        function validarFecha(input) {
+            const value = input.value;
+            const errorDiv = document.getElementById('fechaError');
+            const pattern = /^(0[1-9]|1[0-2])\/\d{2}$/;
+            
+            if (value.length === 0) {
+                input.classList.remove('input-error', 'input-success');
+                errorDiv.textContent = '';
+                return;
+            }
+            
+            if (!pattern.test(value)) {
+                input.classList.add('input-error');
+                input.classList.remove('input-success');
+                errorDiv.textContent = 'Formato requerido: MM/AA (ejemplo: 12/25)';
+                return;
+            }
+            
+            // Extraer mes y año
+            const parts = value.split('/');
+            const mes = parseInt(parts[0], 10);
+            let año = parseInt(parts[1], 10);
+            
+            // Interpretar el año correctamente (25 = 2025, 24 = 2024, etc.)
+            if (año < 50) {
+                año = 2000 + año; // 00-49 = 2000-2049
+            } else {
+                año = 1900 + año; // 50-99 = 1950-1999
+            }
+            
+            const fechaActual = new Date();
+            const añoActual = fechaActual.getFullYear();
+            const mesActual = fechaActual.getMonth() + 1;
+            
+            // Validar rango de mes (01-12)
+            if (mes < 1 || mes > 12) {
+                input.classList.add('input-error');
+                input.classList.remove('input-success');
+                errorDiv.textContent = 'El mes debe estar entre 01 y 12';
+                return;
+            }
+            
+            // Validar que no sea una fecha pasada
+            // Las tarjetas vencen al final del mes, así que comparamos:
+            // - Si el año es menor al actual: vencida
+            // - Si el año es igual y el mes es menor al actual: vencida
+            if (año < añoActual || (año === añoActual && mes < mesActual)) {
+                input.classList.add('input-error');
+                input.classList.remove('input-success');
+                errorDiv.textContent = 'La tarjeta no puede estar vencida';
+                return;
+            }
+            
+            // Validar que no sea muy lejana en el futuro (máximo 2 años)
+            if (año > añoActual + 2) {
+                input.classList.add('input-error');
+                input.classList.remove('input-success');
+                errorDiv.textContent = 'Fecha de vencimiento muy lejana en el futuro';
+                return;
+            }
+            
+            // Si llegamos aquí, la fecha es válida
+            input.classList.remove('input-error');
+            input.classList.add('input-success');
+            errorDiv.textContent = '';
+        }
+        
+        // Validar formulario antes de enviar
+        document.getElementById('pagoForm').addEventListener('submit', function(e) {
+            let isValid = true;
+            const requiredFields = ['numeroTarjeta', 'fechaVencimiento', 'cvv', 'nombreTitular', 'email', 'direccion', 'montoVisible'];
+            
+            // Validar campos requeridos
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                const value = field.value.trim();
+                
+                if (!value) {
+                    field.classList.add('input-error');
+                    isValid = false;
+                } else {
+                    field.classList.remove('input-error');
+                }
+            });
+            
+            // Validaciones específicas
+            const numeroTarjeta = document.getElementById('numeroTarjeta').value.replace(/\s+/g, '');
+            if (numeroTarjeta.length !== 16) {
+                document.getElementById('numeroTarjetaError').textContent = 'El número de tarjeta debe tener exactamente 16 dígitos';
+                isValid = false;
+            }
+            
+            const fechaVencimiento = document.getElementById('fechaVencimiento').value;
+            const fechaPattern = /^(0[1-9]|1[0-2])\/\d{2}$/;
+            if (!fechaPattern.test(fechaVencimiento)) {
+                document.getElementById('fechaError').textContent = 'Formato requerido: MM/AA (ejemplo: 12/25)';
+                isValid = false;
+            } else {
+                // Validar rango de fecha
+                const parts = fechaVencimiento.split('/');
+                const mes = parseInt(parts[0], 10);
+                const año = parseInt('20' + parts[1], 10);
+                const añoActual = new Date().getFullYear();
+                const mesActual = new Date().getMonth() + 1;
+                
+                if (mes < 1 || mes > 12) {
+                    document.getElementById('fechaError').textContent = 'El mes debe estar entre 01 y 12';
+                    isValid = false;
+                } else if (año < añoActual) {
+                    document.getElementById('fechaError').textContent = 'La tarjeta no puede estar vencida';
+                    isValid = false;
+                } else if (año > añoActual + 10) {
+                    document.getElementById('fechaError').textContent = 'Fecha de vencimiento muy lejana en el futuro';
+                    isValid = false;
+                }
+            }
+            
+            const cvv = document.getElementById('cvv').value;
+            if (cvv.length !== 3) {
+                document.getElementById('cvvError').textContent = 'El CVV debe tener exactamente 3 dígitos';
+                isValid = false;
+            }
+            
+            const monto = parseFloat(document.getElementById('montoVisible').value);
+            if (!monto || monto <= 0) {
+                document.getElementById('montoError').textContent = 'El monto debe ser mayor a 0';
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Por favor, complete todos los campos correctamente.');
+            }
+        });
+        
+        // Validación de email en tiempo real
+        document.getElementById('email').addEventListener('blur', function() {
+            const email = this.value;
+            const errorDiv = document.getElementById('emailError');
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (email && !emailPattern.test(email)) {
+                this.classList.add('input-error');
+                errorDiv.textContent = 'Por favor, ingrese un email válido';
+            } else {
+                this.classList.remove('input-error');
+                errorDiv.textContent = '';
+            }
+        });
+        
+        // Validación de nombre en tiempo real
+        document.getElementById('nombreTitular').addEventListener('blur', function() {
+            const nombre = this.value.trim();
+            const errorDiv = document.getElementById('nombreError');
+            
+            if (nombre.length < 3) {
+                this.classList.add('input-error');
+                errorDiv.textContent = 'El nombre debe tener al menos 3 caracteres';
+            } else {
+                this.classList.remove('input-error');
+                errorDiv.textContent = '';
+            }
+        });
+    </script>
+</div>
+</body>
+</html>

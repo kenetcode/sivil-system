@@ -1,0 +1,70 @@
+package com.sivil.systeam.service;
+
+import com.sivil.systeam.repository.VentaRepository;
+import com.sivil.systeam.repository.CompraOnlineRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class NumeracionFacturaService {
+
+    @Value("${sucursal.numero:01}")
+    private String sucursal;
+
+    private Long ultimoCorrelativo = null;
+
+    public synchronized String generarNumeroFactura(VentaRepository ventaRepository) {
+        // SIEMPRE obtener el último correlativo de la base de datos
+        ultimoCorrelativo = obtenerUltimoCorrelativo(ventaRepository);
+
+        // INCREMENTAR para obtener el siguiente número
+        ultimoCorrelativo++;
+
+        return sucursal + "-" + String.format("%010d", ultimoCorrelativo);
+    }
+
+    public synchronized String generarNumeroFactura(CompraOnlineRepository compraOnlineRepository) {
+        // Para compras online usamos un prefijo diferente
+        ultimoCorrelativo = obtenerUltimoCorrelativoCompra(compraOnlineRepository);
+
+        // INCREMENTAR para obtener el siguiente número
+        ultimoCorrelativo++;
+
+        return "ORD-" + String.format("%010d", ultimoCorrelativo);
+    }
+
+    private Long obtenerUltimoCorrelativoCompra(CompraOnlineRepository compraOnlineRepository) {
+        try {
+            String prefijoBusqueda = "ORD-";
+            // Necesitamos implementar un método similar en CompraOnlineRepository
+            // Por ahora, contamos todas las compras existentes y agregamos 1
+            Long count = compraOnlineRepository.count();
+            return count;
+        } catch (Exception e) {
+            // Si hay error, empezar desde 0
+            return 0L;
+        }
+    }
+
+    private Long obtenerUltimoCorrelativo(VentaRepository ventaRepository) {
+        try {
+            String prefijoBusqueda = sucursal + "-";
+            List<String> facturas = ventaRepository.findTopByNumeroFacturaStartingWith(prefijoBusqueda);
+
+            if (!facturas.isEmpty()) {
+                String ultimaFactura = facturas.get(0);
+                // Extraer el número correlativo (después del guión)
+                String correlativoStr = ultimaFactura.substring(prefijoBusqueda.length());
+                return Long.parseLong(correlativoStr);
+            }
+        } catch (Exception e) {
+            // Si hay error, empezar desde 0
+            return 0L;
+        }
+
+        // Si no hay facturas previas, empezar desde 0
+        return 0L;
+    }
+}

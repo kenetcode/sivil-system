@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout ('Selección de Método de Pago', ~{::content})}">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div th:fragment="content">
+    <style>
+        .payment-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 140px);
+        }
+
+        .payment-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .payment-title h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .payment-title p {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+
+        .payment-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto 30px auto;
+            justify-content: center;
+            align-items: stretch;
+        }
+
+        /* Mobile-first approach */
+        @media (max-width: 320px) {
+            .payment-options {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 0 10px;
+            }
+            
+            .payment-container {
+                padding: 10px;
+                min-height: calc(100vh - 100px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .payment-options {
+                grid-template-columns: 1fr;
+                gap: 25px;
+                max-width: 400px;
+            }
+            
+            .payment-container {
+                padding: 15px;
+                min-height: calc(100vh - 120px);
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .payment-options {
+                max-width: 700px;
+                gap: 35px;
+            }
+        }
+
+        /* Radio buttons ocultos */
+        .payment-radio {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .payment-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            padding: 25px 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid transparent;
+            text-align: center;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .payment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .payment-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .payment-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Estados de selección usando CSS puro */
+        #tarjeta:checked ~ .payment-options label[for="tarjeta"] {
+            border-color: #ffffff;
+            background: linear-gradient(135deg, #4e5cd4 0%, #5e3a7e 100%);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(78, 92, 212, 0.3);
+        }
+
+        #efectivo:checked ~ .payment-options label[for="efectivo"] {
+            border-color: #ffffff;
+            background: linear-gradient(135deg, #1e7e34 0%, #17a2b8 100%);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(30, 126, 52, 0.3);
+        }
+
+        #tarjeta:checked ~ .payment-options label[for="tarjeta"] .selected-indicator,
+        #efectivo:checked ~ .payment-options label[for="efectivo"] .selected-indicator {
+            transform: scale(1);
+        }
+
+        .payment-card-tarjeta {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .payment-card-tarjeta:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+
+        .payment-card-efectivo {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .payment-card-efectivo:hover {
+            background: linear-gradient(135deg, #218838 0%, #1abc9c 100%);
+        }
+
+
+        .payment-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .payment-card-tarjeta .payment-icon {
+            animation-delay: 0s;
+        }
+
+        .payment-card-efectivo .payment-icon {
+            animation-delay: 1.5s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .payment-title-card {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .payment-description {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .payment-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .payment-features li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .payment-features li i {
+            margin-right: 6px;
+            font-size: 0.9rem;
+        }
+
+        .selected-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #28a745;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transform: scale(0);
+            transition: transform 0.3s ease;
+        }
+
+        #tarjeta:checked ~ .payment-options label[for="tarjeta"] .selected-indicator {
+            background: #ffffff;
+            color: #667eea;
+        }
+
+        #efectivo:checked ~ .payment-options label[for="efectivo"] .selected-indicator {
+            background: #ffffff;
+            color: #28a745;
+        }
+
+        /* Formularios ocultos por defecto */
+        .payment-form {
+            display: none;
+            width: 100%;
+            margin: 10px auto;
+        }
+
+        .continue-button {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            border: none;
+            border-radius: 40px;
+            padding: 12px 35px;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            cursor: not-allowed;
+            transition: all 0.4s ease;
+            display: block;
+            margin: 0 auto;
+            min-width: 240px;
+            opacity: 0.6;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        /* Mostrar formulario de tarjeta cuando se selecciona tarjeta */
+        #tarjeta:checked ~ .payment-options ~ form:nth-of-type(1) {
+            display: block;
+        }
+
+        /* Mostrar formulario de efectivo cuando se selecciona efectivo */  
+        #efectivo:checked ~ .payment-options ~ form:nth-of-type(2) {
+            display: block;
+        }
+
+        /* Botón activo para tarjeta */
+        #tarjeta:checked ~ .payment-options ~ form .tarjeta-button {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            opacity: 1;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        #tarjeta:checked ~ .payment-options ~ form .tarjeta-button:hover {
+            background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 123, 255, 0.3);
+        }
+
+        /* Botón activo para efectivo */
+        #efectivo:checked ~ .payment-options ~ form .efectivo-button {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            opacity: 1;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        #efectivo:checked ~ .payment-options ~ form .efectivo-button:hover {
+            background: linear-gradient(135deg, #218838 0%, #1abc9c 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 5px 15px rgba(0, 123, 255, 0.2);
+            }
+            50% {
+                box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+            }
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50px;
+            padding: 12px 20px;
+            color: #495057;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 1);
+            color: #007bff;
+            text-decoration: none;
+            transform: translateX(-3px);
+            box-shadow: 0 6px 18px rgba(0, 123, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .back-button {
+                min-width: 44px;
+                padding: 12px;
+                top: 15px;
+                left: 15px;
+                border-radius: 50%;
+            }
+            
+            .back-button span {
+                display: none;
+            }
+        }
+
+        .security-info {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.95) 100%);
+            border: 1px solid rgba(40, 167, 69, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 25px auto 15px auto;
+            text-align: center;
+            max-width: 600px;
+            box-shadow: 0 6px 18px rgba(40, 167, 69, 0.08);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .security-info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #28a745, #20c997, #17a2b8);
+        }
+
+        .security-info h5 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .security-info h5 i {
+            color: #28a745;
+            font-size: 1.3rem;
+        }
+
+        .security-features {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .security-features {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        .security-feature {
+            display: flex;
+            align-items: center;
+            color: #495057;
+            font-size: 0.95rem;
+            font-weight: 500;
+            background: rgba(40, 167, 69, 0.05);
+            padding: 8px 12px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .security-feature:hover {
+            background: rgba(40, 167, 69, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .security-feature i {
+            margin-right: 8px;
+            color: #28a745;
+            font-size: 1.1rem;
+        }
+
+        /* Animación de entrada */
+        .payment-card {
+            animation: slideInUp 0.6s ease-out forwards;
+        }
+
+        .payment-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .payment-card:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mejoras adicionales de centrado y layout */
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f8f9fa 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container-fluid {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            position: relative;
+        }
+
+        .row {
+            width: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Mejorar interacción táctil en móviles */
+        .payment-card {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @media (max-width: 768px) {
+            .payment-card {
+                min-height: 300px;
+                padding: 30px 20px;
+            }
+            
+            .payment-title h2 {
+                font-size: 2rem;
+            }
+            
+            .continue-button {
+                min-width: 90%;
+                margin: 20px auto;
+            }
+        }
+    </style>
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-12">
+                <div class="payment-container">
+                    <a href="javascript:history.back()" class="back-button">
+                        <i class="bi bi-arrow-left"></i> <span>Volver</span>
+                    </a>
+
+                    <div class="payment-title fade-in">
+                        <h2><i class="bi bi-credit-card-2-front"></i> Procesamiento de Pago - Sistema Interno</h2>
+                        <p>Selecciona el método de pago para procesar la transacción del cliente</p>
+                    </div>
+
+                    <!-- Radio buttons para selección -->
+                    <input type="radio" name="metodoPago" value="tarjeta" id="tarjeta" class="payment-radio">
+                    <input type="radio" name="metodoPago" value="efectivo" id="efectivo" class="payment-radio">
+                    
+                    <div class="payment-options">
+                        <!-- Opción Pago con Tarjeta -->
+                        <label for="tarjeta" class="payment-card payment-card-tarjeta">
+                            <div class="selected-indicator">
+                                <i class="bi bi-check-lg"></i>
+                            </div>
+                            
+                            <div class="payment-icon">
+                                <i class="bi bi-credit-card-fill"></i>
+                            </div>
+                            
+                            <h3 class="payment-title-card">Cobro con Tarjeta</h3>
+                            
+                            <p class="payment-description">
+                                Procesa el pago del cliente usando tarjeta de débito o crédito
+                            </p>
+                            
+                            <ul class="payment-features">
+                                <li><i class="bi bi-shield-check"></i> Sistema seguro PCI</li>
+                                <li><i class="bi bi-lightning-charge"></i> Autorización inmediata</li>
+                                <li><i class="bi bi-credit-card"></i> Débito y crédito</li>
+                                <li><i class="bi bi-receipt"></i> Comprobante automático</li>
+                            </ul>
+                        </label>
+
+                        <!-- Opción Pago en Efectivo -->
+                        <label for="efectivo" class="payment-card payment-card-efectivo">
+                            <div class="selected-indicator">
+                                <i class="bi bi-check-lg"></i>
+                            </div>
+                            
+                            <div class="payment-icon">
+                                <i class="bi bi-cash-stack"></i>
+                            </div>
+                            
+                            <h3 class="payment-title-card">Cobro en Efectivo</h3>
+                            
+                            <p class="payment-description">
+                                Recibe el pago del cliente en efectivo y registra la venta
+                            </p>
+                            
+                            <ul class="payment-features">
+                                <li><i class="bi bi-cash"></i> Pago directo</li>
+                                <li><i class="bi bi-calculator"></i> Cálculo de cambio</li>
+                                <li><i class="bi bi-receipt"></i> Ticket de venta</li>
+                                <li><i class="bi bi-building"></i> Registro en caja</li>
+                            </ul>
+                        </label>
+                    </div>
+                    
+                    <!-- Formulario para pago con tarjeta -->
+                    <form action="/pago/pago-tarjeta" method="get" class="payment-form">
+                        <button type="submit" class="continue-button tarjeta-button">
+                            <i class="bi bi-arrow-right-circle"></i> Procesar con Tarjeta
+                        </button>
+                    </form>
+                    
+                    <!-- Formulario para efectivo (en desarrollo) -->
+                    <form class="payment-form">
+                        <button type="button" class="continue-button efectivo-button" onclick="alert('⚠️ Funcionalidad de pago en efectivo en desarrollo.\n\nPróximamente estará disponible.')">
+                            <i class="bi bi-arrow-right-circle"></i> Procesar en Efectivo
+                        </button>
+                    </form>
+
+                    <div class="security-info fade-in">
+                        <h5><i class="bi bi-shield-lock"></i> Sistema de Pagos Seguro</h5>
+                        <p>Plataforma certificada para procesamiento de transacciones comerciales</p>
+                        <div class="security-features">
+                            <div class="security-feature">
+                                <i class="bi bi-lock"></i>
+                                Encriptación PCI DSS
+                            </div>
+                            <div class="security-feature">
+                                <i class="bi bi-shield-check"></i>
+                                Auditoría de Transacciones
+                            </div>
+                            <div class="security-feature">
+                                <i class="bi bi-eye-slash"></i>
+                                Datos Protegidos
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

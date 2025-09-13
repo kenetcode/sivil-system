@@ -7,17 +7,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-/*nuevo*/
-
-import jakarta.persistence.LockModeType;
-import org.springframework.data.jpa.repository.Lock;
-import java.util.Optional;
-
 import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
-public interface LibroRepository extends JpaRepository<Libro, Integer> {
+public interface InventarioRepository extends JpaRepository<Libro, Integer> {
 
     // ======== VALIDACIONES / BÚSQUEDAS DIRECTAS (con underscore) ========
     @Query("SELECT (COUNT(l) > 0) FROM Libro l WHERE l.codigo_libro = :codigo")
@@ -63,12 +57,4 @@ public interface LibroRepository extends JpaRepository<Libro, Integer> {
 
     @Query("SELECT SUM(l.precio * l.cantidad_stock) FROM Libro l WHERE l.estado = :estado")
     BigDecimal sumValorInventarioByEstado(@Param("estado") Estado estado);
-
-    // Bloqueo de fila para actualizar stock durante el checkout
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT l FROM Libro l WHERE l.id_libro = :id")
-    Optional<Libro> lockByIdForUpdate(@Param("id") Integer id);
-
-
-
 }
