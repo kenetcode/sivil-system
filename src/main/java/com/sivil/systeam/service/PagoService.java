@@ -59,7 +59,7 @@ public class PagoService {
             throw new IllegalArgumentException("Procesamiento de compras no implementado aún");
         } else {
             // Si no viene ni venta ni compra, es un pago independiente (no permitido por el constraint)
-            throw new IllegalArgumentException("Debe especificar una venta o compra para procesar el pago");
+            throw new IllegalArgumentException("Debe especificar una venta o compra para procesar el pago (La vista [pago con tarjeta] desde esta pestaña [Gestión de Pagos] es solo demostrativa, para ver su funcionalidad real, inicie el proceso de venta en la pestaña [Realizar Venta] o el proceso de compra desde [Compras Online])");
         }
 
         return pagoRepository.save(pago);
