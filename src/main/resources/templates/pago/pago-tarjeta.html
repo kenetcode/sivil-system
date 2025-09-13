@@ -111,6 +111,7 @@
                             <!-- Campos ocultos -->
                             <input type="hidden" name="idCompra" th:value="${idCompra}" />
                             <input type="hidden" name="idVenta" th:value="${idVenta}" />
+                            <input type="hidden" name="ventaPendiente" th:value="${ventaPendiente}" />
                             
                             <!-- Información de la tarjeta -->
                             <div class="row">
@@ -204,11 +205,11 @@
                                         <span class="input-group-text">$</span>
                                         <input type="number" step="0.01" class="form-control" id="montoVisible" name="monto"
                                                th:value="${montoAPagar != null ? montoAPagar : '100.00'}"
-                                               th:readonly="${idVenta != null}"
+                                               th:readonly="${idVenta != null or ventaPendiente != null}"
                                                placeholder="0.00" required min="0.01">
                                     </div>
                                     <div id="montoError" class="error-message"></div>
-                                    <small th:if="${idVenta != null}" class="text-muted">
+                                    <small th:if="${idVenta != null or ventaPendiente != null}" class="text-muted">
                                         <i class="bi bi-lock"></i> Monto establecido desde la venta
                                     </small>
                                 </div>

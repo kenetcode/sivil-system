@@ -2,10 +2,12 @@ package com.sivil.systeam.controller;
 
 import com.sivil.systeam.entity.Pago;
 import com.sivil.systeam.service.PagoService;
+import com.sivil.systeam.dto.VentaTemporalDTO;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpSession;
 import java.math.BigDecimal;
 
 @Controller
@@ -59,12 +61,14 @@ public class PagoController {
     }
 
     @GetMapping("/tarjeta")
-    public String mostrarFormulario(Model model, 
+    public String mostrarFormulario(Model model,
                                   @RequestParam(value = "monto", required = false) BigDecimal monto,
                                   @RequestParam(value = "idCompra", required = false) Integer idCompra,
-                                  @RequestParam(value = "idVenta", required = false) Integer idVenta) {
+                                  @RequestParam(value = "idVenta", required = false) Integer idVenta,
+                                  @RequestParam(value = "ventaPendiente", required = false) Boolean ventaPendiente,
+                                  HttpSession session) {
         model.addAttribute("pago", new Pago());
-        
+
         // Si viene un monto desde otra vista, lo usamos
         if (monto != null) {
             model.addAttribute("montoAPagar", monto);
@@ -75,7 +79,10 @@ public class PagoController {
         if (idVenta != null) {
             model.addAttribute("idVenta", idVenta);
         }
-        
+        if (ventaPendiente != null && ventaPendiente) {
+            model.addAttribute("ventaPendiente", true);
+        }
+
         return "pago/pago-tarjeta";
     }
 
@@ -89,54 +96,69 @@ public class PagoController {
                              @RequestParam(value = "monto", required = false, defaultValue = "100.00") BigDecimal monto,
                              @RequestParam(value = "idCompra", required = false) Integer idCompra,
                              @RequestParam(value = "idVenta", required = false) Integer idVenta,
+                             @RequestParam(value = "ventaPendiente", required = false) Boolean ventaPendiente,
+                             HttpSession session,
                              Model model) {
         try {
             // Crear objeto Pago
             Pago pago = new Pago();
             pago.setMonto(monto);
-            
-            // Para cumplir con la restricción de BD, necesitamos asociar el pago
-            // a una compra O a una venta. Si no se proporcionan, creamos una venta simulada.
-            if (idCompra != null) {
-                // En una implementación real, buscarías la CompraOnline por ID
-                // CompraOnline compra = compraService.findById(idCompra);
-                // pago.setCompra(compra);
-                
-                // Por ahora, para simular, no seteamos la compra real
-                // pero manejamos el caso en el servicio
-            } else if (idVenta != null) {
-                // En una implementación real, buscarías la Venta por ID
-                // Venta venta = ventaService.findById(idVenta);
-                // pago.setVenta(venta);
-                
-                // Por ahora, para simular, no seteamos la venta real
-                // pero manejamos el caso en el servicio
-            }
-            
-            Pago pagoProcesado = pagoService.procesarPago(
-                numeroTarjeta, fechaVencimiento, cvv, 
-                nombreTitular, email, direccion, pago, idCompra, idVenta);
 
-            if (idCompra == null && idVenta == null) {
-                model.addAttribute("mensaje", "✅ Pago procesado correctamente");
-                model.addAttribute("esSimulacion", true);
+            // Verificar si hay una venta pendiente en sesión
+            if (ventaPendiente != null && ventaPendiente) {
+                VentaTemporalDTO ventaTemporal = (VentaTemporalDTO) session.getAttribute("ventaPendiente");
+                if (ventaTemporal == null) {
+                    model.addAttribute("error", "La sesión de venta ha expirado. Por favor inicie el proceso de venta nuevamente.");
+                    return "pago/pago-tarjeta";
+                }
+
+                // Procesar pago y crear venta
+                Pago pagoProcesado = pagoService.procesarPagoConVentaPendiente(
+                    numeroTarjeta, fechaVencimiento, cvv,
+                    nombreTitular, email, direccion, pago, ventaTemporal);
+
+                // Limpiar la venta temporal de la sesión
+                session.removeAttribute("ventaPendiente");
+
+                model.addAttribute("mensaje", "✅ Pago procesado correctamente - Venta creada");
+                model.addAttribute("pago", pagoProcesado);
+                model.addAttribute("numeroTarjetaOculto", "****-****-****-" + numeroTarjeta.substring(numeroTarjeta.length() - 4));
+
+                return "pago/pago-confirmacion";
+
             } else {
-                model.addAttribute("mensaje", "✅ Pago procesado correctamente");
-            }
-            model.addAttribute("pago", pagoProcesado);
-            model.addAttribute("numeroTarjetaOculto", "****-****-****-" + numeroTarjeta.substring(numeroTarjeta.length() - 4));
+                // Flujo original para pagos con ventas ya existentes
+                Pago pagoProcesado = pagoService.procesarPago(
+                    numeroTarjeta, fechaVencimiento, cvv,
+                    nombreTitular, email, direccion, pago, idCompra, idVenta);
 
-            return "pago/pago-confirmacion";
+                if (idCompra == null && idVenta == null) {
+                    model.addAttribute("mensaje", "✅ Pago procesado correctamente");
+                    model.addAttribute("esSimulacion", true);
+                } else {
+                    model.addAttribute("mensaje", "✅ Pago procesado correctamente");
+                }
+                model.addAttribute("pago", pagoProcesado);
+                model.addAttribute("numeroTarjetaOculto", "****-****-****-" + numeroTarjeta.substring(numeroTarjeta.length() - 4));
+
+                return "pago/pago-confirmacion";
+            }
+
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("pago", new Pago());
             model.addAttribute("montoAPagar", monto);
-            
+
             // Mantener datos del formulario (excepto datos sensibles)
             model.addAttribute("nombreTitular", nombreTitular);
             model.addAttribute("email", email);
             model.addAttribute("direccion", direccion);
-            
+
+            // Mantener el parámetro de venta pendiente si existe
+            if (ventaPendiente != null && ventaPendiente) {
+                model.addAttribute("ventaPendiente", true);
+            }
+
             return "pago/pago-tarjeta";
         }
     }
