@@ -32,7 +32,7 @@
 
 
 
-                    <li class="nav-item dropdown me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor' or currentUser.tipo_usuario.name() == 'comprador')}">
+                    <li class="nav-item dropdown me-2" th:if="${currentUser != null}">
                         <a class="nav-link btn btn-outline-info rounded-pill px-3 py-2 dropdown-toggle" href="#" id="comprasDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
                            style="text-decoration: none;"
                            onmouseover="this.style.backgroundColor='#0dcaf0'; this.style.borderColor='#0dcaf0'; this.style.color='white';"

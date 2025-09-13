@@ -163,7 +163,7 @@ public class PagoService {
     @Transactional
     public Pago procesarPagoConCompraPendiente(String numeroTarjeta, String fechaVencimiento, String cvv,
                                              String nombreTitular, String email, String direccion,
-                                             Pago pago, CompraTemporalDTO compraTemporal, Usuario usuarioActual) {
+                                             Pago pago, CompraTemporalDTO compraTemporal) {
 
         // 1. Validar datos de tarjeta
         validarDatosTarjeta(numeroTarjeta, fechaVencimiento, cvv, nombreTitular, email);
@@ -195,7 +195,8 @@ public class PagoService {
         // 5. Crear la compra online en la base de datos
         CompraOnline nuevaCompra = new CompraOnline();
         nuevaCompra.setNumero_orden(compraTemporal.getNumeroOrden());
-        nuevaCompra.setComprador(usuarioActual);
+
+        nuevaCompra.setComprador(compraTemporal.getComprador());
         nuevaCompra.setSubtotal(compraTemporal.getSubtotal());
         nuevaCompra.setImpuestos(compraTemporal.getImpuestos());
         nuevaCompra.setTotal(compraTemporal.getTotal());

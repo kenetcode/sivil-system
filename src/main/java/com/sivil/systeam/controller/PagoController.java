@@ -141,17 +141,11 @@ public class PagoController {
                     return "pago/pago-tarjeta";
                 }
 
-                // Obtener usuario actual de la sesión
-                Usuario usuarioActual = (Usuario) session.getAttribute("currentUser");
-                if (usuarioActual == null) {
-                    model.addAttribute("error", "La sesión de usuario ha expirado. Por favor inicie sesión nuevamente.");
-                    return "pago/pago-tarjeta";
-                }
 
                 // Procesar pago y crear compra online
                 Pago pagoProcesado = pagoService.procesarPagoConCompraPendiente(
                     numeroTarjeta, fechaVencimiento, cvv,
-                    nombreTitular, email, direccion, pago, compraTemporal, usuarioActual);
+                    nombreTitular, email, direccion, pago, compraTemporal);
 
                 // Limpiar la compra temporal de la sesión
                 session.removeAttribute("compraPendiente");

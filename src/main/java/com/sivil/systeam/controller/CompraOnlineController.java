@@ -127,9 +127,14 @@ public class CompraOnlineController {
             BigDecimal impuestos = subtotalCompra.multiply(new BigDecimal("0.13"));
             BigDecimal totalCompra = subtotalCompra.add(impuestos);
 
-            // 4. Crear CompraTemporalDTO y guardar en sesión
+            // 4. Obtener usuario actual del modelo (agregado por GlobalControllerAdvice)
+            Usuario usuarioActual = (Usuario) model.getAttribute("currentUser");
+
+
+            // 5. Crear CompraTemporalDTO y guardar en sesión
             CompraTemporalDTO compraTemporal = new CompraTemporalDTO();
             compraTemporal.setNumeroOrden(numeracionService.generarNumeroFactura(compraOnlineRepository));
+            compraTemporal.setComprador(usuarioActual);
             compraTemporal.setNombreCliente(nombreCliente);
             compraTemporal.setContactoCliente(contactoCliente);
             compraTemporal.setIdentificacionCliente(identificacionCliente);
@@ -174,9 +179,9 @@ public class CompraOnlineController {
 
     // Endpoint para obtener historial de compras del usuario
     @GetMapping("/mis-compras")
-    public String mostrarMisCompras(Model model, HttpSession session) {
-        // Obtener usuario actual de la sesión
-        Usuario usuarioActual = (Usuario) session.getAttribute("currentUser");
+    public String mostrarMisCompras(Model model) {
+        // Obtener usuario actual del modelo (agregado por GlobalControllerAdvice)
+        Usuario usuarioActual = (Usuario) model.getAttribute("currentUser");
         if (usuarioActual == null) {
             return "redirect:/login";
         }

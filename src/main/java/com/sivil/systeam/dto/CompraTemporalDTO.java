@@ -1,5 +1,6 @@
 package com.sivil.systeam.dto;
 
+import com.sivil.systeam.entity.Usuario;
 import com.sivil.systeam.enums.EstadoCompra;
 import com.sivil.systeam.enums.MetodoPago;
 
@@ -11,6 +12,7 @@ import java.util.List;
 public class CompraTemporalDTO implements Serializable {
 
     private String numeroOrden;
+    private Usuario comprador;
     private String nombreCliente;
     private String contactoCliente;
     private String identificacionCliente;
@@ -65,6 +67,9 @@ public class CompraTemporalDTO implements Serializable {
     // Getters y Setters
     public String getNumeroOrden() { return numeroOrden; }
     public void setNumeroOrden(String numeroOrden) { this.numeroOrden = numeroOrden; }
+
+    public Usuario getComprador() { return comprador; }
+    public void setComprador(Usuario comprador) { this.comprador = comprador; }
 
     public String getNombreCliente() { return nombreCliente; }
     public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
