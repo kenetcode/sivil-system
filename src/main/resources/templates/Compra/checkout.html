@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout (~{::title}, ~{::content})}">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Checkout - Sistema SIVIL</title>
+
+    <!-- CSRF en HEAD -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+<div th:fragment="content">
+
+    <!-- Encabezado -->
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-credit-card fs-3 text-primary"></i>
+        <div>
+            <h1 class="h4 mb-0">Checkout</h1>
+            <small class="text-muted">Revise su orden y confirme el pago</small>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    <div id="msg" role="status" aria-live="polite"></div>
+
+    <div class="row g-3">
+        <!-- Carrito -->
+        <div class="col-12 col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <i class="bi bi-bag-check me-1"></i> Detalle del carrito
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle mb-0" id="tbl">
+                            <thead class="table-dark">
+                            <tr>
+                                <th>Libro</th>
+                                <th class="text-end">Precio</th>
+                                <th class="text-end">Cantidad</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <a class="btn btn-outline-secondary" th:href="@{/compras/carrito}">
+                        <i class="bi bi-arrow-left"></i> Volver al carrito
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen + Datos -->
+        <div class="col-12 col-lg-5">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <i class="bi bi-receipt me-1"></i> Resumen
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Subtotal</span><strong>$ <span id="sSubtotal">0.00</span></strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Impuestos (13%)</span><strong>$ <span id="sImpuestos">0.00</span></strong>
+                    </div>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between fs-5">
+                        <span>Total</span><strong>$ <span id="sTotal">0.00</span></strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <i class="bi bi-person-check me-1"></i> Datos para confirmar
+                </div>
+                <div class="card-body">
+                    <form class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Comprador ID</label>
+                            <input id="compradorId" type="number" class="form-control" value="1"/>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Método de pago</label>
+                            <select id="metodoPago" class="form-select">
+                                <option value="tarjeta" selected>Tarjeta</option>
+                                <option value="efectivo">Efectivo</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Dirección de entrega</label>
+                            <textarea id="direccion" rows="2" class="form-control" placeholder="Dirección completa"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-end">
+                    <!-- type=button para no submittear el form -->
+                    <button type="button" id="btnConfirmar" class="btn btn-primary">
+                        <i class="bi bi-check2-circle"></i> Confirmar compra
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- URLs seguras con Thymeleaf -->
+    <script th:inline="javascript">
+        const URL_ITEMS    = /*[[@{/api/cart/items}]]*/ "/api/cart/items";
+        const URL_SUMMARY  = /*[[@{/api/cart/summary}]]*/ "/api/cart/summary";
+        const URL_CHECKOUT = /*[[@{/api/compra/checkout}]]*/ "/api/compra/checkout";
+        const URL_LISTA    = /*[[@{/compras/lista}]]*/ "/compras/lista";
+    </script>
+
+    <script>
+        const $  = (s) => document.querySelector(s);
+        const tbody = $("#tbl tbody");
+        const msg   = $("#msg");
+        const btnConfirmar = $("#btnConfirmar");
+
+        // CSRF
+        const CSRF_TOKEN  = document.querySelector('meta[name="_csrf"]')?.content;
+        const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content;
+        const withCsrf = (h = {}) => (CSRF_TOKEN && CSRF_HEADER ? { ...h, [CSRF_HEADER]: CSRF_TOKEN } : h);
+
+        const money = n => (Number(n)||0).toFixed(2);
+        function toast(type, text){
+          const icon = type === 'ok' ? 'check-circle' : (type === 'warn' ? 'exclamation-triangle' : 'info-circle');
+          const klass = type === 'ok' ? 'success' : (type === 'warn' ? 'danger' : 'info');
+          msg.innerHTML = `<div class="alert alert-${klass} alert-dismissible fade show" role="alert">
+            <i class="bi bi-${icon} me-1"></i>${text}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>`;
+        }
+
+        async function loadCart() {
+          const [itemsRes, summaryRes] = await Promise.all([
+            fetch(URL_ITEMS,   { headers: withCsrf() }),
+            fetch(URL_SUMMARY, { headers: withCsrf() }),
+          ]);
+          if (!itemsRes.ok || !summaryRes.ok) throw new Error("No se pudo cargar el carrito");
+
+          const items   = await itemsRes.json();
+          const summary = await summaryRes.json();
+
+          tbody.innerHTML = "";
+          (items || []).forEach(i=>{
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${i.titulo ?? ''}</td>
+              <td class="text-end">${money(i.precioUnitario)}</td>
+              <td class="text-end">${i.cantidad}</td>
+              <td class="text-end">${money(i.precioUnitario * i.cantidad)}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+          $("#sSubtotal").textContent  = money(summary?.subtotal);
+          $("#sImpuestos").textContent = money(summary?.impuestos);
+          $("#sTotal").textContent     = money(summary?.total);
+          return items;
+        }
+
+        async function confirmar() {
+          try {
+            msg.innerHTML = "";
+            btnConfirmar.disabled = true;
+
+            const itemsRes = await fetch(URL_ITEMS, { headers: withCsrf() });
+            const items = itemsRes.ok ? await itemsRes.json() : [];
+            if (!items.length) { toast('warn', 'El carrito está vacío.'); return; }
+
+            const body = {
+              compradorId: parseInt($("#compradorId").value, 10),
+              direccionEntrega: $("#direccion").value,
+              metodoPago: $("#metodoPago").value,
+              items
+            };
+
+            const res = await fetch(URL_CHECKOUT, {
+              method: "POST",
+              headers: withCsrf({ "Content-Type": "application/json" }),
+              body: JSON.stringify(body)
+            });
+
+      if (!res.ok) {
+  let err;
+  try {
+    err = await res.json();
+  } catch {
+    err = { message: "Error inesperado" };
+  }
+
+  if (res.status === 409 && err.message?.includes("Stock insuficiente")) {
+    toast('warn', err.message);
+
+    // Buscar el máximo disponible en el mensaje
+    const regex = /Máximo disponible:\s*(\d+)/;
+    const match = err.message.match(regex);
+    if (match) {
+      const max = parseInt(match[1], 10);
+      toast('info', `La cantidad seleccionada excede la cantidad solicitada,Se ajustó automáticamente la cantidad al máximo disponible: ${max}.`);
+      await loadCart(); // recarga el carrito
+    }
+    return; // salir sin éxito
+  }
+
+  throw new Error(err.message || "Error al confirmar");
+}
+
+
+
+            const data = await res.json();
+            toast('ok', `¡Compra realizada! Orden: <strong>${data.numeroOrden}</strong>. Total: <strong>$${money(data.total)}</strong>.`);
+            setTimeout(() => { window.location.href = URL_LISTA; }, 900);
+          } catch (e) {
+            toast('warn', e.message);
+          } finally {
+            btnConfirmar.disabled = false;
+          }
+        }
+
+        btnConfirmar.addEventListener("click", confirmar);
+        loadCart().catch(()=> toast('warn', 'No se pudo cargar el carrito'));
+    </script>
+</div>
+</body>
+</html>

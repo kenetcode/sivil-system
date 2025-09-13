@@ -33,7 +33,7 @@
 
 
                     <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
-                        <a class="nav-link btn btn-outline-info rounded-pill px-3 py-2" href="#"
+                        <a class="nav-link btn btn-outline-info rounded-pill px-3 py-2" th:href="@{compras/carrito}"
                            style="text-decoration: none;"
                            onmouseover="this.style.backgroundColor='#0dcaf0'; this.style.borderColor='#0dcaf0'; this.style.color='white';"
                            onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#0dcaf0'; this.style.color='#0dcaf0';">
