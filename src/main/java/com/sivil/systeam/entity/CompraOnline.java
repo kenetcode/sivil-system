@@ -107,4 +107,14 @@ public class CompraOnline {
 
     public List<Pago> getPagos() { return pagos; }
     public void setPagos(List<Pago> pagos) { this.pagos = pagos; }
+
+    // Método helper para calcular la cantidad total de libros
+    public Integer getCantidadTotalLibros() {
+        if (detallesCompra == null || detallesCompra.isEmpty()) {
+            return 0;
+        }
+        return detallesCompra.stream()
+                .mapToInt(DetalleCompra::getCantidad)
+                .sum();
+    }
 }

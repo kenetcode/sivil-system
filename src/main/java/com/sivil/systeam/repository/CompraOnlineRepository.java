@@ -22,6 +22,8 @@ public interface CompraOnlineRepository extends JpaRepository<CompraOnline, Inte
            select c
            from CompraOnline c
            join fetch c.comprador comp
+           left join fetch c.detallesCompra detalles
+           left join fetch detalles.libro
            where comp.id_usuario = :usuarioId
            order by c.fecha_compra desc
            """)
