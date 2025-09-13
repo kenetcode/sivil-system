@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout ('Comprar Libros Online', ~{::content})}">
+<head>
+    <title>Comprar Libros Online - Sistema SIVIL</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #0d6efd, #0056b3);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #198754, #157347);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+        }
+
+        .table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-dark {
+            background: linear-gradient(45deg, #212529, #343a40);
+        }
+
+        .input-group {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(20px, -20px);
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+        }
+
+        .section-divider {
+            border: none;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            margin: 2.5rem 0;
+            border-radius: 3px;
+        }
+
+        .aviso-temporal {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .aviso-temporal::before {
+            content: '⚠️';
+            font-size: 2rem;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+
+        /* Efectos adicionales para mejor UX */
+        .libro-item {
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .libro-item:hover {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            transform: translateX(5px);
+        }
+
+        .online-shopping-theme {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        }
+
+        .shopping-cart-icon {
+            font-size: 3rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+<div th:fragment="content">
+    <!-- Aviso temporal -->
+    <div class="aviso-temporal" th:if="${avisoTemporal}">
+        <h5 class="mb-3"><i class="bi bi-info-circle me-2"></i>Aviso Temporal</h5>
+        <p class="mb-0">
+            <strong>Esta interfaz es temporal</strong> mientras se implementa el dashboard de libros completo.
+            En el futuro podrá navegar por un catálogo completo de libros. Mientras tanto, puede seleccionar y comprar libros directamente desde este formulario.  Gracias por su comprensión.
+        </p>
+    </div>
+
+    <!-- Header de la página -->
+    <div class="page-header online-shopping-theme">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-cart-plus shopping-cart-icon me-3"></i>
+                    <div>
+                        <h2 class="mb-2">Comprar Libros Online</h2>
+                        <p class="mb-0 opacity-85">Selecciona tus libros favoritos y completa tu compra de forma segura</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="stats-card">
+                    <h5 class="mb-1">Libros Disponibles</h5>
+                    <h3 class="mb-0" th:text="${#lists.size(libros)}">0</h3>
+                    <small>En stock ahora</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensajes -->
+    <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i> <span th:text="${mensaje}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i> <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Formulario de Compra -->
+    <form th:action="@{/compra-online/crear}" method="post" id="compraForm">
+        <div class="row g-4">
+            <!-- Información del Cliente -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header online-shopping-theme text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person-circle me-2"></i>
+                            Tus Datos de Entrega
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-person me-2"></i>Nombre completo: <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="nombreCliente" class="form-control" required
+                                   placeholder="Tu nombre completo">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-telephone me-2"></i>Teléfono: <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="contactoCliente" class="form-control"
+                                   placeholder="7758-3432" maxlength="9" required
+                                   oninput="formatearContacto(this)">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>Formato: 7758-3432
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-card-text me-2"></i>DUI (Opcional):
+                            </label>
+                            <input type="text" name="identificacionCliente" class="form-control"
+                                   placeholder="06308398-3" maxlength="10"
+                                   oninput="formatearDUI(this)">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>Formato: 06308398-3
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-geo-alt me-2"></i>Dirección de entrega: <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="direccionEntrega" class="form-control" rows="3" required
+                                      placeholder="Ingresa tu dirección completa para la entrega"></textarea>
+                            <small class="text-muted">
+                                <i class="bi bi-truck me-1"></i>Los libros serán enviados a esta dirección
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen de Compra -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-receipt me-2"></i>
+                            Resumen de Compra
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-credit-card me-2"></i>Método de pago:
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">💳</span>
+                                <input type="text" class="form-control" value="Pago con Tarjeta" readonly>
+                            </div>
+                            <small class="text-muted">
+                                <i class="bi bi-shield-check me-1"></i>Pago seguro con tarjeta de crédito/débito
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-currency-dollar me-2"></i>Subtotal:
+                            </label>
+                            <input type="number" step="0.01" class="form-control" readonly id="subtotalInput" value="0.00">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-receipt-cutoff me-2"></i>Impuestos (13%):
+                            </label>
+                            <input type="number" step="0.01" class="form-control" readonly id="impuestosInput" value="0.00">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-success">
+                                <i class="bi bi-cash-stack me-2"></i>Total a pagar:
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-success text-white">$</span>
+                                <input type="number" step="0.01" class="form-control fw-bold border-success" readonly id="totalInput" value="0.00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Catálogo de libros -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-book me-2"></i>
+                    Catálogo de Libros Disponibles
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-search me-2"></i>Seleccionar libro:
+                        </label>
+                        <select id="libroSelect" class="form-select">
+                            <option value="" selected disabled>🔍 Busca y selecciona un libro...</option>
+                            <option th:each="libro : ${libros}"
+                                    th:value="${libro.id_libro}"
+                                    th:data-precio="${libro.precio}"
+                                    th:data-titulo="${libro.titulo}"
+                                    th:data-stock="${libro.cantidad_stock}"
+                                    th:text="${libro.titulo + ' - $' + libro.precio + ' (Stock: ' + libro.cantidad_stock + ')'}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-hash me-2"></i>Cantidad:
+                        </label>
+                        <input type="number" min="1" id="cantidadLibro" class="form-control" placeholder="1" value="1">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="button" id="agregarLibro" class="btn btn-primary w-100">
+                            <i class="bi bi-cart-plus me-2"></i>Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de libros agregados al carrito -->
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0" id="tablaLibrosAgregados">
+                        <thead class="table-dark">
+                        <tr>
+                            <th><i class="bi bi-book me-2"></i>Libro</th>
+                            <th><i class="bi bi-currency-dollar me-2"></i>Precio</th>
+                            <th><i class="bi bi-hash me-2"></i>Cantidad</th>
+                            <th><i class="bi bi-calculator me-2"></i>Subtotal</th>
+                            <th><i class="bi bi-trash me-2"></i>Acción</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Campo oculto para enviar los datos de los libros -->
+                <input type="hidden" id="librosData" name="librosData">
+            </div>
+        </div>
+
+        <div class="mt-4 text-center">
+            <button type="submit" class="btn btn-success btn-lg me-3">
+                <i class="bi bi-bag-check me-2"></i>Proceder al Pago
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-lg" id="limpiarFormulario">
+                <i class="bi bi-arrow-clockwise me-2"></i>Limpiar Carrito
+            </button>
+        </div>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const agregarBtn = document.getElementById('agregarLibro');
+            const libroSelect = document.getElementById('libroSelect');
+            const cantidadInput = document.getElementById('cantidadLibro');
+            const tablaBody = document.querySelector('#tablaLibrosAgregados tbody');
+            const subtotalInput = document.getElementById('subtotalInput');
+            const impuestosInput = document.getElementById('impuestosInput');
+            const totalInput = document.getElementById('totalInput');
+            const librosDataInput = document.getElementById('librosData');
+            const compraForm = document.getElementById('compraForm');
+
+            let librosAgregados = [];
+
+            // Función para verificar stock
+            async function verificarStock(idLibro, cantidad) {
+                try {
+                    const response = await fetch(`/compra-online/api/libros/${idLibro}/stock`);
+                    if (!response.ok) {
+                        throw new Error('Error al verificar stock');
+                    }
+                    const data = await response.json();
+
+                    if (data.stock < cantidad) {
+                        alert(`❌ Stock insuficiente para "${data.titulo}"\nStock disponible: ${data.stock} unidades`);
+                        return false;
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('Error al verificar stock:', error);
+                    alert('Error al verificar el stock del libro');
+                    return false;
+                }
+            }
+
+            function actualizarTotales() {
+                let subtotal = 0;
+
+                // Calcular subtotal sumando todos los libros
+                librosAgregados.forEach(libro => {
+                    subtotal += libro.precio * libro.cantidad;
+                });
+
+                // Aplicar IVA del 13% (El Salvador)
+                const impuestos = subtotal * 0.13;
+                const total = subtotal + impuestos;
+
+                // Actualizar los campos
+                subtotalInput.value = subtotal.toFixed(2);
+                impuestosInput.value = impuestos.toFixed(2);
+                totalInput.value = total.toFixed(2);
+
+                // Actualizar el campo oculto con los datos de los libros
+                librosDataInput.value = JSON.stringify(librosAgregados);
+            }
+
+            function renderTabla() {
+                tablaBody.innerHTML = '';
+
+                if (librosAgregados.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="bi bi-cart-x me-2" style="font-size: 2rem;"></i>
+                            <br>Tu carrito está vacío
+                            <br><small>Agrega algunos libros para comenzar</small>
+                        </td>
+                    `;
+                    tablaBody.appendChild(row);
+                } else {
+                    librosAgregados.forEach((libro, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>
+                                <div class="libro-item">
+                                    <strong>${libro.titulo}</strong>
+                                </div>
+                            </td>
+                            <td>$${libro.precio.toFixed(2)}</td>
+                            <td>
+                                <span class="badge bg-primary">${libro.cantidad}</span>
+                            </td>
+                            <td><strong>$${(libro.precio * libro.cantidad).toFixed(2)}</strong></td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm eliminar-libro">
+                                    <i class="bi bi-trash me-1"></i>Eliminar
+                                </button>
+                            </td>
+                        `;
+                        tablaBody.appendChild(row);
+                    });
+
+                    // Agregar event listeners a los botones de eliminar
+                    document.querySelectorAll('.eliminar-libro').forEach((button, index) => {
+                        button.addEventListener('click', () => {
+                            librosAgregados.splice(index, 1);
+                            renderTabla();
+                            actualizarTotales();
+                        });
+                    });
+                }
+
+                actualizarTotales();
+            }
+
+            // Agregar libro al carrito
+            agregarBtn.addEventListener('click', async () => {
+                const id = libroSelect.value;
+                const titulo = libroSelect.options[libroSelect.selectedIndex]?.getAttribute('data-titulo');
+                const precio = parseFloat(libroSelect.options[libroSelect.selectedIndex]?.getAttribute('data-precio') || 0);
+                const cantidad = parseInt(cantidadInput.value);
+
+                if (!id || !titulo || isNaN(cantidad) || cantidad <= 0) {
+                    alert('Por favor selecciona un libro y una cantidad válida.');
+                    return;
+                }
+
+                // Verificar stock antes de agregar
+                const stockDisponible = await verificarStock(id, cantidad);
+                if (!stockDisponible) {
+                    return;
+                }
+
+                // Verificar si el libro ya existe en la lista
+                const libroExistenteIndex = librosAgregados.findIndex(l => l.id == id);
+
+                if (libroExistenteIndex !== -1) {
+                    // Verificar stock total si ya existe el libro
+                    const stockTotalNecesario = librosAgregados[libroExistenteIndex].cantidad + cantidad;
+                    const stockDisponibleTotal = await verificarStock(id, stockTotalNecesario);
+
+                    if (!stockDisponibleTotal) {
+                        return;
+                    }
+
+                    // Si ya existe y hay stock, aumentar la cantidad
+                    librosAgregados[libroExistenteIndex].cantidad += cantidad;
+                } else {
+                    // Si no existe, agregar nuevo libro
+                    librosAgregados.push({
+                        id: parseInt(id),
+                        titulo: titulo,
+                        precio: precio,
+                        cantidad: cantidad
+                    });
+                }
+
+                // Limpiar campos
+                cantidadInput.value = '1';
+                libroSelect.selectedIndex = 0;
+
+                // Actualizar la tabla y los totales
+                renderTabla();
+
+                // Mostrar mensaje de éxito
+                const toast = document.createElement('div');
+                toast.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+                toast.innerHTML = `
+                    <i class="bi bi-check-circle me-2"></i>¡Libro agregado al carrito!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            });
+
+            // Prevenir envío del formulario si no hay libros agregados
+            compraForm.addEventListener('submit', function(e) {
+                if (librosAgregados.length === 0) {
+                    e.preventDefault();
+                    alert('❌ Debes agregar al menos un libro para realizar la compra.');
+                }
+            });
+
+            // Validación en tiempo real de la cantidad
+            cantidadInput.addEventListener('change', async function() {
+                const id = libroSelect.value;
+                const cantidad = parseInt(this.value);
+
+                if (id && cantidad > 0) {
+                    const stockDisponible = await verificarStock(id, cantidad);
+                    if (!stockDisponible) {
+                        this.value = '1';
+                    }
+                }
+            });
+
+            function limpiarFormulario() {
+                // Limpiar campos del formulario principal
+                document.getElementById('compraForm').reset();
+
+                // Limpiar tabla de libros agregados
+                librosAgregados = [];
+                renderTabla();
+
+                // Restablecer el select de libros
+                libroSelect.selectedIndex = 0;
+                cantidadInput.value = '1';
+
+                // Cerrar alertas si están abiertas
+                const alertas = document.querySelectorAll('.alert');
+                alertas.forEach(alerta => {
+                    if (alerta.classList.contains('alert-dismissible')) {
+                        alerta.remove();
+                    }
+                });
+            }
+
+            // Event listener para el botón de limpiar
+            document.getElementById('limpiarFormulario').addEventListener('click', limpiarFormulario);
+
+            // Inicializar la tabla vacía
+            renderTabla();
+        });
+
+        // Funciones para formatear contacto y DUI
+        function formatearContacto(input) {
+            let value = input.value.replace(/\D/g, ''); // Solo números
+            if (value.length > 4) {
+                value = value.substring(0, 4) + '-' + value.substring(4, 8);
+            }
+            input.value = value;
+        }
+
+        function formatearDUI(input) {
+            let value = input.value.replace(/\D/g, ''); // Solo números
+            if (value.length > 8) {
+                value = value.substring(0, 8) + '-' + value.substring(8, 9);
+            }
+            input.value = value;
+        }
+    </script>
+</div>
+</body>
+</html>

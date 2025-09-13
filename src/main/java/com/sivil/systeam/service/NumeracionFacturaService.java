@@ -1,6 +1,7 @@
 package com.sivil.systeam.service;
 
 import com.sivil.systeam.repository.VentaRepository;
+import com.sivil.systeam.repository.CompraOnlineRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,29 @@ public class NumeracionFacturaService {
         ultimoCorrelativo++;
 
         return sucursal + "-" + String.format("%010d", ultimoCorrelativo);
+    }
+
+    public synchronized String generarNumeroFactura(CompraOnlineRepository compraOnlineRepository) {
+        // Para compras online usamos un prefijo diferente
+        ultimoCorrelativo = obtenerUltimoCorrelativoCompra(compraOnlineRepository);
+
+        // INCREMENTAR para obtener el siguiente número
+        ultimoCorrelativo++;
+
+        return "ORD-" + String.format("%010d", ultimoCorrelativo);
+    }
+
+    private Long obtenerUltimoCorrelativoCompra(CompraOnlineRepository compraOnlineRepository) {
+        try {
+            String prefijoBusqueda = "ORD-";
+            // Necesitamos implementar un método similar en CompraOnlineRepository
+            // Por ahora, contamos todas las compras existentes y agregamos 1
+            Long count = compraOnlineRepository.count();
+            return count;
+        } catch (Exception e) {
+            // Si hay error, empezar desde 0
+            return 0L;
+        }
     }
 
     private Long obtenerUltimoCorrelativo(VentaRepository ventaRepository) {

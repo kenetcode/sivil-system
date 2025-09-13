@@ -1,3 +1,4 @@
+// ARCHIVO OBSOLETO - NO SE USA MÁS - Reemplazado por nuevo sistema de compras online
 // src/main/java/com/sivil/systeam/controller/CompraViewController.java
 package com.sivil.systeam.controller;
 

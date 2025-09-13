@@ -1,8 +1,10 @@
 package com.sivil.systeam.controller;
 
 import com.sivil.systeam.entity.Pago;
+import com.sivil.systeam.entity.Usuario;
 import com.sivil.systeam.service.PagoService;
 import com.sivil.systeam.dto.VentaTemporalDTO;
+import com.sivil.systeam.dto.CompraTemporalDTO;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -66,6 +68,7 @@ public class PagoController {
                                   @RequestParam(value = "idCompra", required = false) Integer idCompra,
                                   @RequestParam(value = "idVenta", required = false) Integer idVenta,
                                   @RequestParam(value = "ventaPendiente", required = false) Boolean ventaPendiente,
+                                  @RequestParam(value = "compraPendiente", required = false) Boolean compraPendiente,
                                   HttpSession session) {
         model.addAttribute("pago", new Pago());
 
@@ -82,6 +85,9 @@ public class PagoController {
         if (ventaPendiente != null && ventaPendiente) {
             model.addAttribute("ventaPendiente", true);
         }
+        if (compraPendiente != null && compraPendiente) {
+            model.addAttribute("compraPendiente", true);
+        }
 
         return "pago/pago-tarjeta";
     }
@@ -97,6 +103,7 @@ public class PagoController {
                              @RequestParam(value = "idCompra", required = false) Integer idCompra,
                              @RequestParam(value = "idVenta", required = false) Integer idVenta,
                              @RequestParam(value = "ventaPendiente", required = false) Boolean ventaPendiente,
+                             @RequestParam(value = "compraPendiente", required = false) Boolean compraPendiente,
                              HttpSession session,
                              Model model) {
         try {
@@ -123,6 +130,36 @@ public class PagoController {
                 model.addAttribute("mensaje", "✅ Pago procesado correctamente - Venta creada");
                 model.addAttribute("pago", pagoProcesado);
                 model.addAttribute("numeroTarjetaOculto", "****-****-****-" + numeroTarjeta.substring(numeroTarjeta.length() - 4));
+
+                return "pago/pago-confirmacion";
+
+            // Verificar si hay una compra pendiente en sesión
+            } else if (compraPendiente != null && compraPendiente) {
+                CompraTemporalDTO compraTemporal = (CompraTemporalDTO) session.getAttribute("compraPendiente");
+                if (compraTemporal == null) {
+                    model.addAttribute("error", "La sesión de compra ha expirado. Por favor inicie el proceso de compra nuevamente.");
+                    return "pago/pago-tarjeta";
+                }
+
+                // Obtener usuario actual de la sesión
+                Usuario usuarioActual = (Usuario) session.getAttribute("currentUser");
+                if (usuarioActual == null) {
+                    model.addAttribute("error", "La sesión de usuario ha expirado. Por favor inicie sesión nuevamente.");
+                    return "pago/pago-tarjeta";
+                }
+
+                // Procesar pago y crear compra online
+                Pago pagoProcesado = pagoService.procesarPagoConCompraPendiente(
+                    numeroTarjeta, fechaVencimiento, cvv,
+                    nombreTitular, email, direccion, pago, compraTemporal, usuarioActual);
+
+                // Limpiar la compra temporal de la sesión
+                session.removeAttribute("compraPendiente");
+
+                model.addAttribute("mensaje", "✅ Compra realizada exitosamente - Orden: " + compraTemporal.getNumeroOrden());
+                model.addAttribute("pago", pagoProcesado);
+                model.addAttribute("numeroTarjetaOculto", "****-****-****-" + numeroTarjeta.substring(numeroTarjeta.length() - 4));
+                model.addAttribute("esCompraOnline", true);
 
                 return "pago/pago-confirmacion";
 
@@ -157,6 +194,10 @@ public class PagoController {
             // Mantener el parámetro de venta pendiente si existe
             if (ventaPendiente != null && ventaPendiente) {
                 model.addAttribute("ventaPendiente", true);
+            }
+            // Mantener el parámetro de compra pendiente si existe
+            if (compraPendiente != null && compraPendiente) {
+                model.addAttribute("compraPendiente", true);
             }
 
             return "pago/pago-tarjeta";

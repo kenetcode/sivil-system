@@ -2,8 +2,10 @@ package com.sivil.systeam.service;
 
 import com.sivil.systeam.entity.*;
 import com.sivil.systeam.dto.VentaTemporalDTO;
+import com.sivil.systeam.dto.CompraTemporalDTO;
 import com.sivil.systeam.enums.EstadoPago;
 import com.sivil.systeam.enums.EstadoVenta;
+import com.sivil.systeam.enums.EstadoCompra;
 import com.sivil.systeam.enums.MetodoPago;
 import com.sivil.systeam.repository.*;
 import org.springframework.stereotype.Service;
@@ -23,17 +25,25 @@ public class PagoService {
     private final VentaRepository ventaRepository;
     private final DetalleVentaRepository detalleVentaRepository;
     private final LibroRepository libroRepository;
+    private final CompraOnlineRepository compraOnlineRepository;
+    private final DetalleCompraRepository detalleCompraRepository;
+    private final UsuarioRepository usuarioRepository;
 
     private static final Pattern NUMERO_TARJETA_PATTERN = Pattern.compile("\\d{16}");
     private static final Pattern FECHA_VENCIMIENTO_PATTERN = Pattern.compile("(0[1-9]|1[0-2])/\\d{2}");
     private static final Pattern CVV_PATTERN = Pattern.compile("\\d{3}");
 
     public PagoService(PagoRepository pagoRepository, VentaRepository ventaRepository,
-                      DetalleVentaRepository detalleVentaRepository, LibroRepository libroRepository) {
+                      DetalleVentaRepository detalleVentaRepository, LibroRepository libroRepository,
+                      CompraOnlineRepository compraOnlineRepository, DetalleCompraRepository detalleCompraRepository,
+                      UsuarioRepository usuarioRepository) {
         this.pagoRepository = pagoRepository;
         this.ventaRepository = ventaRepository;
         this.detalleVentaRepository = detalleVentaRepository;
         this.libroRepository = libroRepository;
+        this.compraOnlineRepository = compraOnlineRepository;
+        this.detalleCompraRepository = detalleCompraRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     public Pago procesarPago(String numeroTarjeta, String fechaVencimiento, String cvv, 
@@ -143,6 +153,84 @@ public class PagoService {
         pago.setEstado_pago(EstadoPago.completado);
         pago.setReferencia_transaccion("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         pago.setVenta(ventaGuardada);
+
+        return pagoRepository.save(pago);
+    }
+
+    /**
+     * Procesa pago y crea la compra online desde datos temporales almacenados en sesión
+     */
+    @Transactional
+    public Pago procesarPagoConCompraPendiente(String numeroTarjeta, String fechaVencimiento, String cvv,
+                                             String nombreTitular, String email, String direccion,
+                                             Pago pago, CompraTemporalDTO compraTemporal, Usuario usuarioActual) {
+
+        // 1. Validar datos de tarjeta
+        validarDatosTarjeta(numeroTarjeta, fechaVencimiento, cvv, nombreTitular, email);
+
+        // 2. Verificar que el número de orden no exista
+        if (compraOnlineRepository.findByNumeroOrden(compraTemporal.getNumeroOrden()).isPresent()) {
+            throw new IllegalArgumentException("El número de orden ya existe: " + compraTemporal.getNumeroOrden());
+        }
+
+        // 3. El usuario ya está autenticado, obtenerlo desde la sesión de Spring Security
+        // No necesitamos crear un usuario temporal ya que el usuario está logueado
+        // El usuario será asignado desde el controlador que tiene acceso a la sesión
+
+        // 4. Verificar stock disponible para todos los libros antes de crear la compra
+        for (CompraTemporalDTO.DetalleCompraTemporalDTO detalleTemporal : compraTemporal.getDetallesCompra()) {
+            Optional<Libro> libroOpt = libroRepository.findById(detalleTemporal.getLibroId());
+            if (libroOpt.isEmpty()) {
+                throw new IllegalArgumentException("Libro no encontrado: " + detalleTemporal.getLibroId());
+            }
+
+            Libro libro = libroOpt.get();
+            if (libro.getCantidad_stock() < detalleTemporal.getCantidad()) {
+                throw new IllegalArgumentException("Stock insuficiente para: " + libro.getTitulo() +
+                        ". Stock disponible: " + libro.getCantidad_stock() +
+                        ". Cantidad solicitada: " + detalleTemporal.getCantidad());
+            }
+        }
+
+        // 5. Crear la compra online en la base de datos
+        CompraOnline nuevaCompra = new CompraOnline();
+        nuevaCompra.setNumero_orden(compraTemporal.getNumeroOrden());
+        nuevaCompra.setComprador(usuarioActual);
+        nuevaCompra.setSubtotal(compraTemporal.getSubtotal());
+        nuevaCompra.setImpuestos(compraTemporal.getImpuestos());
+        nuevaCompra.setTotal(compraTemporal.getTotal());
+        nuevaCompra.setDireccion_entrega(compraTemporal.getDireccionEntrega());
+        nuevaCompra.setEstado_compra(EstadoCompra.procesada); // La compra se procesa al pagar
+        nuevaCompra.setMetodo_pago(compraTemporal.getMetodoPago());
+
+        CompraOnline compraGuardada = compraOnlineRepository.save(nuevaCompra);
+
+        // 6. Crear detalles de compra y actualizar stock
+        for (CompraTemporalDTO.DetalleCompraTemporalDTO detalleTemporal : compraTemporal.getDetallesCompra()) {
+            Libro libro = libroRepository.findById(detalleTemporal.getLibroId()).get();
+
+            // Crear detalle de compra
+            DetalleCompra detalle = new DetalleCompra();
+            detalle.setCompra(compraGuardada);
+            detalle.setLibro(libro);
+            detalle.setCantidad(detalleTemporal.getCantidad());
+            detalle.setPrecio_unitario(detalleTemporal.getPrecioUnitario());
+            detalle.setSubtotal_item(detalleTemporal.getSubtotal());
+
+            detalleCompraRepository.save(detalle);
+
+            // Actualizar stock del libro
+            libro.setCantidad_stock(libro.getCantidad_stock() - detalleTemporal.getCantidad());
+            libroRepository.save(libro);
+        }
+
+        // 7. Procesar el pago
+        String datosSimulados = simularEncriptacion(numeroTarjeta, fechaVencimiento, cvv);
+        pago.setDatos_tarjeta_encriptados(datosSimulados);
+        pago.setMetodo_pago(MetodoPago.tarjeta);
+        pago.setEstado_pago(EstadoPago.completado);
+        pago.setReferencia_transaccion("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        pago.setCompra(compraGuardada);
 
         return pagoRepository.save(pago);
     }

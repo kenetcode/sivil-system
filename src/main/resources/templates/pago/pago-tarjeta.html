@@ -112,6 +112,7 @@
                             <input type="hidden" name="idCompra" th:value="${idCompra}" />
                             <input type="hidden" name="idVenta" th:value="${idVenta}" />
                             <input type="hidden" name="ventaPendiente" th:value="${ventaPendiente}" />
+                            <input type="hidden" name="compraPendiente" th:value="${compraPendiente}" />
                             
                             <!-- Información de la tarjeta -->
                             <div class="row">
@@ -205,12 +206,15 @@
                                         <span class="input-group-text">$</span>
                                         <input type="number" step="0.01" class="form-control" id="montoVisible" name="monto"
                                                th:value="${montoAPagar != null ? montoAPagar : '100.00'}"
-                                               th:readonly="${idVenta != null or ventaPendiente != null}"
+                                               th:readonly="${idVenta != null or ventaPendiente != null or compraPendiente != null}"
                                                placeholder="0.00" required min="0.01">
                                     </div>
                                     <div id="montoError" class="error-message"></div>
-                                    <small th:if="${idVenta != null or ventaPendiente != null}" class="text-muted">
-                                        <i class="bi bi-lock"></i> Monto establecido desde la venta
+                                    <small th:if="${idVenta != null or ventaPendiente != null or compraPendiente != null}" class="text-muted">
+                                        <i class="bi bi-lock"></i>
+                                        <span th:if="${compraPendiente != null}">Monto establecido desde la compra online</span>
+                                        <span th:if="${ventaPendiente != null}">Monto establecido desde la venta</span>
+                                        <span th:if="${idVenta != null and compraPendiente == null and ventaPendiente == null}">Monto establecido desde la venta</span>
                                     </small>
                                 </div>
                             </div>
