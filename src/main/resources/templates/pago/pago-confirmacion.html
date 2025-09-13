@@ -96,7 +96,7 @@
                                 
                                 <div class="mb-3">
                                     <span class="info-label">Monto Pagado:</span><br>
-                                    <span class="info-value h4 text-success" th:text="${#numbers.formatCurrency(pago.monto)}">$0.00</span>
+                                    <span class="info-value h4 text-success" th:text="'$' + ${#numbers.formatDecimal(pago.monto, 1, 2)}">$0.00</span>
                                 </div>
                                 
                                 <div class="mb-3">

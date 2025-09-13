@@ -7,6 +7,7 @@ import com.sivil.systeam.enums.EstadoPago;
 import com.sivil.systeam.enums.EstadoVenta;
 import com.sivil.systeam.enums.MetodoPago;
 import com.sivil.systeam.repository.PagoRepository;
+import com.sivil.systeam.repository.VentaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,13 +21,15 @@ import java.util.regex.Pattern;
 public class PagoService {
 
     private final PagoRepository pagoRepository;
+    private final VentaRepository ventaRepository;
 
     private static final Pattern NUMERO_TARJETA_PATTERN = Pattern.compile("\\d{16}");
     private static final Pattern FECHA_VENCIMIENTO_PATTERN = Pattern.compile("(0[1-9]|1[0-2])/\\d{2}");
     private static final Pattern CVV_PATTERN = Pattern.compile("\\d{3}");
 
-    public PagoService(PagoRepository pagoRepository) {
+    public PagoService(PagoRepository pagoRepository, VentaRepository ventaRepository) {
         this.pagoRepository = pagoRepository;
+        this.ventaRepository = ventaRepository;
     }
 
     public Pago procesarPago(String numeroTarjeta, String fechaVencimiento, String cvv, 
@@ -45,18 +48,20 @@ public class PagoService {
         pago.setEstado_pago(EstadoPago.completado);
         pago.setReferencia_transaccion("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         
-        // Para cumplir con la restricción de BD, necesitamos asociar el pago
-        // Por simplicidad en esta demostración, vamos a usar un enfoque directo
-        // IMPORTANTE: En producción, esto debería manejarse correctamente con las entidades reales
-        
-        // Para evitar el error de restricción, solo guardamos si viene con compra o venta válidas
-        // Si no, damos un mensaje explicativo al usuario
-        if (idCompra == null && idVenta == null) {
-            // Para demostración, simplemente simulamos éxito pero no guardamos en BD
-            // En su lugar, retornamos el pago con los datos simulados
-            return pago;
+        // Asociar el pago con la venta o compra correspondiente
+        if (idVenta != null) {
+            // Buscar la venta y asociarla al pago
+            Venta venta = ventaRepository.findById(idVenta)
+                .orElseThrow(() -> new IllegalArgumentException("Venta no encontrada con ID: " + idVenta));
+            pago.setVenta(venta);
+        } else if (idCompra != null) {
+            // TODO: Implementar lógica para compras cuando sea necesario
+            throw new IllegalArgumentException("Procesamiento de compras no implementado aún");
+        } else {
+            // Si no viene ni venta ni compra, es un pago independiente (no permitido por el constraint)
+            throw new IllegalArgumentException("Debe especificar una venta o compra para procesar el pago");
         }
-        
+
         return pagoRepository.save(pago);
     }
     

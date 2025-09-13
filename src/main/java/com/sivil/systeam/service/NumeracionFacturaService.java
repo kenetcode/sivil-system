@@ -4,6 +4,8 @@ import com.sivil.systeam.repository.VentaRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class NumeracionFacturaService {
 
@@ -25,9 +27,10 @@ public class NumeracionFacturaService {
     private Long obtenerUltimoCorrelativo(VentaRepository ventaRepository) {
         try {
             String prefijoBusqueda = sucursal + "-";
-            String ultimaFactura = ventaRepository.findTopByNumeroFacturaStartingWith(prefijoBusqueda);
+            List<String> facturas = ventaRepository.findTopByNumeroFacturaStartingWith(prefijoBusqueda);
 
-            if (ultimaFactura != null) {
+            if (!facturas.isEmpty()) {
+                String ultimaFactura = facturas.get(0);
                 // Extraer el número correlativo (después del guión)
                 String correlativoStr = ultimaFactura.substring(prefijoBusqueda.length());
                 return Long.parseLong(correlativoStr);

@@ -49,7 +49,7 @@ public class VentaController {
         venta.setNumero_factura(numeroFactura);
 
         model.addAttribute("venta", venta);
-        model.addAttribute("libros", libroRepository.findAll());
+        model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
         return "venta/crear-venta";
     }
 
@@ -87,7 +87,7 @@ public class VentaController {
 
             if (detallesRequest.isEmpty()) {
                 model.addAttribute("error", "Debe agregar al menos un libro para realizar la venta.");
-                model.addAttribute("libros", libroRepository.findAll());
+                model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
                 return "venta/crear-venta";
             }
 
@@ -96,7 +96,7 @@ public class VentaController {
 
             if (vendedor == null) {
                 model.addAttribute("error", "No se pudo identificar al vendedor. Por favor inicie sesión nuevamente.");
-                model.addAttribute("libros", libroRepository.findAll());
+                model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
                 return "venta/crear-venta";
             }
 
@@ -105,13 +105,31 @@ public class VentaController {
             // 3. Verificar que el número de factura no exista
             if (ventaRepository.existsByNumero_Factura(venta.getNumero_factura())) {
                 model.addAttribute("error", "El número de factura ya existe.");
-                model.addAttribute("libros", libroRepository.findAll());
+                model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
                 return "venta/crear-venta";
             }
 
-            // 4. Guardar la venta
+            // 4. Calcular totales de la venta
+            BigDecimal subtotalVenta = BigDecimal.ZERO;
+
+            // Primero calcular el subtotal
+            for (LibroVentaRequest detalleRequest : detallesRequest) {
+                BigDecimal subtotalItem = detalleRequest.getPrecio().multiply(BigDecimal.valueOf(detalleRequest.getCantidad()));
+                subtotalVenta = subtotalVenta.add(subtotalItem);
+            }
+
+            // Calcular solo impuestos (13% sobre el subtotal)
+            BigDecimal impuestos = subtotalVenta.multiply(new BigDecimal("0.13"));
+            BigDecimal totalVenta = subtotalVenta.add(impuestos);
+
+            // Asignar valores calculados a la venta
+            venta.setSubtotal(subtotalVenta);
+            venta.setDescuento_aplicado(BigDecimal.ZERO);
+            venta.setImpuestos(impuestos);
+            venta.setTotal(totalVenta);
             venta.setFecha_venta(LocalDateTime.now());
             venta.setEstado(com.sivil.systeam.enums.EstadoVenta.activa);
+
             Venta ventaGuardada = ventaRepository.save(venta);
 
             // 5. Procesar cada detalle de venta
@@ -129,7 +147,7 @@ public class VentaController {
                     model.addAttribute("error", "Stock insuficiente para: " + libro.getTitulo() +
                             ". Stock disponible: " + libro.getCantidad_stock() +
                             ". Cantidad solicitada: " + detalleRequest.getCantidad());
-                    model.addAttribute("libros", libroRepository.findAll());
+                    model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
                     return "venta/crear-venta";
                 }
 
@@ -149,15 +167,13 @@ public class VentaController {
                 libroRepository.save(libro);
             }
 
-            model.addAttribute("mensaje", "Venta creada exitosamente!");
-            model.addAttribute("venta", new Venta()); // Limpia el formulario
-            model.addAttribute("libros", libroRepository.findAll());
-            return "venta/crear-venta";
+            // Redirigir a pago con tarjeta con el total calculado
+            return "redirect:/pago/tarjeta?monto=" + totalVenta + "&idVenta=" + ventaGuardada.getId_venta();
 
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("error", "Error al crear la venta: " + e.getMessage());
-            model.addAttribute("libros", libroRepository.findAll());
+            model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
             return "venta/crear-venta";
         }
     }
