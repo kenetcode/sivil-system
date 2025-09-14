@@ -32,13 +32,21 @@
 
 
 
-                    <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
-                        <a class="nav-link btn btn-outline-info rounded-pill px-3 py-2" th:href="@{compras/carrito}"
+                    <li class="nav-item dropdown me-2" th:if="${currentUser != null}">
+                        <a class="nav-link btn btn-outline-info rounded-pill px-3 py-2 dropdown-toggle" href="#" id="comprasDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
                            style="text-decoration: none;"
                            onmouseover="this.style.backgroundColor='#0dcaf0'; this.style.borderColor='#0dcaf0'; this.style.color='white';"
                            onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#0dcaf0'; this.style.color='#0dcaf0';">
-                            <i class="bi bi-shop me-1"></i> Compras Online
+                            <i class="bi bi-cart-plus me-1"></i> Compras Online
                         </a>
+                        <ul class="dropdown-menu" aria-labelledby="comprasDropdown">
+                            <li><a class="dropdown-item" th:href="@{/compra-online/crear}">
+                                <i class="bi bi-cart-plus me-2"></i>Realizar Compra
+                            </a></li>
+                            <li><a class="dropdown-item" th:href="@{/compra-online/mis-compras}">
+                                <i class="bi bi-bag-check me-2"></i>Mis Compras
+                            </a></li>
+                        </ul>
                     </li>
                     <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
                         <a class="nav-link btn btn-outline-warning rounded-pill px-3 py-2" th:href="@{/pago/seleccion-metodo-pago}"

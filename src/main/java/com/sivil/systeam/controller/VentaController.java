@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sivil.systeam.entity.*;
 import com.sivil.systeam.repository.*;
 import com.sivil.systeam.service.NumeracionFacturaService;
+import com.sivil.systeam.dto.VentaTemporalDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -12,12 +13,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.servlet.http.HttpSession;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ArrayList;
 
 @Controller
 @RequestMapping("/ventas")
@@ -49,7 +52,7 @@ public class VentaController {
         venta.setNumero_factura(numeroFactura);
 
         model.addAttribute("venta", venta);
-        model.addAttribute("libros", libroRepository.findAll());
+        model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
         return "venta/crear-venta";
     }
 
@@ -68,17 +71,15 @@ public class VentaController {
         return ResponseEntity.notFound().build();
     }
 
-    // Recibir datos del formulario y procesar la venta
+    // Procesar datos del formulario y almacenar en sesión (NO crear en BD aún)
     @PostMapping("/crear")
-    @Transactional
     public String procesarFormularioCrearVenta(
             @ModelAttribute("venta") Venta venta,
             @RequestParam("librosData") String librosDataJson,
+            HttpSession session,
             Model model) {
 
         try {
-            // GENERAR EL NÚMERO DE FACTURA
-            venta.setNumero_factura(numeracionService.generarNumeroFactura(ventaRepository));
             // 1. Convertir JSON de libros a lista de objetos
             List<LibroVentaRequest> detallesRequest = objectMapper.readValue(
                     librosDataJson,
@@ -87,77 +88,87 @@ public class VentaController {
 
             if (detallesRequest.isEmpty()) {
                 model.addAttribute("error", "Debe agregar al menos un libro para realizar la venta.");
-                model.addAttribute("libros", libroRepository.findAll());
+                model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
                 return "venta/crear-venta";
             }
 
-            // 2. Obtener el usuario vendedor desde el modelo (agregado por GlobalControllerAdvice)
+            // 2. Obtener el usuario vendedor desde el modelo
             Usuario vendedor = (Usuario) model.getAttribute("currentUser");
-
             if (vendedor == null) {
                 model.addAttribute("error", "No se pudo identificar al vendedor. Por favor inicie sesión nuevamente.");
-                model.addAttribute("libros", libroRepository.findAll());
+                model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
                 return "venta/crear-venta";
             }
 
-            venta.setVendedor(vendedor);
-
-            // 3. Verificar que el número de factura no exista
-            if (ventaRepository.existsByNumero_Factura(venta.getNumero_factura())) {
-                model.addAttribute("error", "El número de factura ya existe.");
-                model.addAttribute("libros", libroRepository.findAll());
-                return "venta/crear-venta";
-            }
-
-            // 4. Guardar la venta
-            venta.setFecha_venta(LocalDateTime.now());
-            venta.setEstado(com.sivil.systeam.enums.EstadoVenta.activa);
-            Venta ventaGuardada = ventaRepository.save(venta);
-
-            // 5. Procesar cada detalle de venta
+            // 3. Verificar stock disponible para todos los libros
             for (LibroVentaRequest detalleRequest : detallesRequest) {
                 Optional<Libro> libroOpt = libroRepository.findById(detalleRequest.getId());
-
                 if (libroOpt.isEmpty()) {
-                    throw new RuntimeException("Libro no encontrado: " + detalleRequest.getId());
+                    model.addAttribute("error", "Libro no encontrado: " + detalleRequest.getId());
+                    model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
+                    return "venta/crear-venta";
                 }
 
                 Libro libro = libroOpt.get();
-
-                // Verificar stock suficiente
                 if (libro.getCantidad_stock() < detalleRequest.getCantidad()) {
                     model.addAttribute("error", "Stock insuficiente para: " + libro.getTitulo() +
                             ". Stock disponible: " + libro.getCantidad_stock() +
                             ". Cantidad solicitada: " + detalleRequest.getCantidad());
-                    model.addAttribute("libros", libroRepository.findAll());
+                    model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
                     return "venta/crear-venta";
                 }
-
-                // Crear detalle de venta
-                DetalleVenta detalle = new DetalleVenta();
-                detalle.setVenta(ventaGuardada);
-                detalle.setLibro(libro);
-                detalle.setCantidad(detalleRequest.getCantidad());
-                detalle.setPrecio_unitario(detalleRequest.getPrecio());
-                detalle.setSubtotal_item(detalleRequest.getPrecio().multiply(
-                        BigDecimal.valueOf(detalleRequest.getCantidad())));
-
-                detalleVentaRepository.save(detalle);
-
-                // Actualizar stock del libro
-                libro.setCantidad_stock(libro.getCantidad_stock() - detalleRequest.getCantidad());
-                libroRepository.save(libro);
             }
 
-            model.addAttribute("mensaje", "Venta creada exitosamente!");
-            model.addAttribute("venta", new Venta()); // Limpia el formulario
-            model.addAttribute("libros", libroRepository.findAll());
-            return "venta/crear-venta";
+            // 4. Calcular totales de la venta
+            BigDecimal subtotalVenta = BigDecimal.ZERO;
+            for (LibroVentaRequest detalleRequest : detallesRequest) {
+                BigDecimal subtotalItem = detalleRequest.getPrecio().multiply(BigDecimal.valueOf(detalleRequest.getCantidad()));
+                subtotalVenta = subtotalVenta.add(subtotalItem);
+            }
+
+            BigDecimal impuestos = subtotalVenta.multiply(new BigDecimal("0.13"));
+            BigDecimal totalVenta = subtotalVenta.add(impuestos);
+
+            // 5. Crear VentaTemporalDTO y guardar en sesión
+            VentaTemporalDTO ventaTemporal = new VentaTemporalDTO();
+            ventaTemporal.setNumeroFactura(numeracionService.generarNumeroFactura(ventaRepository));
+            ventaTemporal.setVendedor(vendedor);
+            ventaTemporal.setNombreCliente(venta.getNombre_cliente());
+            ventaTemporal.setContactoCliente(venta.getContacto_cliente());
+            ventaTemporal.setIdentificacionCliente(venta.getIdentificacion_cliente());
+            ventaTemporal.setSubtotal(subtotalVenta);
+            ventaTemporal.setDescuentoAplicado(BigDecimal.ZERO);
+            ventaTemporal.setImpuestos(impuestos);
+            ventaTemporal.setTotal(totalVenta);
+            ventaTemporal.setTipoPago(com.sivil.systeam.enums.MetodoPago.tarjeta);
+            ventaTemporal.setEstado(com.sivil.systeam.enums.EstadoVenta.activa);
+            ventaTemporal.setFechaVenta(LocalDateTime.now());
+
+            // 6. Crear lista de detalles temporales
+            List<VentaTemporalDTO.DetalleVentaTemporalDTO> detallesTemporal = new ArrayList<>();
+            for (LibroVentaRequest detalleRequest : detallesRequest) {
+                VentaTemporalDTO.DetalleVentaTemporalDTO detalleTemporal =
+                    new VentaTemporalDTO.DetalleVentaTemporalDTO(
+                        detalleRequest.getId(),
+                        detalleRequest.getTitulo(),
+                        detalleRequest.getCantidad(),
+                        detalleRequest.getPrecio(),
+                        detalleRequest.getPrecio().multiply(BigDecimal.valueOf(detalleRequest.getCantidad()))
+                    );
+                detallesTemporal.add(detalleTemporal);
+            }
+            ventaTemporal.setDetallesVenta(detallesTemporal);
+
+            // 7. Guardar en sesión
+            session.setAttribute("ventaPendiente", ventaTemporal);
+
+            // 8. Redirigir a pago con tarjeta (sin idVenta porque aún no existe)
+            return "redirect:/pago/tarjeta?monto=" + totalVenta + "&ventaPendiente=true";
 
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("error", "Error al crear la venta: " + e.getMessage());
-            model.addAttribute("libros", libroRepository.findAll());
+            model.addAttribute("error", "Error al procesar la venta: " + e.getMessage());
+            model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
             return "venta/crear-venta";
         }
     }

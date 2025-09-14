@@ -1,3 +1,4 @@
+// ARCHIVO OBSOLETO - NO SE USA MÁS - Reemplazado por nuevo sistema de compras online
 package com.sivil.systeam.controller;
 
 import com.sivil.systeam.entity.CompraOnline;

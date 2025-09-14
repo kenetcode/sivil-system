@@ -52,7 +52,7 @@ public class Libro {
     @Digits(integer = 8, fraction = 2, message = "El precio debe tener máximo 8 dígitos enteros y 2 decimales")
     private BigDecimal precio; // Precio del libro
 
-    @Min(value = 1, message = "El stock inicial debe ser al menos 1")
+    @Min(value = 0, message = "El stock no puede ser negativo")
     private Integer cantidad_stock;
 
     @Column(length = 50) // Máximo 50 caracteres, campo opcional
