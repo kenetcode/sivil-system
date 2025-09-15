@@ -19,7 +19,6 @@ Este proyecto surge como la necesidad de digitalizar el comercio tradicional de 
 | **Nombre** | **Carnet** |
 | --- | --- |
 | Kenet Arnulfo Ortiz Pineda | OP20001 |
-| Maria de los Angeles Acosta Mendez | AM17040 |
 | Nataly Melissa Ayala Rivas | AR21077 |
 | Benjamín Hernández | HH17018 |
 | Douglas Vladimir Melara Portillo | MP17036 |
