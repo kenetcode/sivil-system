@@ -37,3 +37,5 @@ build/
 #/src/main/resources/application-prod.properties
 
 .DS_Store
+
+DEPLOY.md
