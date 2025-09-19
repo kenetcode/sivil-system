@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout ('Ventas - Sistema SIVIL', ~{::content})}">
+<head>
+    <title>Ventas - Sistema SIVIL</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-receipt"></i> Gestión de Ventas</h2>
+                <p class="text-muted">Listado de ventas registradas en el sistema</p>
+            </div>
+            <a th:href="@{/ventas/crear}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Nueva Venta
+            </a>
+        </div>
+    </div>
+
+    <!-- Mensaje de éxito -->
+    <div th:if="${ok}" class="alert alert-success" th:text="${ok}"></div>
+
+    <!-- Mensaje de error -->
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <!-- Tarjetas de estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Ventas</h5>
+                    <p class="card-text display-6" th:text="${#numbers.formatCurrency(totalVentas)}">$0.00</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Ventas Activas</h5>
+                    <p class="card-text display-6" th:text="${ventasActivas}">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Ventas Hoy</h5>
+                    <p class="card-text display-6" th:text="${ventasHoy}">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Promedio por Venta</h5>
+                    <p class="card-text display-6" th:text="${#numbers.formatCurrency(promedioVenta)}">$0.00</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de búsqueda -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form th:action="@{/ventas/listar}" method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="fechaInicio" class="form-label">Fecha Inicio</label>
+                    <input type="date" class="form-control" id="fechaInicio" name="fechaInicio" th:value="${fechaInicio}">
+                </div>
+                <div class="col-md-3">
+                    <label for="fechaFin" class="form-label">Fecha Fin</label>
+                    <input type="date" class="form-control" id="fechaFin" name="fechaFin" th:value="${fechaFin}">
+                </div>
+                <div class="col-md-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select class="form-select" id="estado" name="estado">
+                        <option value="">Todos</option>
+                        <option value="activa" th:selected="${estado} == 'activa'">Activa</option>
+                        <option value="inactiva" th:selected="${estado} == 'inactiva'">Inactiva</option>
+                        <option value="finalizada" th:selected="${estado} == 'finalizada'">Finalizada</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="cliente" class="form-label">Cliente</label>
+                    <input type="text" class="form-control" id="cliente" name="cliente" placeholder="Nombre cliente" th:value="${cliente}">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-filter"></i> Filtrar
+                    </button>
+                    <a th:href="@{/ventas/listar}" class="btn btn-secondary ms-2">
+                        <i class="bi bi-x-circle"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de ventas -->
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+            <tr>
+                <th>N° Factura</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Vendedor</th>
+                <th class="text-end">Subtotal</th>
+                <th class="text-end">Impuestos</th>
+                <th class="text-end">Total</th>
+                <th>Método Pago</th>
+                <th>Estado</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="venta : ${ventas}">
+                <td th:text="${venta.numero_factura}">FAC-001</td>
+                <td th:text="${#temporals.format(venta.fecha_venta, 'dd/MM/yyyy HH:mm')}">01/01/2023</td>
+                <td th:text="${venta.nombre_cliente}">Cliente Ejemplo</td>
+                <td th:text="${venta.vendedor?.nombre_completo}">Vendedor</td>
+                <td class="text-end" th:text="${#numbers.formatCurrency(venta.subtotal)}">$0.00</td>
+                <td class="text-end" th:text="${#numbers.formatCurrency(venta.impuestos)}">$0.00</td>
+                <td class="text-end fw-bold" th:text="${#numbers.formatCurrency(venta.total)}">$0.00</td>
+                <td>
+                    <span class="badge bg-info" th:if="${venta.tipo_pago.name() == 'efectivo'}">Efectivo</span>
+                    <span class="badge bg-primary" th:if="${venta.tipo_pago.name() == 'tarjeta'}">Tarjeta</span>
+                </td>
+                <td>
+                    <span class="badge bg-success" th:if="${venta.estado.name() == 'activa'}">Activa</span>
+                    <span class="badge bg-secondary" th:if="${venta.estado.name() == 'inactiva'}">Inactiva</span>
+                    <span class="badge bg-primary" th:if="${venta.estado.name() == 'finalizada'}">Finalizada</span>
+                </td>
+                <td class="text-center">
+                    <a th:href="@{|/ventas/${venta.id_venta}|}" class="btn btn-sm btn-outline-primary">Ver</a>
+                    <a th:href="@{|/ventas/${venta.id_venta}/imprimir|}" class="btn btn-sm btn-outline-secondary">Imprimir</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(ventas)}">
+                <td colspan="10" class="text-center text-muted">No hay ventas registradas</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <div th:if="${!#lists.isEmpty(ventas)}" class="d-flex justify-content-between align-items-center mt-3">
+        <div class="text-muted" th:text="'Mostrando ' + ${ventas.size()} + ' de ' + ${totalRegistros} + ' ventas'"></div>
+        <nav th:if="${totalPaginas > 1}">
+            <ul class="pagination">
+                <li class="page-item" th:classappend="${paginaActual == 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/ventas/listar(page=${paginaActual - 1}, size=${tamanoPagina})}">Anterior</a>
+                </li>
+                <li th:each="i : ${#numbers.sequence(1, totalPaginas)}"
+                    class="page-item"
+                    th:classappend="${i == paginaActual} ? 'active'">
+                    <a class="page-link" th:href="@{/ventas/listar(page=${i}, size=${tamanoPagina})}" th:text="${i}"></a>
+                </li>
+                <li class="page-item" th:classappend="${paginaActual == totalPaginas} ? 'disabled'">
+                    <a class="page-link" th:href="@{/ventas/listar(page=${paginaActual + 1}, size=${tamanoPagina})}">Siguiente</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+</body>
+</html>

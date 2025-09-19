@@ -71,6 +71,18 @@ public class VentaController {
         return ResponseEntity.notFound().build();
     }
 
+
+    @GetMapping("/listar")
+    public String listarVentas(Model model) {
+        // Datos de ejemplo para probar la vista
+        model.addAttribute("ventas", new ArrayList<Venta>());
+        model.addAttribute("totalVentas", 0);
+        model.addAttribute("ventasActivas", 0);
+        model.addAttribute("ventasHoy", 0);
+        model.addAttribute("promedioVenta", 0);
+        return "venta/listar-ventas";
+    }
+
     // Procesar datos del formulario y almacenar en sesión (NO crear en BD aún)
     @PostMapping("/crear")
     public String procesarFormularioCrearVenta(
@@ -193,4 +205,6 @@ public class VentaController {
         public Integer getCantidad() { return cantidad; }
         public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
     }
+
+
 }
