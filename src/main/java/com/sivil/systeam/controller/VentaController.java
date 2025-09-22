@@ -4,14 +4,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sivil.systeam.entity.*;
 import com.sivil.systeam.repository.*;
-import com.sivil.systeam.service.NumeracionFacturaService;
+import com.sivil.systeam.service.*;
 import com.sivil.systeam.dto.VentaTemporalDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.servlet.http.HttpSession;
 import java.math.BigDecimal;
@@ -44,6 +43,9 @@ public class VentaController {
     @Autowired
     private NumeracionFacturaService numeracionService;
 
+    @Autowired
+    private VentaService ventaService;
+
     @GetMapping("/crear")
     public String mostrarFormularioCrearVenta(Model model) {
         Venta venta = new Venta();
@@ -74,14 +76,20 @@ public class VentaController {
 
     @GetMapping("/listar")
     public String listarVentas(Model model) {
-        // Datos de ejemplo para probar la vista
-        model.addAttribute("ventas", new ArrayList<Venta>());
-        model.addAttribute("totalVentas", 0);
+        // Obtener las ventas finalizadas desde el servicio
+        List<Venta> ventas = ventaService.listarVentasFinalizadas();
+
+        model.addAttribute("ventas", ventas);
+        model.addAttribute("totalVentas", ventas.size());
+
+        // Mantener valores de ejemplo para otros atributos
         model.addAttribute("ventasActivas", 0);
         model.addAttribute("ventasHoy", 0);
         model.addAttribute("promedioVenta", 0);
+
         return "venta/listar-ventas";
     }
+
 
     // Procesar datos del formulario y almacenar en sesión (NO crear en BD aún)
     @PostMapping("/crear")
