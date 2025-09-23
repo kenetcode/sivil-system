@@ -127,6 +127,12 @@ public class VentaController {
 
             Venta ventaExistente = ventaOpt.get();
 
+            // Guardar los detalles originales para calcular diferencias de stock
+            Map<Integer, Integer> cantidadesOriginales = new HashMap<>();
+            for (DetalleVenta detalle : ventaExistente.getDetallesVenta()) {
+                cantidadesOriginales.put(detalle.getLibro().getId_libro(), detalle.getCantidad());
+            }
+
             // Actualizar datos del cliente
             ventaExistente.setNombre_cliente(ventaActualizada.getNombre_cliente());
             ventaExistente.setContacto_cliente(ventaActualizada.getContacto_cliente());
@@ -134,6 +140,7 @@ public class VentaController {
 
             BigDecimal subtotal = BigDecimal.ZERO;
             List<DetalleVenta> detallesAEliminar = new ArrayList<>();
+            Map<Integer, Integer> cambiosStock = new HashMap<>(); // Para trackear cambios de stock
 
             // Procesar cada detalle de venta
             for (DetalleVenta detalle : ventaExistente.getDetallesVenta()) {
@@ -143,6 +150,9 @@ public class VentaController {
                 String eliminarParam = requestParams.get("eliminar[" + detalleId + "]");
                 if ("true".equals(eliminarParam)) {
                     detallesAEliminar.add(detalle);
+                    // Al eliminar, devolver el stock al libro
+                    int libroId = detalle.getLibro().getId_libro();
+                    cambiosStock.put(libroId, cambiosStock.getOrDefault(libroId, 0) + detalle.getCantidad());
                     continue;
                 }
 
@@ -151,15 +161,23 @@ public class VentaController {
                 if (cantidadParam != null && !cantidadParam.trim().isEmpty()) {
                     try {
                         int cantidadNueva = Integer.parseInt(cantidadParam);
+                        int cantidadOriginal = detalle.getCantidad();
 
                         // Validar stock antes de actualizar
                         Libro libro = detalle.getLibro();
-                        int stockDisponible = libro.getCantidad_stock() + detalle.getCantidad();
+                        int stockDisponible = libro.getCantidad_stock() + cantidadOriginal; // Stock + cantidad original
 
                         if (cantidadNueva > stockDisponible) {
                             model.addAttribute("error", "Stock insuficiente para: " + libro.getTitulo() +
                                     ". Stock disponible: " + stockDisponible);
                             return "redirect:/ventas/" + id + "/modificar";
+                        }
+
+                        // Calcular diferencia de stock
+                        int diferencia = cantidadOriginal - cantidadNueva;
+                        if (diferencia != 0) {
+                            int libroId = libro.getId_libro();
+                            cambiosStock.put(libroId, cambiosStock.getOrDefault(libroId, 0) + diferencia);
                         }
 
                         // Actualizar cantidad y subtotal
@@ -170,11 +188,9 @@ public class VentaController {
                         subtotal = subtotal.add(subtotalItem);
 
                     } catch (NumberFormatException e) {
-                        // Mantener la cantidad original si hay error
                         subtotal = subtotal.add(detalle.getSubtotal_item());
                     }
                 } else {
-                    // Mantener el subtotal original si no hay cambios
                     subtotal = subtotal.add(detalle.getSubtotal_item());
                 }
             }
@@ -199,7 +215,25 @@ public class VentaController {
             ventaExistente.setImpuestos(impuestos);
             ventaExistente.setTotal(total);
 
-            // Guardar los cambios (SIN la línea de fecha_modificacion)
+            // ACTUALIZAR STOCK DE LOS LIBROS
+            for (Map.Entry<Integer, Integer> entry : cambiosStock.entrySet()) {
+                Integer libroId = entry.getKey();
+                Integer diferenciaStock = entry.getValue();
+
+                Optional<Libro> libroOpt = libroRepository.findById(libroId);
+                if (libroOpt.isPresent()) {
+                    Libro libro = libroOpt.get();
+                    int nuevoStock = libro.getCantidad_stock() + diferenciaStock;
+                    if (nuevoStock < 0) {
+                        model.addAttribute("error", "Error: Stock no puede ser negativo para " + libro.getTitulo());
+                        return "redirect:/ventas/" + id + "/modificar";
+                    }
+                    libro.setCantidad_stock(nuevoStock);
+                    libroRepository.save(libro);
+                }
+            }
+
+            // Guardar los cambios de la venta
             ventaRepository.save(ventaExistente);
 
             model.addAttribute("ok", "Venta actualizada correctamente.");
@@ -211,6 +245,8 @@ public class VentaController {
             return "redirect:/ventas/" + id + "/modificar";
         }
     }
+
+
 
 
     @PostMapping("/crear")

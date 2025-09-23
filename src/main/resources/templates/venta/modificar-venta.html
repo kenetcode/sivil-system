@@ -94,27 +94,6 @@
             font-size: 0.875rem;
         }
 
-        /* Estilos para mostrar el stock en el dropdown */
-        option[data-stock="0"] {
-            color: #dc3545 !important;
-            font-style: italic;
-            background-color: #f8d7da;
-        }
-
-        option[data-stock="0"]::after {
-            content: " - SIN STOCK";
-            font-weight: bold;
-        }
-
-        option[data-stock^="0"]:not([data-stock="0"]) {
-            color: #ffc107 !important;
-            font-weight: bold;
-        }
-
-        option[data-stock^="1"]:not([data-stock="10"]):not([data-stock="11"]):not([data-stock="12"]):not([data-stock="13"]):not([data-stock="14"]):not([data-stock="15"]):not([data-stock="16"]):not([data-stock="17"]):not([data-stock="18"]):not([data-stock="19"]) {
-            color: #ff9800 !important;
-        }
-
         .page-header {
             background: linear-gradient(135deg, #ffc107, #fd7e14);
             color: white;
@@ -164,6 +143,12 @@
         .form-control:read-only:focus {
             border-color: #e9ecef;
             box-shadow: none;
+        }
+
+        .stock-info {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
         }
     </style>
 </head>
@@ -309,7 +294,13 @@
                         </thead>
                         <tbody>
                         <tr th:each="detalle : ${venta.detallesVenta}">
-                            <td th:text="${detalle.libro.titulo}">Libro</td>
+                            <td>
+                                <span th:text="${detalle.libro.titulo}">Libro</span>
+                                <div class="stock-info">
+                                    <i class="bi bi-box-seam"></i> Stock disponible:
+                                    <span th:text="${detalle.libro.cantidad_stock}">0</span> unidades
+                                </div>
+                            </td>
                             <td th:text="${'₡' + #numbers.formatDecimal(detalle.precio_unitario, 1, 'COMMA', 2, 'POINT')}">₡0.00</td>
                             <td>
                                 <input type="number"
@@ -318,8 +309,10 @@
                                        min="1"
                                        max="1000"
                                        class="form-control cantidad-input"
-                                       th:attr="data-libro-id=${detalle.libro.id_libro}"
-                                       th:data-stock-actual="${detalle.libro.cantidad_stock + detalle.cantidad}">
+                                       th:attr="data-libro-id=${detalle.libro.id_libro},
+                                                data-stock-original=${detalle.libro.cantidad_stock},
+                                                data-cantidad-original=${detalle.cantidad}">
+                                <small class="text-muted">Máx: <span th:text="${detalle.libro.cantidad_stock + detalle.cantidad}">0</span></small>
                             </td>
                             <td class="subtotal-item" th:text="${'₡' + #numbers.formatDecimal(detalle.subtotal_item, 1, 'COMMA', 2, 'POINT')}">₡0.00</td>
                             <td>
@@ -355,6 +348,15 @@
             const totalInput = document.getElementById('totalInput');
             const form = document.getElementById('ventaForm');
 
+            function calcularStockDisponible(input) {
+                const stockOriginal = parseInt(input.getAttribute('data-stock-original')) || 0;
+                const cantidadOriginal = parseInt(input.getAttribute('data-cantidad-original')) || 0;
+                const cantidadActual = parseInt(input.value) || 0;
+
+                // Stock disponible = Stock actual + (Cantidad original - Cantidad actual)
+                return stockOriginal + (cantidadOriginal - cantidadActual);
+            }
+
             function recalcularTotales() {
                 let subtotal = 0;
 
@@ -385,7 +387,7 @@
 
             function validarStock(input) {
                 const cantidad = parseInt(input.value) || 0;
-                const stockActual = parseInt(input.getAttribute('data-stock-actual')) || 0;
+                const stockDisponible = calcularStockDisponible(input);
 
                 if (cantidad < 1) {
                     alert('❌ La cantidad debe ser al menos 1');
@@ -393,17 +395,26 @@
                     return false;
                 }
 
-                if (cantidad > stockActual) {
-                    alert('❌ Stock insuficiente. Stock disponible: ' + stockActual);
-                    input.value = stockActual;
+                if (cantidad > stockDisponible) {
+                    alert('❌ Stock insuficiente. Stock disponible: ' + stockDisponible + ' unidades');
+                    input.value = stockDisponible;
                     return false;
                 }
                 return true;
             }
 
+            function actualizarMaximoStock(input) {
+                const stockDisponible = calcularStockDisponible(input);
+                const smallElement = input.parentNode.querySelector('small');
+                if (smallElement) {
+                    smallElement.innerHTML = 'Máx: ' + stockDisponible;
+                }
+            }
+
             // Recalcular al cambiar cantidad
             tabla.addEventListener('input', function(e) {
                 if (e.target.classList.contains('cantidad-input')) {
+                    actualizarMaximoStock(e.target);
                     if (validarStock(e.target)) {
                         recalcularTotales();
                     }
@@ -459,7 +470,10 @@
                 }
             });
 
-            // Inicializar totales al cargar la página
+            // Inicializar máximos de stock y totales
+            document.querySelectorAll('.cantidad-input').forEach(input => {
+                actualizarMaximoStock(input);
+            });
             recalcularTotales();
 
             // Agregar validación adicional para inputs de cantidad
@@ -467,6 +481,7 @@
                 input.addEventListener('blur', function() {
                     if (this.value === '' || parseInt(this.value) < 1) {
                         this.value = 1;
+                        actualizarMaximoStock(this);
                         recalcularTotales();
                     }
                 });
