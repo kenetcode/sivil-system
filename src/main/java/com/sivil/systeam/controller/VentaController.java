@@ -15,11 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpSession;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.ArrayList;
+import java.util.*;
 
 @Controller
 @RequestMapping("/ventas")
@@ -49,12 +45,9 @@ public class VentaController {
     @Autowired
     private LibroService libroService;
 
-    
-
     @GetMapping("/crear")
     public String mostrarFormularioCrearVenta(Model model) {
         Venta venta = new Venta();
-
         String numeroFactura = numeracionService.generarNumeroFactura(ventaRepository);
         venta.setNumero_factura(numeroFactura);
 
@@ -78,42 +71,37 @@ public class VentaController {
         return ResponseEntity.notFound().build();
     }
 
-
     @GetMapping("/listar")
     public String listarVentas(Model model) {
-        // Obtener las ventas finalizadas desde el servicio
         List<Venta> ventas = ventaService.listarVentasFinalizadas();
-
         model.addAttribute("ventas", ventas);
         model.addAttribute("totalVentas", ventas.size());
-
-        // Mantener valores de ejemplo para otros atributos
         model.addAttribute("ventasActivas", 0);
         model.addAttribute("ventasHoy", 0);
         model.addAttribute("promedioVenta", 0);
-
         return "venta/listar-ventas";
     }
 
-    // cambios
+
+
     @GetMapping("/{id}/modificar")
     public String mostrarFormularioModificacion(@PathVariable("id") Integer id, Model model) {
         try {
-            // Obtener la venta por id
             Optional<Venta> ventaOpt = ventaService.obtenerVentaPorId(id);
             if (ventaOpt.isEmpty()) {
                 model.addAttribute("error", "Venta no encontrada");
                 return "redirect:/ventas/listar";
             }
-            Venta venta = ventaOpt.get();
 
-            // Obtener todos los libros activos con stock > 0
+            Venta venta = ventaOpt.get();
             List<Libro> libros = libroService.listarTodosActivosConStock();
 
             model.addAttribute("venta", venta);
             model.addAttribute("libros", libros);
-            model.addAttribute("modoEdicion", true); // flag para diferenciar el formulario de creación
-            return "venta/modificar-venta"; // nombre del html que crearemos
+            model.addAttribute("modoEdicion", true);
+
+            return "venta/modificar-venta"; // Asegúrate que este sea el nombre correcto de tu template
+
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("error", "No se pudo cargar la venta para modificar");
@@ -122,56 +110,109 @@ public class VentaController {
     }
 
 
-    //cambios
+
     @PostMapping("/{id}/modificar")
     public String actualizarVenta(
             @PathVariable("id") Integer id,
             @ModelAttribute("venta") Venta ventaActualizada,
+            @RequestParam Map<String, String> requestParams,
             Model model) {
 
-        // 1. Obtener la venta existente
-        Optional<Venta> ventaOpt = ventaRepository.findById(id);
-        if (ventaOpt.isEmpty()) {
-            model.addAttribute("error", "No se encontró la venta.");
+        try {
+            Optional<Venta> ventaOpt = ventaRepository.findById(id);
+            if (ventaOpt.isEmpty()) {
+                model.addAttribute("error", "No se encontró la venta.");
+                return "redirect:/ventas/listar";
+            }
+
+            Venta ventaExistente = ventaOpt.get();
+
+            // Actualizar datos del cliente
+            ventaExistente.setNombre_cliente(ventaActualizada.getNombre_cliente());
+            ventaExistente.setContacto_cliente(ventaActualizada.getContacto_cliente());
+            ventaExistente.setIdentificacion_cliente(ventaActualizada.getIdentificacion_cliente());
+
+            BigDecimal subtotal = BigDecimal.ZERO;
+            List<DetalleVenta> detallesAEliminar = new ArrayList<>();
+
+            // Procesar cada detalle de venta
+            for (DetalleVenta detalle : ventaExistente.getDetallesVenta()) {
+                String detalleId = String.valueOf(detalle.getId_detalle_venta());
+
+                // Verificar si el detalle debe ser eliminado
+                String eliminarParam = requestParams.get("eliminar[" + detalleId + "]");
+                if ("true".equals(eliminarParam)) {
+                    detallesAEliminar.add(detalle);
+                    continue;
+                }
+
+                // Actualizar cantidad si existe en los parámetros
+                String cantidadParam = requestParams.get("cantidades[" + detalleId + "]");
+                if (cantidadParam != null && !cantidadParam.trim().isEmpty()) {
+                    try {
+                        int cantidadNueva = Integer.parseInt(cantidadParam);
+
+                        // Validar stock antes de actualizar
+                        Libro libro = detalle.getLibro();
+                        int stockDisponible = libro.getCantidad_stock() + detalle.getCantidad();
+
+                        if (cantidadNueva > stockDisponible) {
+                            model.addAttribute("error", "Stock insuficiente para: " + libro.getTitulo() +
+                                    ". Stock disponible: " + stockDisponible);
+                            return "redirect:/ventas/" + id + "/modificar";
+                        }
+
+                        // Actualizar cantidad y subtotal
+                        detalle.setCantidad(cantidadNueva);
+                        BigDecimal subtotalItem = detalle.getPrecio_unitario().multiply(BigDecimal.valueOf(cantidadNueva));
+                        detalle.setSubtotal_item(subtotalItem);
+
+                        subtotal = subtotal.add(subtotalItem);
+
+                    } catch (NumberFormatException e) {
+                        // Mantener la cantidad original si hay error
+                        subtotal = subtotal.add(detalle.getSubtotal_item());
+                    }
+                } else {
+                    // Mantener el subtotal original si no hay cambios
+                    subtotal = subtotal.add(detalle.getSubtotal_item());
+                }
+            }
+
+            // Eliminar detalles marcados para eliminación
+            for (DetalleVenta detalle : detallesAEliminar) {
+                ventaExistente.getDetallesVenta().remove(detalle);
+                detalleVentaRepository.delete(detalle);
+            }
+
+            // Validar que la venta tenga al menos un detalle
+            if (ventaExistente.getDetallesVenta().isEmpty()) {
+                model.addAttribute("error", "La venta debe tener al menos un libro.");
+                return "redirect:/ventas/" + id + "/modificar";
+            }
+
+            // Recalcular totales
+            BigDecimal impuestos = subtotal.multiply(new BigDecimal("0.13"));
+            BigDecimal total = subtotal.add(impuestos);
+
+            ventaExistente.setSubtotal(subtotal);
+            ventaExistente.setImpuestos(impuestos);
+            ventaExistente.setTotal(total);
+
+            // Guardar los cambios (SIN la línea de fecha_modificacion)
+            ventaRepository.save(ventaExistente);
+
+            model.addAttribute("ok", "Venta actualizada correctamente.");
             return "redirect:/ventas/listar";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", "Error al actualizar la venta: " + e.getMessage());
+            return "redirect:/ventas/" + id + "/modificar";
         }
-        Venta ventaExistente = ventaOpt.get();
-
-        // 2. Actualizar campos del cliente
-        ventaExistente.setNombre_cliente(ventaActualizada.getNombre_cliente());
-        ventaExistente.setContacto_cliente(ventaActualizada.getContacto_cliente());
-        ventaExistente.setIdentificacion_cliente(ventaActualizada.getIdentificacion_cliente());
-
-        // 3. Actualizar detalles de venta si es necesario
-        // (Aquí asumimos que los detalles se envían de la misma forma que en crear-venta)
-        // Por ahora, solo recalcularemos totales con los detalles existentes
-
-        List<DetalleVenta> detalles = ventaExistente.getDetallesVenta();
-        BigDecimal subtotal = BigDecimal.ZERO;
-        for (DetalleVenta detalle : detalles) {
-            BigDecimal subtotalItem = detalle.getPrecio_unitario().multiply(BigDecimal.valueOf(detalle.getCantidad()));
-            detalle.setSubtotal_item(subtotalItem);
-            subtotal = subtotal.add(subtotalItem);
-        }
-
-        // 4. Recalcular impuestos y total
-        BigDecimal impuestos = subtotal.multiply(new BigDecimal("0.13"));
-        BigDecimal total = subtotal.add(impuestos);
-
-        ventaExistente.setSubtotal(subtotal);
-        ventaExistente.setImpuestos(impuestos);
-        ventaExistente.setTotal(total);
-
-        // 5. Guardar cambios
-        ventaRepository.save(ventaExistente);
-
-        return "redirect:/ventas/listar";
     }
 
 
-
-
-    // Procesar datos del formulario y almacenar en sesión (NO crear en BD aún)
     @PostMapping("/crear")
     public String procesarFormularioCrearVenta(
             @ModelAttribute("venta") Venta venta,
@@ -180,7 +221,6 @@ public class VentaController {
             Model model) {
 
         try {
-            // 1. Convertir JSON de libros a lista de objetos
             List<LibroVentaRequest> detallesRequest = objectMapper.readValue(
                     librosDataJson,
                     new TypeReference<List<LibroVentaRequest>>() {}
@@ -192,7 +232,6 @@ public class VentaController {
                 return "venta/crear-venta";
             }
 
-            // 2. Obtener el usuario vendedor desde el modelo
             Usuario vendedor = (Usuario) model.getAttribute("currentUser");
             if (vendedor == null) {
                 model.addAttribute("error", "No se pudo identificar al vendedor. Por favor inicie sesión nuevamente.");
@@ -200,7 +239,6 @@ public class VentaController {
                 return "venta/crear-venta";
             }
 
-            // 3. Verificar stock disponible para todos los libros
             for (LibroVentaRequest detalleRequest : detallesRequest) {
                 Optional<Libro> libroOpt = libroRepository.findById(detalleRequest.getId());
                 if (libroOpt.isEmpty()) {
@@ -219,7 +257,6 @@ public class VentaController {
                 }
             }
 
-            // 4. Calcular totales de la venta
             BigDecimal subtotalVenta = BigDecimal.ZERO;
             for (LibroVentaRequest detalleRequest : detallesRequest) {
                 BigDecimal subtotalItem = detalleRequest.getPrecio().multiply(BigDecimal.valueOf(detalleRequest.getCantidad()));
@@ -229,7 +266,6 @@ public class VentaController {
             BigDecimal impuestos = subtotalVenta.multiply(new BigDecimal("0.13"));
             BigDecimal totalVenta = subtotalVenta.add(impuestos);
 
-            // 5. Crear VentaTemporalDTO y guardar en sesión
             VentaTemporalDTO ventaTemporal = new VentaTemporalDTO();
             ventaTemporal.setNumeroFactura(numeracionService.generarNumeroFactura(ventaRepository));
             ventaTemporal.setVendedor(vendedor);
@@ -244,25 +280,22 @@ public class VentaController {
             ventaTemporal.setEstado(com.sivil.systeam.enums.EstadoVenta.activa);
             ventaTemporal.setFechaVenta(LocalDateTime.now());
 
-            // 6. Crear lista de detalles temporales
             List<VentaTemporalDTO.DetalleVentaTemporalDTO> detallesTemporal = new ArrayList<>();
             for (LibroVentaRequest detalleRequest : detallesRequest) {
                 VentaTemporalDTO.DetalleVentaTemporalDTO detalleTemporal =
-                    new VentaTemporalDTO.DetalleVentaTemporalDTO(
-                        detalleRequest.getId(),
-                        detalleRequest.getTitulo(),
-                        detalleRequest.getCantidad(),
-                        detalleRequest.getPrecio(),
-                        detalleRequest.getPrecio().multiply(BigDecimal.valueOf(detalleRequest.getCantidad()))
-                    );
+                        new VentaTemporalDTO.DetalleVentaTemporalDTO(
+                                detalleRequest.getId(),
+                                detalleRequest.getTitulo(),
+                                detalleRequest.getCantidad(),
+                                detalleRequest.getPrecio(),
+                                detalleRequest.getPrecio().multiply(BigDecimal.valueOf(detalleRequest.getCantidad()))
+                        );
                 detallesTemporal.add(detalleTemporal);
             }
             ventaTemporal.setDetallesVenta(detallesTemporal);
 
-            // 7. Guardar en sesión
             session.setAttribute("ventaPendiente", ventaTemporal);
 
-            // 8. Redirigir a pago con tarjeta (sin idVenta porque aún no existe)
             return "redirect:/pago/tarjeta?monto=" + totalVenta + "&ventaPendiente=true";
 
         } catch (Exception e) {
@@ -280,7 +313,6 @@ public class VentaController {
         private BigDecimal precio;
         private Integer cantidad;
 
-        // Getters y Setters
         public Integer getId() { return id; }
         public void setId(Integer id) { this.id = id; }
 
@@ -293,6 +325,4 @@ public class VentaController {
         public Integer getCantidad() { return cantidad; }
         public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
     }
-
-
 }
