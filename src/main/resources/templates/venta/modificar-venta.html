@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout ('Modificar Venta', ~{::content})}">
+<head>
+    <title>Modificar Venta - Sistema SIVIL</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-receipt"></i> Modificar Venta</h2>
+                <p class="text-muted">Editar los datos de la venta seleccionada</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensajes -->
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${ok}" class="alert alert-success" th:text="${ok}"></div>
+
+    <form th:action="@{|/ventas/${venta.id_venta}/modificar|}" th:object="${venta}" method="post" id="ventaForm">
+        <div class="row g-4">
+            <!-- Información del Cliente -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i> Información del Cliente</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Número de factura:</label>
+                            <input type="text" th:field="*{numero_factura}" class="form-control" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nombre cliente:</label>
+                            <input type="text" th:field="*{nombre_cliente}" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contacto cliente:</label>
+                            <input type="text" th:field="*{contacto_cliente}" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Identificación cliente (DUI):</label>
+                            <input type="text" th:field="*{identificacion_cliente}" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen de Venta -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-calculator me-2"></i> Resumen de Venta</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Subtotal:</label>
+                            <input type="number" step="0.01" th:field="*{subtotal}" class="form-control" readonly id="subtotalInput">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Impuestos:</label>
+                            <input type="number" step="0.01" th:field="*{impuestos}" class="form-control" readonly id="impuestosInput">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Total:</label>
+                            <input type="number" step="0.01" th:field="*{total}" class="form-control fw-bold" readonly id="totalInput">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Selección de libros -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-book me-2"></i> Libros en la venta</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="tablaLibrosAgregados">
+                        <thead class="table-dark">
+                        <tr>
+                            <th>Libro</th>
+                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>Subtotal</th>
+                            <th>Acción</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="detalle : ${venta.detallesVenta}">
+                            <td th:text="${detalle.titulo}">Libro</td>
+                            <td th:text="${detalle.precio}">0.00</td>
+                            <td th:text="${detalle.cantidad}">1</td>
+                            <td th:text="${detalle.subtotal}">0.00</td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm eliminar-libro">Eliminar</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 text-center">
+            <button type="submit" class="btn btn-success btn-lg">Guardar Cambios</button>
+        </div>
+    </form>
+
+    <!-- Aquí puedes agregar scripts para recalcular totales si cambian cantidades o eliminan libros -->
+</div>
+</body>
+</html>

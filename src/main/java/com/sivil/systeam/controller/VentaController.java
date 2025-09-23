@@ -46,6 +46,11 @@ public class VentaController {
     @Autowired
     private VentaService ventaService;
 
+    @Autowired
+    private LibroService libroService;
+
+    
+
     @GetMapping("/crear")
     public String mostrarFormularioCrearVenta(Model model) {
         Venta venta = new Venta();
@@ -89,6 +94,81 @@ public class VentaController {
 
         return "venta/listar-ventas";
     }
+
+    // cambios
+    @GetMapping("/{id}/modificar")
+    public String mostrarFormularioModificacion(@PathVariable("id") Integer id, Model model) {
+        try {
+            // Obtener la venta por id
+            Optional<Venta> ventaOpt = ventaService.obtenerVentaPorId(id);
+            if (ventaOpt.isEmpty()) {
+                model.addAttribute("error", "Venta no encontrada");
+                return "redirect:/ventas/listar";
+            }
+            Venta venta = ventaOpt.get();
+
+            // Obtener todos los libros activos con stock > 0
+            List<Libro> libros = libroService.listarTodosActivosConStock();
+
+            model.addAttribute("venta", venta);
+            model.addAttribute("libros", libros);
+            model.addAttribute("modoEdicion", true); // flag para diferenciar el formulario de creación
+            return "venta/modificar-venta"; // nombre del html que crearemos
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", "No se pudo cargar la venta para modificar");
+            return "redirect:/ventas/listar";
+        }
+    }
+
+
+    //cambios
+    @PostMapping("/{id}/modificar")
+    public String actualizarVenta(
+            @PathVariable("id") Integer id,
+            @ModelAttribute("venta") Venta ventaActualizada,
+            Model model) {
+
+        // 1. Obtener la venta existente
+        Optional<Venta> ventaOpt = ventaRepository.findById(id);
+        if (ventaOpt.isEmpty()) {
+            model.addAttribute("error", "No se encontró la venta.");
+            return "redirect:/ventas/listar";
+        }
+        Venta ventaExistente = ventaOpt.get();
+
+        // 2. Actualizar campos del cliente
+        ventaExistente.setNombre_cliente(ventaActualizada.getNombre_cliente());
+        ventaExistente.setContacto_cliente(ventaActualizada.getContacto_cliente());
+        ventaExistente.setIdentificacion_cliente(ventaActualizada.getIdentificacion_cliente());
+
+        // 3. Actualizar detalles de venta si es necesario
+        // (Aquí asumimos que los detalles se envían de la misma forma que en crear-venta)
+        // Por ahora, solo recalcularemos totales con los detalles existentes
+
+        List<DetalleVenta> detalles = ventaExistente.getDetallesVenta();
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (DetalleVenta detalle : detalles) {
+            BigDecimal subtotalItem = detalle.getPrecio_unitario().multiply(BigDecimal.valueOf(detalle.getCantidad()));
+            detalle.setSubtotal_item(subtotalItem);
+            subtotal = subtotal.add(subtotalItem);
+        }
+
+        // 4. Recalcular impuestos y total
+        BigDecimal impuestos = subtotal.multiply(new BigDecimal("0.13"));
+        BigDecimal total = subtotal.add(impuestos);
+
+        ventaExistente.setSubtotal(subtotal);
+        ventaExistente.setImpuestos(impuestos);
+        ventaExistente.setTotal(total);
+
+        // 5. Guardar cambios
+        ventaRepository.save(ventaExistente);
+
+        return "redirect:/ventas/listar";
+    }
+
+
 
 
     // Procesar datos del formulario y almacenar en sesión (NO crear en BD aún)

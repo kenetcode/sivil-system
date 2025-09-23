@@ -12,6 +12,8 @@ import java.util.List;
 @Repository
 public interface VentaRepository extends JpaRepository<Venta, Integer> {
 
+    List<Venta> findByEstado(EstadoVenta estado);
+
     @Query("SELECT COUNT(v) > 0 FROM Venta v WHERE v.numero_factura = :numeroFactura")
     boolean existsByNumero_Factura(@Param("numeroFactura") String numeroFactura);
 
@@ -21,5 +23,7 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
 
     @Query("SELECT v FROM Venta v WHERE v.estado = :estado ORDER BY v.fecha_venta DESC")
     List<Venta> findByEstadoOrderByFechaVentaDesc(@Param("estado") EstadoVenta estado);
+
+
 
 }
