@@ -150,6 +150,41 @@
             color: #6c757d;
             margin-top: 0.25rem;
         }
+
+        .search-results {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .libro-resultado {
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+        }
+
+        .libro-resultado:hover {
+            background-color: #f8f9fa;
+        }
+
+        .libro-resultado:last-child {
+            border-bottom: none;
+        }
+
+        /* Estilos para mostrar el stock en el dropdown */
+        option[data-stock="0"] {
+            color: #dc3545 !important;
+            font-style: italic;
+            background-color: #f8d7da;
+        }
+
+        option[data-stock="0"]::after {
+            content: " - SIN STOCK";
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -185,6 +220,9 @@
     </div>
 
     <form th:action="@{|/ventas/${venta.id_venta}/modificar|}" th:object="${venta}" method="post" id="ventaForm">
+        <!-- Campos ocultos para nuevos libros -->
+        <div id="nuevos-libros-container"></div>
+
         <div class="row g-4">
             <!-- Información del Cliente -->
             <div class="col-md-6">
@@ -275,9 +313,49 @@
 
         <hr class="section-divider">
 
-        <!-- Selección de libros -->
-        <div class="card">
+        <!-- Buscador de libros para agregar (USANDO TU CÓDIGO) -->
+        <div class="card mb-4">
             <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-search me-2"></i>
+                    Agregar Más Libros a la Venta
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-search me-2"></i>Seleccionar libro:
+                        </label>
+                        <select id="libroSelect" class="form-select">
+                            <option value="" selected disabled>🔍 Seleccione un libro...</option>
+                            <option th:each="libro : ${libros}"
+                                    th:value="${libro.id_libro}"
+                                    th:data-precio="${libro.precio}"
+                                    th:data-titulo="${libro.titulo}"
+                                    th:data-stock="${libro.cantidad_stock}"
+                                    th:text="${libro.titulo + ' - ₡' + libro.precio + ' (Stock: ' + libro.cantidad_stock + ')'}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-hash me-2"></i>Cantidad:
+                        </label>
+                        <input type="number" min="1" id="cantidadLibro" class="form-control" placeholder="1" value="1">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="button" id="agregarLibro" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-circle me-2"></i>Agregar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selección de libros existentes en la venta -->
+        <div class="card">
+            <div class="card-header bg-warning text-white">
                 <h5 class="mb-0">
                     <i class="bi bi-book me-2"></i>
                     Libros en la Venta
@@ -296,6 +374,7 @@
                         </tr>
                         </thead>
                         <tbody>
+                        <!-- Libros existentes en la venta -->
                         <tr th:each="detalle : ${venta.detallesVenta}">
                             <td>
                                 <span th:text="${detalle.libro.titulo}">Libro</span>
@@ -348,7 +427,7 @@
         </div>
     </form>
 
-    <!-- Script para recalcular totales y eliminar libros -->
+    <!-- Script combinado con tu funcionalidad de búsqueda -->
     <script th:inline="javascript">
         /*<![CDATA[*/
         document.addEventListener('DOMContentLoaded', function() {
@@ -357,13 +436,21 @@
             const impuestosInput = document.getElementById('impuestosInput');
             const totalInput = document.getElementById('totalInput');
             const form = document.getElementById('ventaForm');
+            const nuevosLibrosContainer = document.getElementById('nuevos-libros-container');
 
+            // VARIABLES DE TU CÓDIGO
+            const agregarBtn = document.getElementById('agregarLibro');
+            const libroSelect = document.getElementById('libroSelect');
+            const cantidadInput = document.getElementById('cantidadLibro');
+
+            let contadorNuevosLibros = 0;
+
+            // FUNCIONES DE RECALCULO (de tu código original)
             function recalcularTotales() {
                 let subtotal = 0;
 
                 tabla.querySelectorAll('tbody tr').forEach(row => {
                     if (row.style.display !== 'none') {
-                        // Obtener precio del texto (eliminar símbolo de moneda si existe)
                         const precioText = row.cells[1].textContent.replace(/[^\d.,]/g, '').replace(',', '.');
                         const precio = parseFloat(precioText) || 0;
 
@@ -371,7 +458,6 @@
                         const cantidad = parseInt(cantidadInput.value) || 0;
                         const subtotalItem = precio * cantidad;
 
-                        // Actualizar subtotal en la tabla
                         row.cells[3].textContent = '₡' + subtotalItem.toFixed(2);
                         subtotal += subtotalItem;
                     }
@@ -386,6 +472,93 @@
                 totalInput.value = total.toFixed(2);
             }
 
+            // FUNCIÓN DE VALIDACIÓN DE STOCK (de tu código)
+            async function verificarStock(idLibro, cantidad) {
+                try {
+                    const response = await fetch(`/ventas/api/libros/${idLibro}/stock`);
+                    if (!response.ok) {
+                        throw new Error('Error al verificar stock');
+                    }
+                    const data = await response.json();
+
+                    if (data.stock < cantidad) {
+                        alert(`❌ Stock insuficiente para "${data.titulo}"\nStock disponible: ${data.stock} unidades`);
+                        return false;
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('Error al verificar stock:', error);
+                    alert('Error al verificar el stock del libro');
+                    return false;
+                }
+            }
+
+            // FUNCIÓN PARA AGREGAR NUEVO LIBRO (adaptada de tu código)
+            async function agregarNuevoLibro() {
+                const id = libroSelect.value;
+                const titulo = libroSelect.options[libroSelect.selectedIndex].getAttribute('data-titulo');
+                const precio = parseFloat(libroSelect.options[libroSelect.selectedIndex].getAttribute('data-precio'));
+                const cantidad = parseInt(cantidadInput.value);
+
+                if (!id || isNaN(cantidad) || cantidad <= 0) {
+                    alert('Seleccione un libro y una cantidad válida.');
+                    return;
+                }
+
+                // Verificar stock antes de agregar (usando tu función)
+                const stockDisponible = await verificarStock(id, cantidad);
+                if (!stockDisponible) {
+                    return;
+                }
+
+                // Agregar campos ocultos al formulario
+                contadorNuevosLibros++;
+                const nuevoLibroHTML = `
+                    <input type="hidden" name="nuevosLibros[${contadorNuevosLibros}].idLibro" value="${id}">
+                    <input type="hidden" name="nuevosLibros[${contadorNuevosLibros}].cantidad" value="${cantidad}">
+                    <input type="hidden" name="nuevosLibros[${contadorNuevosLibros}].precioUnitario" value="${precio}">
+                `;
+                nuevosLibrosContainer.innerHTML += nuevoLibroHTML;
+
+                // Agregar fila a la tabla
+                const stockActual = libroSelect.options[libroSelect.selectedIndex].getAttribute('data-stock');
+                const nuevaFila = document.createElement('tr');
+                nuevaFila.className = 'libro-agregado';
+                nuevaFila.innerHTML = `
+                    <td>
+                        <span>${titulo}</span>
+                        <div class="stock-info">
+                            <i class="bi bi-box-seam"></i> Stock disponible: ${stockActual} unidades
+                        </div>
+                    </td>
+                    <td>₡${precio.toLocaleString()}</td>
+                    <td>
+                        <input type="number" name="nuevasCantidades[${contadorNuevosLibros}]"
+                               value="${cantidad}" min="1" max="${stockActual}"
+                               class="form-control cantidad-input nuevo-libro"
+                               data-libro-id="${id}"
+                               data-stock-original="${stockActual}"
+                               data-cantidad-original="${cantidad}">
+                        <small class="text-muted">Máx: ${stockActual}</small>
+                    </td>
+                    <td class="subtotal-item">₡${(precio * cantidad).toLocaleString()}</td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm eliminar-nuevo-libro">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                    </td>
+                `;
+                tabla.querySelector('tbody').appendChild(nuevaFila);
+
+                // Limpiar campos (como en tu código)
+                cantidadInput.value = '1';
+                libroSelect.selectedIndex = 0;
+
+                // Recalcular totales
+                recalcularTotales();
+            }
+
+            // VALIDACIÓN DE STOCK PARA LIBROS EXISTENTES
             function validarStock(input) {
                 const cantidad = parseInt(input.value) || 0;
                 const stockActual = parseInt(input.getAttribute('data-stock-original')) || 0;
@@ -419,29 +592,63 @@
                 }
             }
 
-            // ✅ EVENT LISTENER CORREGIDO - Para cambios en cantidad
+            // EVENT LISTENERS
+
+            // Agregar libro (usando tu botón)
+            agregarBtn.addEventListener('click', agregarNuevoLibro);
+
+            // Validación en tiempo real de la cantidad (de tu código)
+            cantidadInput.addEventListener('change', async function() {
+                const id = libroSelect.value;
+                const cantidad = parseInt(this.value);
+
+                if (id && cantidad > 0) {
+                    const stockDisponible = await verificarStock(id, cantidad);
+                    if (!stockDisponible) {
+                        this.value = '1';
+                    }
+                }
+            });
+
+            // Cambios en cantidad
             tabla.addEventListener('input', function(e) {
                 if (e.target.classList.contains('cantidad-input')) {
-                    actualizarMaximoStock(e.target);
-                    validarStock(e.target);
+                    if (e.target.classList.contains('nuevo-libro')) {
+                        // Para libros nuevos, validación simple
+                        const stock = parseInt(e.target.getAttribute('data-stock-original')) || 0;
+                        const cantidad = parseInt(e.target.value) || 0;
+
+                        if (cantidad < 1) {
+                            e.target.value = 1;
+                        } else if (cantidad > stock) {
+                            alert(`Stock insuficiente. Máximo: ${stock} unidades`);
+                            e.target.value = stock;
+                        }
+                    } else {
+                        // Para libros existentes, validación completa
+                        actualizarMaximoStock(e.target);
+                        validarStock(e.target);
+                    }
                     recalcularTotales();
                 }
             });
 
-            // Marcar y ocultar fila al eliminar
+            // Eliminar libros
             tabla.addEventListener('click', function(e) {
-                const eliminarBtn = e.target.closest('.eliminar-libro');
-                if (eliminarBtn) {
-                    const row = eliminarBtn.closest('tr');
+                if (e.target.classList.contains('eliminar-libro') ||
+                    e.target.classList.contains('eliminar-nuevo-libro')) {
+                    const row = e.target.closest('tr');
                     if (confirm('¿Está seguro de que desea eliminar este libro de la venta?')) {
-                        row.querySelector('.eliminar-flag').value = 'true';
+                        if (e.target.classList.contains('eliminar-libro')) {
+                            row.querySelector('.eliminar-flag').value = 'true';
+                        }
                         row.style.display = 'none';
                         recalcularTotales();
                     }
                 }
             });
 
-            // Validar antes de enviar el formulario
+            // Validación del formulario
             form.addEventListener('submit', function(e) {
                 let tieneLibros = false;
                 let errorStock = false;
@@ -450,11 +657,10 @@
                     if (row.style.display !== 'none') {
                         tieneLibros = true;
                         const cantidadInput = row.querySelector('.cantidad-input');
-                        if (!validarStock(cantidadInput)) {
+                        if (!cantidadInput.classList.contains('nuevo-libro') && !validarStock(cantidadInput)) {
                             errorStock = true;
                         }
-                    } else {
-                        // Asegurar que las filas ocultas se marquen como eliminadas
+                    } else if (row.querySelector('.eliminar-flag')) {
                         row.querySelector('.eliminar-flag').value = 'true';
                     }
                 });
@@ -471,35 +677,35 @@
                     return;
                 }
 
-                // Confirmar antes de enviar
                 if (!confirm('¿Está seguro de que desea guardar los cambios en esta venta?')) {
                     e.preventDefault();
                 }
             });
 
-            // Inicializar máximos de stock y totales
+            // INICIALIZACIÓN
             document.querySelectorAll('.cantidad-input').forEach(input => {
-                actualizarMaximoStock(input);
+                if (!input.classList.contains('nuevo-libro')) {
+                    actualizarMaximoStock(input);
+                }
             });
             recalcularTotales();
 
-            // Agregar validación adicional para inputs de cantidad
             document.querySelectorAll('.cantidad-input').forEach(input => {
                 input.addEventListener('blur', function() {
                     if (this.value === '' || parseInt(this.value) < 1) {
                         this.value = 1;
-                        actualizarMaximoStock(this);
+                        if (!this.classList.contains('nuevo-libro')) {
+                            actualizarMaximoStock(this);
+                        }
                         recalcularTotales();
                     }
                 });
             });
 
-            // Prevenir reenvío del formulario al recargar la página
             if (window.history.replaceState) {
                 window.history.replaceState(null, null, window.location.href);
             }
 
-            // Prevenir que Enter envíe el formulario accidentalmente
             document.getElementById('ventaForm').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -510,9 +716,8 @@
     </script>
 
     <script>
-        // Funciones para formatear contacto y DUI
         function formatearContacto(input) {
-            let value = input.value.replace(/\D/g, ''); // Solo números
+            let value = input.value.replace(/\D/g, '');
             if (value.length > 4) {
                 value = value.substring(0, 4) + '-' + value.substring(4, 8);
             }
@@ -520,7 +725,7 @@
         }
 
         function formatearDUI(input) {
-            let value = input.value.replace(/\D/g, ''); // Solo números
+            let value = input.value.replace(/\D/g, '');
             if (value.length > 8) {
                 value = value.substring(0, 8) + '-' + value.substring(8, 9);
             }
