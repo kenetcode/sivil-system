@@ -21,7 +21,8 @@ public class VentaService {
 
     // Listar ventas finalizadas
     public List<Venta> listarVentasFinalizadas() {
-        return ventaRepository.findByEstado(EstadoVenta.activa);
+        return ventaRepository.findByEstadoOrderByFechaVentaDesc(EstadoVenta.activa);
+
     }
 
     // Obtener venta por ID

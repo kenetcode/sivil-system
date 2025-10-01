@@ -34,30 +34,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Ventas Activas</h5>
-                    <p class="card-text display-6" th:text="${ventasActivas}">0</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Ventas Hoy</h5>
-                    <p class="card-text display-6" th:text="${ventasHoy}">0</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Promedio por Venta</h5>
-                    <p class="card-text display-6" th:text="${promedioVenta}">0</p>
-                </div>
-            </div>
-        </div>
+        <!-- Se eliminaron las tarjetas de Ventas Activas, Ventas Hoy y Promedio por Venta -->
+        <!-- Para mantener el espacio visual, podrías dejar los otros 3 col-md-3 vacíos si lo deseas -->
+        <div class="col-md-9"></div>
     </div>
 
     <!-- Tabla de ventas -->
@@ -96,13 +75,14 @@
                     <span class="badge bg-primary" th:if="${venta.estado.name() == 'finalizada'}">Finalizada</span>
                 </td>
                 <td class="text-center">
-                    <!-- Botón Modificar (reemplaza el botón Ver) -->
+                    <!-- Botón Modificar -->
                     <a th:href="@{|/ventas/${venta.id_venta}/modificar|}" class="btn btn-sm btn-outline-warning">
                         <i class="bi bi-pencil"></i> Modificar
                     </a>
-                    <a th:href="@{|/ventas/${venta.id_venta}/imprimir|}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-printer"></i> Imprimir
-                    </a>
+                    <!-- Botón Buscar en desarrollo -->
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="alert('Funcionalidad en desarrollo')">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(ventas)}">
