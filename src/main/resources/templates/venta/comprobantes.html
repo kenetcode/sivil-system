@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout('Comprobantes de Pago', 'content')}">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<!-- Contenido principal -->
+<div th:fragment="content">
+    <div class="container">
+
+        <h2 class="mb-4">Comprobantes de Pago</h2>
+
+        <!-- Formulario subir comprobante -->
+        <div class="card mb-4">
+            <div class="card-header">Subir comprobante</div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="pagoId" class="form-label">ID del pago:</label>
+                        <input type="number" class="form-control" id="pagoId" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="archivo" class="form-label">Archivo PDF:</label>
+                        <input type="file" class="form-control" id="archivo" accept=".pdf" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Subir comprobante
+                    </button>
+                </form>
+                <div id="uploadResult" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- Tabla de comprobantes -->
+        <div class="card">
+            <div class="card-header">Comprobantes del vendedor</div>
+            <div class="card-body">
+                <table class="table table-striped" id="tablaComprobantes">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Pago ID</th>
+                        <th>Nombre archivo</th>
+                        <th>Tipo</th>
+                        <th>Tamaño (bytes)</th>
+                        <th>Fecha subida</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="comprobante : ${comprobantes}">
+                        <td th:text="${comprobante.id_comprobante}"></td>
+                        <td th:text="${comprobante.pago.id_pago}"></td>
+                        <td th:text="${comprobante.nombre_archivo}"></td>
+                        <td th:text="${comprobante.tipo_archivo}"></td>
+                        <td th:text="${comprobante.tamaño_archivo}"></td>
+                        <td th:text="${#dates.format(comprobante.fecha_subida, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td>
+                            <a th:href="@{'/comprobantes/ver/' + ${comprobante.id_comprobante}}" target="_blank" class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i> Ver
+                            </a>
+                            <a th:href="@{'/comprobantes/descargar/' + ${comprobante.id_comprobante}}" class="btn btn-sm btn-success">
+                                <i class="bi bi-download"></i> Descargar
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(comprobantes)}">
+                        <td colspan="7" class="text-center">No hay comprobantes cargados.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /* <![CDATA[ */
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadResult = document.getElementById('uploadResult');
+
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const pagoId = document.getElementById('pagoId').value;
+            const archivo = document.getElementById('archivo').files[0];
+
+            if (!archivo) {
+                uploadResult.innerHTML = '<div class="alert alert-danger">Seleccione un archivo PDF</div>';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("archivo", archivo);
+
+            fetch('/comprobantes/upload/' + pagoId, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': /*[[${_csrf.token}]]*/ ''
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                uploadResult.innerHTML = '<div class="alert alert-success">Comprobante subido correctamente!</div>';
+                // opcional: recargar la página o actualizar la tabla
+                location.reload();
+            })
+            .catch(err => {
+                uploadResult.innerHTML = '<div class="alert alert-danger">Error al subir el archivo: ' + err + '</div>';
+            });
+        });
+    /* ]]> */
+</script>
+
+</body>
+</html>
