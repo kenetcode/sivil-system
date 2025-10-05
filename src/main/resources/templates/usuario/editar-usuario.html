@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{layout/base :: layout ('Editar Usuario - Sistema SIVIL', ~{::content})}">
+<head>
+    <title>Editar Usuario - Sistema SIVIL</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <div class="container">
+            <!-- Header de la página -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2><i class="bi bi-pencil-square"></i> Editar Usuario</h2>
+                    <p class="text-muted">Modificar información del usuario del sistema</p>
+                </div>
+            </div>
+
+            <!-- Botón regresar -->
+            <div class="mb-3">
+                <a th:href="@{/usuarios}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Regresar a la lista
+                </a>
+            </div>
+
+            <!-- Card de Edición -->
+            <div class="row justify-content-center">
+                <div class="col-md-10 col-lg-8">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Formulario de Edición</h5>
+                        </div>
+                        <div class="card-body">
+                <!-- Mensajes -->
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle"></i> <span th:text="${mensaje}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Formulario de edición -->
+                <form th:action="@{|/usuarios/${usuario.id_usuario}/editar|}" method="post" th:object="${usuario}">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nombre_usuario" class="form-label">
+                                <i class="bi bi-person"></i> Nombre de Usuario <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="nombre_usuario" 
+                                   th:field="*{nombre_usuario}" required 
+                                   placeholder="Ej: admin123">
+                            <div class="invalid-feedback">
+                                El nombre de usuario ya existe o no es válido.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">
+                                <i class="bi bi-envelope"></i> Email <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" class="form-control" id="email" 
+                                   th:field="*{email}" required 
+                                   placeholder="Ej: admin@sivil.com">
+                            <div class="invalid-feedback">
+                                Este email ya está registrado o no es válido.
+                            </div>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> 
+                                <strong>Importante:</strong> Admin y Vendedores requieren email @sivil.com
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label for="contraseña" class="form-label">
+                                <i class="bi bi-lock"></i> Nueva Contraseña
+                            </label>
+                            <input type="password" class="form-control" id="contraseña" 
+                                   name="contraseña" minlength="6"
+                                   placeholder="Dejar vacío para mantener la actual">
+                            <div class="invalid-feedback">
+                                La contraseña debe tener al menos 6 caracteres con letras y números.
+                            </div>
+                            <small class="text-muted">Debe contener al menos una letra y un número. Dejar vacío para no cambiar.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="tipo_usuario" class="form-label">
+                                <i class="bi bi-person-badge"></i> Tipo de Usuario <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="tipo_usuario" th:field="*{tipo_usuario}" required>
+                                <option value="">Selecciona un tipo</option>
+                                <option th:each="tipo : ${tiposUsuario}" 
+                                        th:value="${tipo}"
+                                        th:text="${#strings.capitalize(tipo.name())}"
+                                        th:selected="${tipo == usuario.tipo_usuario}">
+                                </option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Debes seleccionar un tipo de usuario.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-3">
+                        <label for="nombre_completo" class="form-label">
+                            <i class="bi bi-card-text"></i> Nombre Completo <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="nombre_completo" 
+                               th:field="*{nombre_completo}" required 
+                               placeholder="Ej: Juan Carlos Administrador">
+                        <div class="invalid-feedback">
+                            El nombre completo es requerido.
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="telefono" class="form-label">
+                                <i class="bi bi-telephone"></i> Teléfono
+                            </label>
+                            <input type="tel" class="form-control" id="telefono" 
+                                   th:field="*{telefono}" 
+                                   placeholder="Ej: 2234-5678">
+                            <small class="text-muted">Campo opcional</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="direccion" class="form-label">
+                                <i class="bi bi-geo-alt"></i> Dirección
+                            </label>
+                            <input type="text" class="form-control" id="direccion" 
+                                   th:field="*{direccion}" 
+                                   placeholder="Ej: San Salvador, El Salvador">
+                            <small class="text-muted">Campo opcional</small>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label for="estado" class="form-label">
+                                <i class="bi bi-toggle2-on"></i> Estado <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="estado" th:field="*{estado}" required>
+                                <option th:value="activo" th:selected="${usuario.estado.name() == 'activo'}">Activo</option>
+                                <option th:value="inactivo" th:selected="${usuario.estado.name() == 'inactivo'}">Inactivo</option>
+                            </select>
+                            <small class="text-muted">Estado actual del usuario en el sistema</small>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-warning w-100">
+                                <i class="bi bi-check-circle"></i> Actualizar Usuario
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <a th:href="@{/usuarios}" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+
+                        </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="row justify-content-center mt-3">
+                <div class="col-md-10 col-lg-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-info-circle"></i> Información de Edición:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-warning">Campos Editables:</h6>
+                                    <ul class="mb-3">
+                                        <li><strong>Email:</strong> Debe ser válido y único en el sistema</li>
+                                        <li><strong>Nombre de Usuario:</strong> Único, mínimo 3 caracteres</li>
+                                        <li><strong>Contraseña:</strong> Solo cambiar si es necesario</li>
+                                        <li><strong>Estado:</strong> Activar/desactivar el usuario</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-success">Validaciones:</h6>
+                                    <ul class="mb-3">
+                                        <li><strong>Email único:</strong> No debe existir otro usuario con el mismo email</li>
+                                        <li><strong>Username único:</strong> No debe existir otro usuario con el mismo nombre</li>
+                                        <li><strong>Email corporativo:</strong> Admin y Vendedores requieren @sivil.com</li>
+                                        <li><strong>Contraseña:</strong> Si se cambia, debe tener letras y números</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-exclamation-circle"></i> 
+                                <strong>Nota:</strong> Los campos marcados con <span class="text-danger">*</span> son obligatorios. 
+                                La contraseña solo se actualizará si ingresa una nueva.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript para validaciones -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const nombreUsuarioInput = document.getElementById('nombre_usuario');
+            const emailInput = document.getElementById('email');
+            const contraseñaInput = document.getElementById('contraseña');
+            const tipoUsuarioSelect = document.getElementById('tipo_usuario');
+            const nombreCompletoInput = document.getElementById('nombre_completo');
+            
+            const originalEmail = emailInput.value;
+            const originalUsername = nombreUsuarioInput.value;
+            
+            // Función para validar nombre de usuario
+            async function validarNombreUsuario() {
+                const nombreUsuario = nombreUsuarioInput.value.trim();
+                
+                if (!nombreUsuario) {
+                    nombreUsuarioInput.setCustomValidity('El nombre de usuario es obligatorio');
+                    nombreUsuarioInput.classList.add('is-invalid');
+                    nombreUsuarioInput.classList.remove('is-valid');
+                    return false;
+                } else if (nombreUsuario.length < 3) {
+                    nombreUsuarioInput.setCustomValidity('El nombre de usuario debe tener al menos 3 caracteres');
+                    nombreUsuarioInput.classList.add('is-invalid');
+                    nombreUsuarioInput.classList.remove('is-valid');
+                    return false;
+                } else if (nombreUsuario.length > 20) {
+                    nombreUsuarioInput.setCustomValidity('El nombre de usuario no puede tener más de 20 caracteres');
+                    nombreUsuarioInput.classList.add('is-invalid');
+                    nombreUsuarioInput.classList.remove('is-valid');
+                    return false;
+                } else if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(nombreUsuario)) {
+                    nombreUsuarioInput.setCustomValidity('El nombre de usuario debe empezar con una letra y solo puede contener letras, números y guiones bajos');
+                    nombreUsuarioInput.classList.add('is-invalid');
+                    nombreUsuarioInput.classList.remove('is-valid');
+                    return false;
+                } else if (nombreUsuario !== originalUsername) {
+                    // Solo validar disponibilidad si cambió
+                    try {
+                        const response = await fetch(`/validar-nombre-usuario?nombre_usuario=${encodeURIComponent(nombreUsuario)}`);
+                        const disponible = await response.json();
+                        
+                        if (!disponible) {
+                            nombreUsuarioInput.setCustomValidity('Este nombre de usuario ya está en uso');
+                            nombreUsuarioInput.classList.add('is-invalid');
+                            nombreUsuarioInput.classList.remove('is-valid');
+                            return false;
+                        } else {
+                            nombreUsuarioInput.setCustomValidity('');
+                            nombreUsuarioInput.classList.remove('is-invalid');
+                            nombreUsuarioInput.classList.add('is-valid');
+                            return true;
+                        }
+                    } catch (error) {
+                        nombreUsuarioInput.setCustomValidity('');
+                        nombreUsuarioInput.classList.remove('is-invalid');
+                        nombreUsuarioInput.classList.add('is-valid');
+                        return true;
+                    }
+                } else {
+                    nombreUsuarioInput.setCustomValidity('');
+                    nombreUsuarioInput.classList.remove('is-invalid');
+                    nombreUsuarioInput.classList.add('is-valid');
+                    return true;
+                }
+            }
+            
+            // Función para validar email
+            async function validarEmail() {
+                const email = emailInput.value.trim();
+                const tipoUsuario = tipoUsuarioSelect.value;
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                
+                if (!email) {
+                    emailInput.setCustomValidity('El email es obligatorio');
+                    emailInput.classList.add('is-invalid');
+                    emailInput.classList.remove('is-valid');
+                    return false;
+                } else if (!emailRegex.test(email)) {
+                    emailInput.setCustomValidity('Por favor ingresa un email válido');
+                    emailInput.classList.add('is-invalid');
+                    emailInput.classList.remove('is-valid');
+                    return false;
+                } else if ((tipoUsuario.toLowerCase() === 'vendedor' || tipoUsuario.toLowerCase() === 'admin') && !email.endsWith('@sivil.com')) {
+                    const tipoTexto = tipoUsuario.toLowerCase() === 'admin' ? 'administradores' : 'vendedores';
+                    emailInput.setCustomValidity(`Los ${tipoTexto} deben usar un email corporativo (@sivil.com)`);
+                    emailInput.classList.add('is-invalid');
+                    emailInput.classList.remove('is-valid');
+                    return false;
+                } else if (email !== originalEmail) {
+                    // Solo validar disponibilidad si cambió
+                    try {
+                        const response = await fetch(`/validar-email?email=${encodeURIComponent(email)}`);
+                        const disponible = await response.json();
+                        
+                        if (!disponible) {
+                            emailInput.setCustomValidity('Este email ya está registrado en el sistema');
+                            emailInput.classList.add('is-invalid');
+                            emailInput.classList.remove('is-valid');
+                            return false;
+                        } else {
+                            emailInput.setCustomValidity('');
+                            emailInput.classList.remove('is-invalid');
+                            emailInput.classList.add('is-valid');
+                            return true;
+                        }
+                    } catch (error) {
+                        emailInput.setCustomValidity('');
+                        emailInput.classList.remove('is-invalid');
+                        emailInput.classList.add('is-valid');
+                        return true;
+                    }
+                } else {
+                    emailInput.setCustomValidity('');
+                    emailInput.classList.remove('is-invalid');
+                    emailInput.classList.add('is-valid');
+                    return true;
+                }
+            }
+            
+            // Función para validar contraseña (opcional en edición)
+            function validarContraseña() {
+                const contraseña = contraseñaInput.value;
+                
+                if (contraseña && contraseña.length > 0) {
+                    if (contraseña.length < 6) {
+                        contraseñaInput.setCustomValidity('La contraseña debe tener al menos 6 caracteres');
+                        contraseñaInput.classList.add('is-invalid');
+                        contraseñaInput.classList.remove('is-valid');
+                        return false;
+                    } else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(contraseña)) {
+                        contraseñaInput.setCustomValidity('La contraseña debe contener al menos una letra y un número');
+                        contraseñaInput.classList.add('is-invalid');
+                        contraseñaInput.classList.remove('is-valid');
+                        return false;
+                    } else {
+                        contraseñaInput.setCustomValidity('');
+                        contraseñaInput.classList.remove('is-invalid');
+                        contraseñaInput.classList.add('is-valid');
+                        return true;
+                    }
+                } else {
+                    // Contraseña vacía es válida en edición
+                    contraseñaInput.setCustomValidity('');
+                    contraseñaInput.classList.remove('is-invalid');
+                    contraseñaInput.classList.remove('is-valid');
+                    return true;
+                }
+            }
+            
+            // Función para validar nombre completo
+            function validarNombreCompleto() {
+                const nombreCompleto = nombreCompletoInput.value.trim();
+                
+                if (nombreCompleto.length < 2) {
+                    nombreCompletoInput.setCustomValidity('El nombre completo debe tener al menos 2 caracteres');
+                    nombreCompletoInput.classList.add('is-invalid');
+                    nombreCompletoInput.classList.remove('is-valid');
+                    return false;
+                } else {
+                    nombreCompletoInput.setCustomValidity('');
+                    nombreCompletoInput.classList.remove('is-invalid');
+                    nombreCompletoInput.classList.add('is-valid');
+                    return true;
+                }
+            }
+            
+            // Función para validar tipo de usuario
+            function validarTipoUsuario() {
+                if (!tipoUsuarioSelect.value) {
+                    tipoUsuarioSelect.setCustomValidity('Debes seleccionar un tipo de usuario');
+                    tipoUsuarioSelect.classList.add('is-invalid');
+                    tipoUsuarioSelect.classList.remove('is-valid');
+                    return false;
+                } else {
+                    tipoUsuarioSelect.setCustomValidity('');
+                    tipoUsuarioSelect.classList.remove('is-invalid');
+                    tipoUsuarioSelect.classList.add('is-valid');
+                    return true;
+                }
+            }
+            
+            // Escuchar cambios en todos los campos
+            nombreUsuarioInput.addEventListener('input', validarNombreUsuario);
+            emailInput.addEventListener('input', validarEmail);
+            contraseñaInput.addEventListener('input', validarContraseña);
+            nombreCompletoInput.addEventListener('input', validarNombreCompleto);
+            tipoUsuarioSelect.addEventListener('change', function() {
+                validarTipoUsuario();
+                validarEmail(); // Re-validar email cuando cambie el tipo
+            });
+            
+            // Validar al perder el foco
+            nombreUsuarioInput.addEventListener('blur', validarNombreUsuario);
+            emailInput.addEventListener('blur', validarEmail);
+            contraseñaInput.addEventListener('blur', validarContraseña);
+            nombreCompletoInput.addEventListener('blur', validarNombreCompleto);
+            
+            // Validar antes de enviar el formulario
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Ejecutar todas las validaciones
+                const nombreValido = await validarNombreUsuario();
+                const emailValido = await validarEmail();
+                const contraseñaValida = validarContraseña();
+                const nombreCompletoValido = validarNombreCompleto();
+                const tipoValido = validarTipoUsuario();
+                
+                // Si alguna validación falla, mostrar errores
+                if (!nombreValido || !emailValido || !contraseñaValida || !nombreCompletoValido || !tipoValido) {
+                    // Mostrar alerta
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+                    alertDiv.innerHTML = `
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        Por favor corrige los errores en el formulario antes de continuar.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    
+                    // Insertar alerta al inicio del formulario
+                    const cardBody = document.querySelector('.card-body');
+                    const existingAlert = cardBody.querySelector('.alert-danger');
+                    if (existingAlert && !existingAlert.querySelector('[th\\:if]')) {
+                        existingAlert.remove();
+                    }
+                    cardBody.insertBefore(alertDiv, cardBody.firstChild);
+                    
+                    return false;
+                }
+                
+                // Si todas las validaciones pasan, enviar el formulario
+                form.submit();
+            });
+        });
+    </script>
+</body>
+</html>
