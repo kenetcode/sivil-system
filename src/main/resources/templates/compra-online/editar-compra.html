@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout ('Editar Compra - Sistema SIVIL', ~{::content})}">
+<head>
+    <title>Editar Compra - Sistema SIVIL</title>
+</head>
+<body>
+
+<div th:fragment="content">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="bi bi-pencil me-2"></i>Editar Compra
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Información de la compra (solo lectura) -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">Número de Orden</label>
+                                    <p class="fw-bold" th:text="${compra.numero_orden ?: 'No disponible'}">ORD-12345</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">Estado</label>
+                                    <p>
+                                        <span class="badge bg-warning" th:if="${compra.estado_compra != null and compra.estado_compra.name() == 'pendiente'}"
+                                              th:text="${compra.estado_compra.name()}">pendiente</span>
+                                        <span class="badge bg-success" th:if="${compra.estado_compra != null and compra.estado_compra.name() == 'procesada'}"
+                                              th:text="${compra.estado_compra.name()}">procesada</span>
+                                        <span class="badge bg-danger" th:if="${compra.estado_compra != null and compra.estado_compra.name() == 'cancelada'}"
+                                              th:text="${compra.estado_compra.name()}">cancelada</span>
+                                        <span class="badge bg-secondary" th:if="${compra.estado_compra == null or (compra.estado_compra.name() != 'pendiente' and compra.estado_compra.name() != 'procesada' and compra.estado_compra.name() != 'cancelada')}"
+                                              th:text="${compra.estado_compra != null ? compra.estado_compra.name() : 'Sin estado'}">Sin estado</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">Fecha de Compra</label>
+                                    <p th:if="${compra.fecha_compra != null}" th:text="${#temporals.format(compra.fecha_compra, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</p>
+                                    <p th:if="${compra.fecha_compra == null}">No disponible</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">Total</label>
+                                    <p class="fw-bold text-primary" th:text="'$' + ${compra.total != null ? #numbers.formatDecimal(compra.total, 0, 2) : '0.00'}">$0.00</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Formulario para editar la dirección -->
+                        <form th:action="@{/compra-online/{id}/editar(id=${compra.id_compra})}" method="post">
+                            <div class="mb-4">
+                                <label for="direccionEntrega" class="form-label">
+                                    <i class="bi bi-geo-alt me-2"></i>Dirección de Entrega
+                                </label>
+                                <textarea class="form-control"
+                                          id="direccionEntrega"
+                                          name="direccionEntrega"
+                                          rows="3"
+                                          placeholder="Ingresa la nueva dirección de entrega..."
+                                          th:text="${compra.direccion_entrega ?: ''}"
+                                          required></textarea>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Puedes editar la dirección de entrega en cualquier momento.
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="/compra-online/mis-compras" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i>Volver a Mis Compras
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-lg me-2"></i>Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Información adicional -->
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-lightbulb me-2"></i>
+                    <strong>Nota:</strong> Puedes cambiar la dirección de entrega cuando lo necesites.
+                    Si necesitas realizar otros cambios, contacta con nuestro servicio de atención al cliente.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
