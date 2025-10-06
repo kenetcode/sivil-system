@@ -11,6 +11,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
+/**
+ * Servicio de Inventario
+ * - HU013: Agregar libro
+ * - HU014: Actualizar información de libro
+ * - Operaciones de stock y estadísticas
+ */
 @Service
 @Transactional
 public class InventarioService {
@@ -19,7 +25,7 @@ public class InventarioService {
     private InventarioRepository inventarioRepository;
 
     // ============================================================
-    // MÉTODOS QUE USA TU LibroController
+    // MÉTODOS QUE USA TU LibroController / InventarioController
     // ============================================================
 
     @Transactional(readOnly = true)
@@ -87,7 +93,6 @@ public class InventarioService {
         return inventarioRepository.save(libro);
     }
 
-
     @Transactional(readOnly = true)
     public boolean existePorCodigoLibro(String codigo_libro) {
         return inventarioRepository.existsByCodigo_libro(codigo_libro);
@@ -96,6 +101,105 @@ public class InventarioService {
     @Transactional(readOnly = true)
     public Libro buscarPorCodigoLibro(String codigo_libro) {
         return inventarioRepository.findByCodigo_libroAndEstado(codigo_libro, Estado.activo);
+    }
+
+    // ============================================================
+    // HU014: Actualizar Información de Libro
+    // ============================================================
+
+    @Transactional(readOnly = true)
+    public boolean existeOtroConMismoCodigo(Integer idLibro, String codigoNuevo) {
+        return inventarioRepository.existsByCodigo_libroAndId_libroNot(codigoNuevo, idLibro);
+    }
+
+    /**
+     * Actualizar información del libro (HU014)
+     * Reglas:
+     * - ID debe existir
+     * - Código único si cambia (excluyendo este ID)
+     * - Año entre 1900 y año actual
+     * - Precio > 0
+     * - Stock nuevo >= cantidad vendida (si no hay ventas, se toma 0)
+     * - No se tocan id ni fecha_creacion (las fechas las manejan triggers)
+     * - Se permite cambiar estado (opcional)
+     *
+     * @param id        ID del libro a actualizar
+     * @param cambios   Objeto con nuevos valores (desde el formulario)
+     * @param username  Usuario modificador (para logs/notificación)
+     * @return Libro actualizado
+     */
+    public Libro actualizarLibro(Integer id, Libro cambios, String username) {
+        Libro actual = inventarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró el libro con ID: " + id));
+
+        // Código: obligatorio y único si cambia
+        String nuevoCodigo = cambios.getCodigo_libro();
+        if (nuevoCodigo == null || nuevoCodigo.isBlank()) {
+            throw new IllegalArgumentException("El código del libro es obligatorio");
+        }
+        if (!nuevoCodigo.equals(actual.getCodigo_libro())) {
+            boolean existe = existeOtroConMismoCodigo(id, nuevoCodigo);
+            if (existe) {
+                throw new IllegalArgumentException("El código '" + nuevoCodigo + "' ya existe en otro libro");
+            }
+        }
+
+        // Año de publicación
+        Integer anio = cambios.getAño_publicacion();
+        int anioActual = LocalDateTime.now().getYear();
+        if (anio == null || anio < 1900 || anio > anioActual) {
+            throw new IllegalArgumentException("El año de publicación debe estar entre 1900 y " + anioActual);
+        }
+
+        // Precio
+        BigDecimal precio = cambios.getPrecio();
+        if (precio == null || precio.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El precio debe ser mayor a 0");
+        }
+
+        // Stock >= vendidos
+        Long vendidos;
+        try {
+            vendidos = inventarioRepository.sumCantidadVendidaByLibroId(id);
+        } catch (Exception ignore) {
+            vendidos = 0L; // si aún no tienes ventas implementadas, asumimos 0
+        }
+        Integer stockNuevo = cambios.getCantidad_stock();
+        if (stockNuevo == null || stockNuevo < 0) {
+            throw new IllegalArgumentException("El stock no puede ser negativo");
+        }
+        if (vendidos != null && stockNuevo < vendidos.intValue()) {
+            throw new IllegalArgumentException("El stock no puede ser menor a la cantidad ya vendida (" + vendidos + ")");
+        }
+
+        // Detectar cambios relevantes para notificación
+        boolean precioCambio = actual.getPrecio() != null && actual.getPrecio().compareTo(precio) != 0;
+        boolean disponibilidadCambio = (actual.getCantidad_stock() == 0 && stockNuevo > 0)
+                || (actual.getCantidad_stock() > 0 && stockNuevo == 0);
+
+        // Aplicar cambios permitidos (NO tocar id ni fecha_creacion; triggers manejan auditoría)
+        actual.setCodigo_libro(nuevoCodigo);
+        actual.setTitulo(cambios.getTitulo());
+        actual.setAutor(cambios.getAutor());
+        actual.setAño_publicacion(anio);
+        actual.setPrecio(precio);
+        actual.setCantidad_stock(stockNuevo);
+        actual.setCategoria(cambios.getCategoria());
+        actual.setEditorial(cambios.getEditorial());
+        actual.setDescripcion(cambios.getDescripcion());
+        actual.setImagen_url(cambios.getImagen_url());
+        actual.setEstado(cambios.getEstado()); // si quieres permitir activar/desactivar en HU014
+
+        Libro guardado = inventarioRepository.save(actual);
+
+        // Notificación simple por consola (puedes integrar email/eventos más adelante)
+        if (precioCambio || disponibilidadCambio) {
+            System.out.printf("NOTIFICACIÓN: %s actualizó libro %s (ID %d). Cambió precio/disponibilidad.%n",
+                    (username != null ? username : "sistema"),
+                    guardado.getCodigo_libro(), guardado.getId_libro());
+        }
+
+        return guardado;
     }
 
     // ============================================================
@@ -180,20 +284,20 @@ public class InventarioService {
         if (libroOpt.isEmpty()) {
             throw new IllegalArgumentException("Libro no encontrado");
         }
-        
+
         Libro libro = libroOpt.get();
-        
+
         // Validar que el libro esté activo
         if (libro.getEstado() != Estado.activo) {
             throw new IllegalArgumentException("No se puede eliminar: el libro no está activo");
         }
-        
+
         // Validar que el stock sea cero
         if (libro.getCantidad_stock() > 0) {
-            throw new IllegalArgumentException("No se puede eliminar: tiene " + 
+            throw new IllegalArgumentException("No se puede eliminar: tiene " +
                     libro.getCantidad_stock() + " unidades en stock");
         }
-        
+
         // Eliminación física del libro de la base de datos
         inventarioRepository.deleteById(id);
     }
@@ -203,8 +307,6 @@ public class InventarioService {
         if (libro == null) {
             throw new IllegalArgumentException("No se encontró el libro con código: " + codigo_libro);
         }
-        
-        // Eliminación física del libro de la base de datos
         inventarioRepository.delete(libro);
     }
 }

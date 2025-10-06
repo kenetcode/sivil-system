@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -107,6 +108,38 @@ public class UsuarioController {
             model.addAttribute("usuario", usuario); // Preservar los datos
             model.addAttribute("tiposUsuario", TipoUsuario.values());
             return "usuario/registro-interno-sistema"; // Volver al formulario sin redirect
+        }
+    }
+    
+    @GetMapping("/usuarios/{id}/editar")
+    public String mostrarEditarUsuario(@PathVariable("id") Integer id, Model model) {
+        Usuario usuario = usuarioService.obtenerUsuarioPorId(id);
+        if (usuario == null) {
+            model.addAttribute("error", "Usuario no encontrado");
+            return "redirect:/usuarios";
+        }
+        
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("tiposUsuario", TipoUsuario.values());
+        return "usuario/editar-usuario";
+    }
+    
+    @PostMapping("/usuarios/{id}/editar")
+    public String procesarEditarUsuario(@PathVariable("id") Integer id,
+                                       @ModelAttribute Usuario usuario,
+                                       RedirectAttributes redirectAttributes,
+                                       Model model) {
+        try {
+            usuario.setId_usuario(id); // Asegurar que el ID sea correcto
+            usuarioService.actualizarUsuario(usuario);
+            redirectAttributes.addFlashAttribute("mensaje", "Usuario actualizado exitosamente");
+            return "redirect:/usuarios";
+        } catch (RuntimeException e) {
+            // En caso de error, volver a mostrar el formulario con los datos
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("usuario", usuario);
+            model.addAttribute("tiposUsuario", TipoUsuario.values());
+            return "usuario/editar-usuario";
         }
     }
 }

@@ -59,7 +59,7 @@
                         <a th:href="@{/stock}" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Cancelar
                         </a>
-                        <form th:action="@{|/libros/${libro.id_libro}/eliminar/|}" method="post" class="d-inline">
+                        <form th:action="@{|/libros/${libro.id_libro}/eliminar|}" method="post" class="d-inline">
                             <button type="submit" class="btn btn-danger">
                                 <i class="bi bi-trash"></i> Confirmar Eliminación
                             </button>
