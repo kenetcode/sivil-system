@@ -42,6 +42,6 @@ INSERT INTO libros (
     ('LIB013', 'Godel, Escher, Bach: an Eternal Golden Braid', 'Douglas Hofstadter', 1979, 33.20, 5, 'Matemáticas'),
     ('LIB014', 'The Design of Everyday Things', 'Don Norman', 1988, 20.00, 12, 'Diseño'),
     ('LIB015', 'Structures: Or Why Things Don''t Fall Down', 'J.E. Gordon', 1978, 22.50, 10, 'Ingeniería'),
-    ('LIB016', 'Física universitaria con Física Moderna', 'Hugh D. Young y Roger A. Freedman', 2009, 28, 0, 'Física'),
-    ('LIB017', 'Calor y Termodinámica', ' Richard H. Dittman', 1985, 24, 0, 'Termodinámica')
+    ('LIB016', 'Física universitaria con Física Moderna', 'Hugh D. Young y Roger A. Freedman', 2009, 25, 0, 'Física'),
+    ('LIB017', 'Calor y Termodinámica', ' Richard H. Dittman', 1985, 25, 0, 'Termodinámica')
 ON CONFLICT (codigo_libro) DO NOTHING;
