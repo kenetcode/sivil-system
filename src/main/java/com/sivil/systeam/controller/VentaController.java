@@ -84,6 +84,16 @@ public class VentaController {
         return "venta/listar-ventas";
     }
 
+  // VentasController prueba
+  /*@GetMapping("/listar")
+  public String listarVentas(Model model){
+      List<Venta> ventas = ventaService.listarVentasVisibles(); // incluye ACTIVA y FINALIZADA
+      model.addAttribute("ventas", ventas);
+      model.addAttribute("totalVentas", ventas.size());
+      return "venta/listar-ventas";
+  }
+*/
+
 
 
     @GetMapping("/{id}/modificar")
