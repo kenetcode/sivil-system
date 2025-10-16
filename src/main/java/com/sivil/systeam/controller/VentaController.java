@@ -13,6 +13,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpSession;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -360,5 +362,29 @@ public class VentaController {
 
         public Integer getCantidad() { return cantidad; }
         public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
+    }
+
+
+    // Confirmación (pide motivo)
+    @GetMapping("/inactivar/{numeroFactura}")
+// @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')") // <- activa si ya tienes Spring Security
+    public String confirmarInactivacion(@PathVariable String numeroFactura, Model model) {
+        model.addAttribute("numeroFactura", numeroFactura);
+        return "venta/confirmar-inactivacion"; // template en /templates/venta/
+    }
+
+    // Ejecutar inactivación
+    @PostMapping("/inactivar")
+// @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')")
+    public String inactivar(@RequestParam String numeroFactura,
+                            @RequestParam String motivo,
+                            RedirectAttributes ra) {
+        try {
+            ventaService.inactivarPorNumeroFactura(numeroFactura, motivo);
+            ra.addFlashAttribute("ok", "Venta " + numeroFactura + " inactivada y stock restaurado.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/ventas/listar";
     }
 }

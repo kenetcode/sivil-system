@@ -91,7 +91,7 @@ public class PagoService {
         validarDatosTarjeta(numeroTarjeta, fechaVencimiento, cvv, nombreTitular, email);
 
         // 2. Verificar que el número de factura no exista
-        if (ventaRepository.existsByNumero_Factura(ventaTemporal.getNumeroFactura())) {
+        if (ventaRepository.existsByNumeroFactura(ventaTemporal.getNumeroFactura())) {
             throw new IllegalArgumentException("El número de factura ya existe: " + ventaTemporal.getNumeroFactura());
         }
 
