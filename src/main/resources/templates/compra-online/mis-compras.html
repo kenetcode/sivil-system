@@ -1,432 +1,294 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout ('Mis Compras Online', ~{::content})}">
+      th:replace="~{layout/base :: layout ('Mis Compras - Sistema SIVIL', ~{::content})}">
 <head>
-    <title>Mis Compras Online - Sistema SIVIL</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        .page-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2.5rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .page-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100px;
-            height: 100px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            transform: translate(20px, -20px);
-        }
-
-        .compra-card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-            transition: all 0.3s ease;
-            background: linear-gradient(145deg, #ffffff, #f8f9fa);
-            margin-bottom: 1.5rem;
-        }
-
-        .compra-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18);
-        }
-
-        .compra-header {
-            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
-            color: white;
-            border-radius: 15px 15px 0 0;
-            padding: 1.5rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .compra-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 50%;
-        }
-
-        .estado-badge {
-            padding: 8px 16px;
-            border-radius: 25px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .estado-procesada {
-            background: linear-gradient(135deg, #00b894, #00a085);
-            color: white;
-        }
-
-        .estado-pendiente {
-            background: linear-gradient(135deg, #fdcb6e, #e17055);
-            color: white;
-        }
-
-        .estado-cancelada {
-            background: linear-gradient(135deg, #e17055, #d63031);
-            color: white;
-        }
-
-        .detalle-libro {
-            background: linear-gradient(145deg, #f1f3f5, #e9ecef);
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-            border-left: 4px solid #74b9ff;
-            transition: all 0.3s ease;
-        }
-
-        .detalle-libro:hover {
-            transform: translateX(5px);
-            border-left-color: #0984e3;
-        }
-
-        .precio-total {
-            background: linear-gradient(135deg, #55a3ff, #003d82);
-            color: white;
-            border-radius: 12px;
-            padding: 1.2rem;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(85, 163, 255, 0.3);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: #6c757d;
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        .metodo-pago-badge {
-            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .stats-row {
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-item {
-            text-align: center;
-            color: #333;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            display: block;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        .fecha-badge {
-            background: rgba(116, 185, 255, 0.2);
-            color: #0984e3;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .total-badge {
-            background: linear-gradient(135deg, #00b894, #00a085);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-weight: bold;
-        }
-    </style>
+    <title>Mis Compras - Sistema SIVIL</title>
 </head>
 <body>
+
 <div th:fragment="content">
-    <!-- Header de la página -->
-    <div class="page-header">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-bag-check me-3" style="font-size: 3rem; opacity: 0.8;"></i>
-                    <div>
-                        <h2 class="mb-2">Mis Compras Online</h2>
-                        <p class="mb-0 opacity-85">Historial completo de todas tus compras realizadas</p>
+    <div class="container">
+        <h2><i class="bi bi-bag-check me-2"></i>Mis Compras</h2>
+
+        <!-- Mensajes de éxito o error -->
+        <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <span th:text="${mensaje}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Lista de compras -->
+        <div th:if="${compras != null and !compras.isEmpty()}">
+            <div class="row">
+                <div th:each="compra : ${compras}" class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="bi bi-receipt me-2"></i>
+                                <span th:text="${compra.numero_orden}">ORD-12345</span>
+                            </h6>
+                            <!-- Simplificamos la lógica del badge -->
+                            <span class="badge bg-warning" th:if="${compra.estado_compra != null and compra.estado_compra.name() == 'pendiente'}"
+                                  th:text="${compra.estado_compra.name()}">pendiente</span>
+                            <span class="badge bg-success" th:if="${compra.estado_compra != null and compra.estado_compra.name() == 'procesada'}"
+                                  th:text="${compra.estado_compra.name()}">procesada</span>
+                            <span class="badge bg-danger" th:if="${compra.estado_compra != null and compra.estado_compra.name() == 'cancelada'}"
+                                  th:text="${compra.estado_compra.name()}">cancelada</span>
+                            <span class="badge bg-secondary" th:if="${compra.estado_compra == null or (compra.estado_compra.name() != 'pendiente' and compra.estado_compra.name() != 'procesada' and compra.estado_compra.name() != 'cancelada')}"
+                                  th:text="${compra.estado_compra != null ? compra.estado_compra.name() : 'Sin estado'}">Sin estado</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                <strong><i class="bi bi-calendar me-2"></i>Fecha:</strong>
+                                <span th:if="${compra.fecha_compra != null}" th:text="${#temporals.format(compra.fecha_compra, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
+                                <span th:if="${compra.fecha_compra == null}">No disponible</span>
+                            </p>
+                            <p class="card-text">
+                                <strong><i class="bi bi-geo-alt me-2"></i>Dirección:</strong>
+                                <span th:text="${compra.direccion_entrega ?: 'No especificada'}">Dirección de entrega</span>
+                            </p>
+                            <p class="card-text">
+                                <strong><i class="bi bi-credit-card me-2"></i>Método de pago:</strong>
+                                <span th:text="${compra.metodo_pago != null ? compra.metodo_pago.name() : 'No especificado'}">tarjeta</span>
+                            </p>
+                            <hr>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <small class="text-muted">Subtotal</small>
+                                    <p class="mb-0 fw-bold" th:text="'$' + ${compra.subtotal != null ? #numbers.formatDecimal(compra.subtotal, 0, 2) : '0.00'}">$0.00</p>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">IVA</small>
+                                    <p class="mb-0 fw-bold" th:text="'$' + ${compra.impuestos != null ? #numbers.formatDecimal(compra.impuestos, 0, 2) : '0.00'}">$0.00</p>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Total</small>
+                                    <p class="mb-0 fw-bold text-primary" th:text="'$' + ${compra.total != null ? #numbers.formatDecimal(compra.total, 0, 2) : '0.00'}">$0.00</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="btn-group w-100" role="group">
+                                <!-- Botón Ver Detalles -->
+                                <button type="button" class="btn btn-outline-info btn-sm"
+                                        th:onclick="|verDetalles(${compra.id_compra})|">
+                                    <i class="bi bi-eye me-1"></i>Ver Detalles
+                                </button>
+
+                                <!-- Botón Editar - ahora aparece para TODAS las compras -->
+                                <a th:href="@{/compra-online/{id}/editar(id=${compra.id_compra})}"
+                                   class="btn btn-outline-warning btn-sm">
+                                    <i class="bi bi-pencil me-1"></i>Editar
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 text-end">
-                <div class="stats-row text-center">
-                    <div class="stat-item">
-                        <span class="stat-number" th:text="${#lists.size(compras)}">0</span>
-                        <span class="stat-label">Compras realizadas</span>
-                    </div>
+        </div>
+
+        <!-- Mensaje cuando no hay compras -->
+        <div th:if="${compras == null or compras.isEmpty()}" class="text-center py-5">
+            <i class="bi bi-cart fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No tienes compras registradas</h4>
+            <p class="text-muted">Cuando realices tu primera compra, aparecerá aquí.</p>
+            <a href="/compra-online/crear" class="btn btn-primary">
+                <i class="bi bi-plus me-2"></i>Realizar Primera Compra
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal para ver detalles de la compra -->
+    <div class="modal fade" id="detallesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-list-ul me-2"></i>Detalles de la Compra
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detallesContent">
+                    <!-- Contenido cargado dinámicamente -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Botón para nueva compra -->
-    <div class="mb-4 text-center">
-        <a href="/compra-online/crear" class="btn btn-primary btn-lg">
-            <i class="bi bi-cart-plus me-2"></i>Realizar Nueva Compra
-        </a>
-    </div>
+    <script>
+        function verDetalles(idCompra) {
+            // Mostrar spinner mientras carga
+            document.getElementById('detallesContent').innerHTML = 
+                '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div></div>';
 
-    <!-- Lista de compras -->
-    <div th:if="${#lists.isEmpty(compras)}" class="empty-state">
-        <i class="bi bi-cart-x"></i>
-        <h4>No tienes compras realizadas</h4>
-        <p class="mb-4">Para ver tu historial de compras online, necesitas realizar al menos una compra. Una vez que completes una compra, aparecerán aquí todos los detalles de tus órdenes.</p>
-        <a href="/compra-online/crear" class="btn btn-primary btn-lg">
-            <i class="bi bi-cart-plus me-2"></i>Realizar mi primera compra
-        </a>
-    </div>
+            // Mostrar el modal inmediatamente
+            var modal = new bootstrap.Modal(document.getElementById('detallesModal'));
+            modal.show();
 
-    <!-- Tabla de compras -->
-    <div th:unless="${#lists.isEmpty(compras)}" class="card">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="bi bi-list-ul me-2"></i>Historial de Compras
-            </h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th><i class="bi bi-receipt me-1"></i>Orden</th>
-                            <th><i class="bi bi-calendar3 me-1"></i>Fecha</th>
-                            <th><i class="bi bi-tag me-1"></i>Estado</th>
-                            <th><i class="bi bi-credit-card me-1"></i>Método Pago</th>
-                            <th><i class="bi bi-book me-1"></i>Libros</th>
-                            <th><i class="bi bi-currency-dollar me-1"></i>Total</th>
-                            <th><i class="bi bi-eye me-1"></i>Detalles</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="compra : ${compras}" class="align-middle">
-                            <!-- Número de Orden -->
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-receipt-cutoff text-primary me-2"></i>
-                                    <div>
-                                        <strong th:text="${compra.numero_orden}">ORD-001</strong>
-                                        <br>
-                                        <small class="text-muted">ID: <span th:text="${compra.id_compra}">1</span></small>
+            // Hacer llamada AJAX para obtener los detalles
+            fetch(`/compra-online/${idCompra}/detalles`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al cargar los detalles');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Construir el HTML con los detalles
+                    let html = '';
+                    
+                    // Información de la compra
+                    html += `
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información de la Compra</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Número de Orden:</strong> ${data.compra.numero_orden}</p>
+                                        <p><strong>Estado:</strong> 
+                                            <span class="badge bg-${getStatusBadgeColor(data.compra.estado_compra)}">${data.compra.estado_compra}</span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Fecha:</strong> ${formatDate(data.compra.fecha_compra)}</p>
+                                        <p><strong>Método de Pago:</strong> ${data.compra.metodo_pago}</p>
                                     </div>
                                 </div>
-                            </td>
+                                <p><strong>Dirección de Entrega:</strong> ${data.compra.direccion_entrega || 'No especificada'}</p>
+                            </div>
+                        </div>
+                    `;
 
-                            <!-- Fecha -->
-                            <td>
-                                <span class="fecha-badge">
-                                    <span th:text="${#temporals.format(compra.fecha_compra, 'dd/MM/yyyy')}">01/01/2024</span>
-                                    <br>
-                                    <small th:text="${#temporals.format(compra.fecha_compra, 'HH:mm')}">15:30</small>
-                                </span>
-                            </td>
-
-                            <!-- Estado -->
-                            <td>
-                                <span class="estado-badge"
-                                      th:classappend="${compra.estado_compra.name() == 'procesada'} ? 'estado-procesada' :
-                                                     (${compra.estado_compra.name() == 'pendiente'} ? 'estado-pendiente' : 'estado-cancelada')"
-                                      th:text="${compra.estado_compra.name()}">
-                                    procesada
-                                </span>
-                            </td>
-
-                            <!-- Método de Pago -->
-                            <td>
-                                <span class="metodo-pago-badge">
-                                    <i class="bi bi-credit-card me-1"></i>
-                                    <span th:text="${compra.metodo_pago.name()}">Tarjeta</span>
-                                </span>
-                            </td>
-
-                            <!-- Cantidad de Libros -->
-                            <td>
-                                <div class="text-center">
-                                    <span class="badge bg-info fs-6" th:text="${compra.cantidadTotalLibros}">2</span>
-                                    <br>
-                                    <small class="text-muted">libros</small>
+                    // Detalles de los libros
+                    if (data.detalles && data.detalles.length > 0) {
+                        html += `
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="bi bi-book me-2"></i>Libros Comprados</h6>
                                 </div>
-                            </td>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Libro</th>
+                                                    <th class="text-center">Cantidad</th>
+                                                    <th class="text-end">Precio Unit.</th>
+                                                    <th class="text-end">Subtotal</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                        `;
+                        
+                        data.detalles.forEach(detalle => {
+                            html += `
+                                <tr>
+                                    <td>
+                                        <strong>${detalle.libro.titulo}</strong><br>
+                                        <small class="text-muted">Autor: ${detalle.libro.autor || 'No especificado'}</small>
+                                    </td>
+                                    <td class="text-center">${detalle.cantidad}</td>
+                                    <td class="text-end">$${formatCurrency(detalle.precio_unitario)}</td>
+                                    <td class="text-end"><strong>$${formatCurrency(detalle.subtotal_item)}</strong></td>
+                                </tr>
+                            `;
+                        });
 
-                            <!-- Total -->
-                            <td>
-                                <div class="text-end">
-                                    <strong class="text-success fs-5">$<span th:text="${compra.total}">96.05</span></strong>
-                                    <br>
-                                    <small class="text-muted">IVA: $<span th:text="${compra.impuestos}">11.05</span></small>
+                        html += `
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                            </td>
+                            </div>
+                        `;
 
-                            <!-- Detalles (Botón expandible) -->
-                            <td>
-                                <button class="btn btn-outline-primary btn-sm" type="button"
-                                        data-bs-toggle="collapse"
-                                        th:data-bs-target="'#detalle-' + ${compra.id_compra}"
-                                        aria-expanded="false">
-                                    <i class="bi bi-chevron-down me-1"></i>Ver
-                                </button>
-                            </td>
-                        </tr>
-
-                        <!-- Fila expandible con detalles -->
-                        <tr th:each="compra : ${compras}">
-                            <td colspan="7" class="p-0">
-                                <div class="collapse" th:id="'detalle-' + ${compra.id_compra}">
-                                    <div class="card card-body m-3 bg-light">
-                                        <div class="row">
-                                            <!-- Información de entrega -->
-                                            <div class="col-md-6">
-                                                <h6 class="text-primary mb-3">
-                                                    <i class="bi bi-truck me-2"></i>Información de Entrega
-                                                </h6>
-                                                <p class="mb-2">
-                                                    <strong>Dirección:</strong>
-                                                    <br><span class="text-muted" th:text="${compra.direccion_entrega}">Dirección de entrega</span>
-                                                </p>
-                                                <p class="mb-2">
-                                                    <strong>Comprador:</strong>
-                                                    <br><span class="text-muted" th:text="${compra.comprador.nombre_completo}">Nombre</span>
-                                                </p>
-                                            </div>
-
-                                            <!-- Resumen financiero detallado -->
-                                            <div class="col-md-6">
-                                                <h6 class="text-success mb-3">
-                                                    <i class="bi bi-calculator me-2"></i>Resumen Financiero
-                                                </h6>
-                                                <div class="row g-2">
-                                                    <div class="col-4">
-                                                        <small class="text-muted">Subtotal:</small>
-                                                        <div class="fw-semibold">$<span th:text="${compra.subtotal}">85.00</span></div>
-                                                    </div>
-                                                    <div class="col-4">
-                                                        <small class="text-muted">Impuestos (13%):</small>
-                                                        <div class="fw-semibold">$<span th:text="${compra.impuestos}">11.05</span></div>
-                                                    </div>
-                                                    <div class="col-4">
-                                                        <small class="text-muted">Total:</small>
-                                                        <div class="fw-bold text-success">$<span th:text="${compra.total}">96.05</span></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Detalles de libros -->
-                                        <hr class="my-3">
-                                        <h6 class="text-info mb-3">
-                                            <i class="bi bi-book me-2"></i>Libros Comprados
-                                        </h6>
-
-                                        <div class="table-responsive">
-                                            <table class="table table-sm table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Libro</th>
-                                                        <th>Autor</th>
-                                                        <th>Cantidad</th>
-                                                        <th>Precio Unit.</th>
-                                                        <th>Subtotal</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr th:each="detalle : ${compra.detallesCompra}">
-                                                        <td>
-                                                            <strong th:text="${detalle.libro.titulo}">Título del Libro</strong>
-                                                        </td>
-                                                        <td>
-                                                            <span th:text="${detalle.libro.autor}">Autor</span>
-                                                        </td>
-                                                        <td>
-                                                            <span class="badge bg-primary" th:text="${detalle.cantidad}">2</span>
-                                                        </td>
-                                                        <td>
-                                                            $<span th:text="${detalle.precio_unitario}">25.00</span>
-                                                        </td>
-                                                        <td>
-                                                            <strong class="text-success">$<span th:text="${detalle.subtotal_item}">50.00</span></strong>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
+                        // Totales
+                        html += `
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8"></div>
+                                        <div class="col-md-4">
+                                            <table class="table table-sm">
+                                                <tr>
+                                                    <td>Subtotal:</td>
+                                                    <td class="text-end">$${formatCurrency(data.compra.subtotal)}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>IVA (13%):</td>
+                                                    <td class="text-end">$${formatCurrency(data.compra.impuestos)}</td>
+                                                </tr>
+                                                <tr class="fw-bold border-top">
+                                                    <td>Total:</td>
+                                                    <td class="text-end text-primary">$${formatCurrency(data.compra.total)}</td>
+                                                </tr>
                                             </table>
                                         </div>
                                     </div>
                                 </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                No se encontraron detalles para esta compra.
+                            </div>
+                        `;
+                    }
 
-    <!-- Estadísticas adicionales (si hay compras) -->
-    <div th:unless="${#lists.isEmpty(compras)}" class="mt-5">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="bi bi-graph-up me-2"></i>Estadísticas de Compras
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row stats-row">
-                    <div class="col-md-3 stat-item">
-                        <span class="stat-number" th:text="${#lists.size(compras)}">5</span>
-                        <span class="stat-label">Órdenes totales</span>
-                    </div>
-                    <div class="col-md-3 stat-item">
-                        <span class="stat-number" th:text="${#lists.size(compras) > 0 ? 'Ver detalles' : '0'}">--</span>
-                        <span class="stat-label">Tipos de libros</span>
-                    </div>
-                    <div class="col-md-3 stat-item">
-                        <span class="stat-number">$<span th:text="${#numbers.formatDecimal(#aggregates.sum(compras.![total]), 1, 2)}">245.75</span></span>
-                        <span class="stat-label">Total invertido</span>
-                    </div>
-                    <div class="col-md-3 stat-item">
-                        <span class="stat-number">$<span th:text="${#numbers.formatDecimal(#aggregates.sum(compras.![total]) / #lists.size(compras), 1, 2)}">49.15</span></span>
-                        <span class="stat-label">Promedio por orden</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    document.getElementById('detallesContent').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('detallesContent').innerHTML = 
+                        `<div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Error al cargar los detalles de la compra: ${error.message}
+                        </div>`;
+                });
+        }
+
+        function getStatusBadgeColor(estado) {
+            switch(estado?.toLowerCase()) {
+                case 'procesada': return 'success';
+                case 'pendiente': return 'warning';
+                case 'cancelada': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'No disponible';
+            try {
+                return new Date(dateString).toLocaleString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return dateString;
+            }
+        }
+
+        function formatCurrency(amount) {
+            return parseFloat(amount || 0).toFixed(2);
+        }
+    </script>
 </div>
+
 </body>
 </html>

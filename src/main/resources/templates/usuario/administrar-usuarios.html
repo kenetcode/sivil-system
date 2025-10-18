@@ -74,8 +74,7 @@
                                 <td th:text="${usuario.nombre_completo}">Administrador</td>
                                 <td>
                                     <span class="badge" 
-                                          th:classappend="${usuario.tipo_usuario.name() == 'admin' ? 'bg-danger' : 
-                                                          usuario.tipo_usuario.name() == 'vendedor' ? 'bg-warning' : 'bg-primary'}"
+                                          th:classappend="${usuario.tipo_usuario.name() == 'admin' ? 'bg-danger' : (usuario.tipo_usuario.name() == 'vendedor' ? 'bg-warning' : 'bg-primary')}"
                                           th:text="${#strings.capitalize(usuario.tipo_usuario.name())}">Admin</span>
                                 </td>
                                 <td>
@@ -83,24 +82,11 @@
                                           th:classappend="${usuario.estado.name() == 'activo' ? 'bg-success' : 'bg-danger'}"
                                           th:text="${#strings.capitalize(usuario.estado.name())}">Activo</span>
                                 </td>
-                                <td th:text="${usuario.telefono ?: '-'}">-</td>
+                                <td th:text="${usuario.telefono != null ? usuario.telefono : '-'}">-</td>
                                 <td class="text-center">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <!-- Ver detalles -->
-                                        <button class="btn btn-outline-info" title="Ver detalles">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        
-                                        <!-- Editar -->
-                                        <button class="btn btn-outline-primary" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        
-                                        <!-- Eliminar -->
-                                        <button class="btn btn-outline-danger" title="Eliminar">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary" disabled title="Próximamente">Ver</button>
+                                    <a th:href="@{|/usuarios/${usuario.id_usuario}/editar|}" class="btn btn-sm btn-outline-warning">Editar</a>
+                                    <button class="btn btn-sm btn-outline-danger" disabled title="Próximamente">Eliminar</button>
                                 </td>
                             </tr>
                         </tbody>
