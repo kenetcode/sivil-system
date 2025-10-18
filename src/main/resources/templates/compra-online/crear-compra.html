@@ -172,12 +172,12 @@
 </head>
 <body>
 <div th:fragment="content">
-    <!-- Aviso temporal -->
-    <div class="aviso-temporal" th:if="${avisoTemporal}">
-        <h5 class="mb-3"><i class="bi bi-info-circle me-2"></i>Aviso Temporal</h5>
+    <!-- Aviso de carrito cargado -->
+    <div class="alert alert-info" th:if="${itemsCarrito != null and !#lists.isEmpty(itemsCarrito)}">
+        <h5 class="mb-2"><i class="bi bi-cart-check me-2"></i>Libros del Catálogo</h5>
         <p class="mb-0">
-            <strong>Esta interfaz es temporal</strong> mientras se implementa el dashboard de libros completo.
-            En el futuro podrá navegar por un catálogo completo de libros. Mientras tanto, puede seleccionar y comprar libros directamente desde este formulario.  Gracias por su comprensión.
+            Se han cargado <strong th:text="${#lists.size(itemsCarrito)}">0</strong> libros desde tu carrito.
+            Puedes agregar más libros o continuar con el proceso de compra.
         </p>
     </div>
 
@@ -323,10 +323,16 @@
         <!-- Catálogo de libros -->
         <div class="card">
             <div class="card-header bg-info text-white">
-                <h5 class="mb-0">
-                    <i class="bi bi-book me-2"></i>
-                    Catálogo de Libros Disponibles
-                </h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-book me-2"></i>
+                        Catálogo de Libros Disponibles
+                    </h5>
+                    <span class="badge bg-light text-dark" id="contadorCarrito">
+                        <i class="bi bi-cart3 me-1"></i>
+                        <span id="cantidadItems">0</span> libro(s) en el carrito
+                    </span>
+                </div>
             </div>
             <div class="card-body">
                 <div class="row g-3 mb-4">
@@ -384,13 +390,13 @@
             <button type="submit" class="btn btn-success btn-lg me-3">
                 <i class="bi bi-bag-check me-2"></i>Proceder al Pago
             </button>
-            <button type="button" class="btn btn-outline-secondary btn-lg" id="limpiarFormulario">
-                <i class="bi bi-arrow-clockwise me-2"></i>Limpiar Carrito
+            <button type="button" class="btn btn-outline-danger btn-lg" id="limpiarFormulario">
+                <i class="bi bi-trash3 me-2"></i>Vaciar Todo el Carrito
             </button>
         </div>
     </form>
 
-    <script>
+    <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function() {
             const agregarBtn = document.getElementById('agregarLibro');
             const libroSelect = document.getElementById('libroSelect');
@@ -402,7 +408,20 @@
             const librosDataInput = document.getElementById('librosData');
             const compraForm = document.getElementById('compraForm');
 
-            let librosAgregados = [];
+            // Cargar libros del carrito desde el servidor
+            let librosAgregados = /*[[${itemsCarrito}]]*/ [];
+            
+            // Convertir items del carrito a formato JavaScript
+            if (librosAgregados && librosAgregados.length > 0) {
+                librosAgregados = librosAgregados.map(item => ({
+                    id: item.libroId,
+                    titulo: item.titulo,
+                    precio: parseFloat(item.precio),
+                    cantidad: item.cantidad
+                }));
+            } else {
+                librosAgregados = [];
+            }
 
             // Función para verificar stock
             async function verificarStock(idLibro, cantidad) {
@@ -427,10 +446,12 @@
 
             function actualizarTotales() {
                 let subtotal = 0;
+                let cantidadTotal = 0;
 
-                // Calcular subtotal sumando todos los libros
+                // Calcular subtotal y cantidad total sumando todos los libros
                 librosAgregados.forEach(libro => {
                     subtotal += libro.precio * libro.cantidad;
+                    cantidadTotal += libro.cantidad;
                 });
 
                 // Aplicar IVA del 13% (El Salvador)
@@ -441,6 +462,12 @@
                 subtotalInput.value = subtotal.toFixed(2);
                 impuestosInput.value = impuestos.toFixed(2);
                 totalInput.value = total.toFixed(2);
+
+                // Actualizar contador de items en el carrito
+                const cantidadItemsSpan = document.getElementById('cantidadItems');
+                if (cantidadItemsSpan) {
+                    cantidadItemsSpan.textContent = cantidadTotal;
+                }
 
                 // Actualizar el campo oculto con los datos de los libros
                 librosDataInput.value = JSON.stringify(librosAgregados);
@@ -470,24 +497,105 @@
                             </td>
                             <td>$${libro.precio.toFixed(2)}</td>
                             <td>
-                                <span class="badge bg-primary">${libro.cantidad}</span>
+                                <div class="input-group input-group-sm" style="max-width: 120px;">
+                                    <button class="btn btn-outline-secondary disminuir-cantidad" type="button">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" class="form-control text-center cantidad-input" 
+                                           value="${libro.cantidad}" min="1" data-index="${index}">
+                                    <button class="btn btn-outline-secondary aumentar-cantidad" type="button">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
                             </td>
                             <td><strong>$${(libro.precio * libro.cantidad).toFixed(2)}</strong></td>
                             <td>
-                                <button type="button" class="btn btn-danger btn-sm eliminar-libro">
-                                    <i class="bi bi-trash me-1"></i>Eliminar
+                                <button type="button" class="btn btn-danger btn-sm eliminar-libro" title="Eliminar del carrito">
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             </td>
                         `;
                         tablaBody.appendChild(row);
                     });
+                    
+                    // Event listeners para cambiar cantidad
+                    document.querySelectorAll('.disminuir-cantidad').forEach((button, index) => {
+                        button.addEventListener('click', () => {
+                            if (librosAgregados[index].cantidad > 1) {
+                                librosAgregados[index].cantidad--;
+                                renderTabla();
+                                actualizarTotales();
+                            }
+                        });
+                    });
+                    
+                    document.querySelectorAll('.aumentar-cantidad').forEach((button, index) => {
+                        button.addEventListener('click', () => {
+                            librosAgregados[index].cantidad++;
+                            renderTabla();
+                            actualizarTotales();
+                        });
+                    });
+                    
+                    document.querySelectorAll('.cantidad-input').forEach((input, index) => {
+                        input.addEventListener('change', () => {
+                            const nuevaCantidad = parseInt(input.value);
+                            if (nuevaCantidad > 0) {
+                                librosAgregados[index].cantidad = nuevaCantidad;
+                                renderTabla();
+                                actualizarTotales();
+                            } else {
+                                input.value = librosAgregados[index].cantidad;
+                            }
+                        });
+                    });
 
                     // Agregar event listeners a los botones de eliminar
                     document.querySelectorAll('.eliminar-libro').forEach((button, index) => {
-                        button.addEventListener('click', () => {
-                            librosAgregados.splice(index, 1);
-                            renderTabla();
-                            actualizarTotales();
+                        button.addEventListener('click', async () => {
+                            const libro = librosAgregados[index];
+                            
+                            // Confirmar eliminación
+                            if (confirm(`¿Eliminar "${libro.titulo}" del carrito?`)) {
+                                try {
+                                    // Obtener CSRF token
+                                    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+                                    
+                                    // Eliminar del servidor
+                                    const formData = new FormData();
+                                    formData.append('libroId', libro.id);
+                                    
+                                    const response = await fetch('/carrito/eliminar', {
+                                        method: 'POST',
+                                        headers: {
+                                            [csrfHeader]: csrfToken
+                                        },
+                                        body: formData
+                                    });
+                                    
+                                    if (response.ok) {
+                                        // Eliminar del frontend
+                                        librosAgregados.splice(index, 1);
+                                        renderTabla();
+                                        actualizarTotales();
+                                        
+                                        // Mostrar notificación
+                                        const toast = document.createElement('div');
+                                        toast.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                                        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+                                        toast.innerHTML = `
+                                            <i class="bi bi-check-circle me-2"></i>Libro eliminado del carrito
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        `;
+                                        document.body.appendChild(toast);
+                                        setTimeout(() => toast.remove(), 2000);
+                                    }
+                                } catch (error) {
+                                    console.error('Error al eliminar del carrito:', error);
+                                    alert('Error al eliminar el libro del carrito');
+                                }
+                            }
                         });
                     });
                 }
@@ -577,32 +685,55 @@
                 }
             });
 
-            function limpiarFormulario() {
-                // Limpiar campos del formulario principal
-                document.getElementById('compraForm').reset();
-
-                // Limpiar tabla de libros agregados
-                librosAgregados = [];
-                renderTabla();
-
-                // Restablecer el select de libros
-                libroSelect.selectedIndex = 0;
-                cantidadInput.value = '1';
-
-                // Cerrar alertas si están abiertas
-                const alertas = document.querySelectorAll('.alert');
-                alertas.forEach(alerta => {
-                    if (alerta.classList.contains('alert-dismissible')) {
-                        alerta.remove();
+            async function limpiarFormulario() {
+                if (!confirm('⚠️ ¿Estás seguro de que deseas ELIMINAR TODOS los libros del carrito?\n\nEsta acción no se puede deshacer y te llevará de vuelta al catálogo.')) {
+                    return;
+                }
+                
+                try {
+                    // Obtener CSRF token
+                    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+                    
+                    // Limpiar carrito en el servidor
+                    const response = await fetch('/carrito/limpiar', {
+                        method: 'POST',
+                        headers: {
+                            [csrfHeader]: csrfToken
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        // Forzar recarga sin caché añadiendo timestamp
+                        const timestamp = new Date().getTime();
+                        window.location.href = '/?limpiado=true&t=' + timestamp;
+                    } else {
+                        alert('Error al limpiar el carrito en el servidor');
                     }
-                });
+                } catch (error) {
+                    console.error('Error al limpiar carrito:', error);
+                    alert('Error al limpiar el carrito: ' + error.message);
+                }
             }
 
             // Event listener para el botón de limpiar
             document.getElementById('limpiarFormulario').addEventListener('click', limpiarFormulario);
 
-            // Inicializar la tabla vacía
+            // Inicializar la tabla (cargará los items del carrito si existen)
             renderTabla();
+            
+            // Mostrar notificación si se cargaron libros del carrito
+            if (librosAgregados.length > 0) {
+                const toast = document.createElement('div');
+                toast.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+                toast.innerHTML = `
+                    <i class="bi bi-check-circle me-2"></i>Se han cargado ${librosAgregados.length} libro(s) desde tu carrito
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 4000);
+            }
         });
 
         // Funciones para formatear contacto y DUI

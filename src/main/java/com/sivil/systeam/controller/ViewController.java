@@ -21,7 +21,10 @@ public class ViewController {
 
     /**
      * Página principal del sistema
+     * NOTA: Esta ruta ahora es manejada por CatalogoController para mostrar el catálogo de libros
+     * Mantenida comentada para referencia
      */
+    /*
     @GetMapping("/")
     public String index(Model model) {
         // Obtener todos los libros y pasarlos al modelo
@@ -29,6 +32,7 @@ public class ViewController {
         model.addAttribute("libros", libros);
         return "index";
     }
+    */
 
     //Datos de ejemplo para la tabla, solo de ejemplo, usaremos endpoints REST para datos reales
     //http://localhost:8080/tabla-ejemplo
