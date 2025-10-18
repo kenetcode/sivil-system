@@ -55,8 +55,10 @@ public class CatalogoService {
 
         // 3. Aplicar filtro por autor (si se proporciona)
         if (autor != null && !autor.trim().isEmpty() && !autor.equals("todos")) {
+            String autorBuscado = autor.trim();
             libros = libros.stream()
-                    .filter(libro -> libro.getAutor().equalsIgnoreCase(autor.trim()))
+                    .filter(libro -> libro.getAutor() != null && 
+                            libro.getAutor().trim().equalsIgnoreCase(autorBuscado))
                     .collect(Collectors.toList());
         }
 
@@ -136,6 +138,8 @@ public class CatalogoService {
     public List<String> obtenerAutoresDisponibles() {
         return obtenerLibrosDisponibles().stream()
                 .map(Libro::getAutor)
+                .filter(autor -> autor != null && !autor.trim().isEmpty())
+                .map(String::trim) // Limpiar espacios en blanco
                 .distinct()
                 .sorted()
                 .collect(Collectors.toList());
