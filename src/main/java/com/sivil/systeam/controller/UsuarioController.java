@@ -68,8 +68,39 @@ public class UsuarioController {
     }
     
     @GetMapping("/usuarios")
-    public String mostrarUsuarios(Model model) {
-        model.addAttribute("usuarios", usuarioService.obtenerTodosLosUsuarios());
+    public String mostrarUsuarios(
+            @RequestParam(value = "criterio", required = false) String criterio,
+            @RequestParam(value = "tipoBusqueda", required = false) String tipoBusqueda,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        
+        List<Usuario> usuarios;
+        
+        // Si hay criterio de búsqueda, buscar; de lo contrario, mostrar todos
+        if (criterio != null && !criterio.trim().isEmpty() && tipoBusqueda != null && !tipoBusqueda.trim().isEmpty()) {
+            try {
+                usuarios = usuarioService.buscarUsuarios(criterio, tipoBusqueda);
+                model.addAttribute("criterio", criterio);
+                model.addAttribute("tipoBusqueda", tipoBusqueda);
+                
+                // Si no hay resultados, mostrar mensaje
+                if (usuarios.isEmpty()) {
+                    model.addAttribute("sinResultados", true);
+                    model.addAttribute("mensajeBusqueda", 
+                        String.format("No se encontraron usuarios que coincidan con '%s' en %s", 
+                        criterio, 
+                        tipoBusqueda.equals("todos") ? "todos los campos" : tipoBusqueda));
+                }
+            } catch (RuntimeException e) {
+                // En caso de error en la búsqueda, mostrar todos y mensaje de error
+                usuarios = usuarioService.obtenerTodosLosUsuarios();
+                model.addAttribute("error", e.getMessage());
+            }
+        } else {
+            usuarios = usuarioService.obtenerTodosLosUsuarios();
+        }
+        
+        model.addAttribute("usuarios", usuarios);
         
         // Configurar columnas para la tabla
         List<Object> columnas = Arrays.asList(
