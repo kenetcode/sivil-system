@@ -24,6 +24,15 @@ body {
     padding-bottom: 20px;
 }
 
+/* Carrito flotante siempre visible */
+.carrito-flotante {
+    z-index: 999999 !important;
+}
+
+main, .container-fluid {
+    z-index: auto !important;
+}
+
 /* Header y navegacion */
 .navbar-brand {
     font-weight: 700;

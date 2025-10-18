@@ -224,12 +224,17 @@
                             <label class="form-label">
                                 <i class="bi bi-credit-card me-2"></i>Tipo de pago:
                             </label>
-                            <select th:field="*{tipo_pago}" class="form-select" readonly>
+                         <!--   <select th:field="*{tipo_pago}" class="form-select" readonly>
                                 <option value="tarjeta" selected>💳 Pago con Tarjeta</option>
+                            </select>-->
+                            <select class="form-select" id="tipoPago" name="tipo_pago" required>
+                                <option value="tarjeta" selected>Pago con Tarjeta</option>
+                                <option value="efectivo">Pago en Efectivo</option>
                             </select>
-                            <small class="text-muted">
+
+                           <!-- <small class="text-muted">
                                 <i class="bi bi-info-circle me-1"></i>Solo se acepta pago con tarjeta
-                            </small>
+                            </small>-->
                         </div>
                         <div class="mb-3">
                             <label class="form-label">

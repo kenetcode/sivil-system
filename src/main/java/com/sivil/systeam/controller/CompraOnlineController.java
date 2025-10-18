@@ -45,9 +45,17 @@ public class CompraOnlineController {
     private NumeracionFacturaService numeracionService;
 
     @GetMapping("/crear")
-    public String mostrarFormularioComprarLibros(Model model) {
-        // Avisar que es temporal mientras se implementa el catálogo
-        model.addAttribute("avisoTemporal", true);
+    public String mostrarFormularioComprarLibros(Model model, HttpSession session) {
+        // Obtener carrito de la sesión
+        @SuppressWarnings("unchecked")
+        List<com.sivil.systeam.controller.CatalogoController.ItemCarrito> carrito = 
+            (List<com.sivil.systeam.controller.CatalogoController.ItemCarrito>) session.getAttribute("carrito");
+        
+        // Si hay items en el carrito, los pasamos al modelo
+        if (carrito != null && !carrito.isEmpty()) {
+            model.addAttribute("itemsCarrito", carrito);
+        }
+        
         model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(
             com.sivil.systeam.enums.Estado.activo, 0));
         return "compra-online/crear-compra";
@@ -163,8 +171,11 @@ public class CompraOnlineController {
 
             // 6. Guardar en sesión
             session.setAttribute("compraPendiente", compraTemporal);
+            
+            // 7. Limpiar carrito de la sesión después de procesar
+            session.removeAttribute("carrito");
 
-            // 7. Redirigir a pago con tarjeta
+            // 8. Redirigir a pago con tarjeta
             return "redirect:/pago/tarjeta?monto=" + totalCompra + "&compraPendiente=true";
 
         } catch (Exception e) {

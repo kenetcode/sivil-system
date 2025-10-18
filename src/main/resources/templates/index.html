@@ -1,36 +1,1006 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org" 
-      th:replace="~{layout/base :: layout ('Inicio - Sistema SIVIL', ~{::content})}">
+      th:replace="~{layout/base :: layout ('Catálogo de Libros - SIVIL', ~{::content})}">
 <head>
-    <title>Inicio - Sistema SIVIL</title>
+    <title>Catálogo de Libros - SIVIL</title>
+    <style>
+        /* Reset y estilos base para el catálogo */
+        body {
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Estilos generales del catálogo */
+        .catalogo-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2.5rem 0;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 50px;
+            padding: 0.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:focus-within {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .search-bar input {
+            border: none;
+            outline: none;
+            padding: 0.5rem 1rem;
+        }
+
+        .search-bar button {
+            border-radius: 50px;
+            padding: 0.5rem 2rem;
+        }
+
+        /* Contenedor de las cards */
+        .row.g-4 > [class*='col-'] {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Cards de libros */
+        .libro-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1 !important;
+            max-width: 100%;
+        }
+
+        .libro-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            z-index: 10 !important;
+        }
+
+        .libro-image {
+            height: 150px !important;
+            min-height: 150px !important;
+            max-height: 150px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: relative !important;
+            flex-shrink: 0 !important;
+            padding: 0 !important;
+        }
+
+        .libro-image img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            object-position: center !important;
+            display: block !important;
+        }
+
+        .libro-placeholder {
+            font-size: 5rem;
+            color: #6c757d;
+            opacity: 0.3;
+        }
+
+        .libro-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #2d3748 !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .libro-card .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+        }
+
+        .libro-titulo {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+            min-height: 50px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .libro-autor {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .libro-precio {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #667eea;
+            margin: auto 0 0.75rem 0;
+        }
+
+        .libro-stock {
+            font-size: 0.85rem;
+            color: #48bb78;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .btn-agregar {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-agregar:hover {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-ver-detalle {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 0.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-ver-detalle:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Filtros y ordenamiento */
+        .filtros-container {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .form-select, .form-control {
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus, .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        /* Paginación */
+        .pagination {
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .page-item.active .page-link {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+        }
+
+        .page-link {
+            color: #667eea;
+            border-radius: 10px;
+            margin: 0 5px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .page-link:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Modal de detalles */
+        .modal {
+            z-index: 9990 !important;
+        }
+        
+        .modal-backdrop {
+            z-index: 9989 !important;
+        }
+        
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        /* Carrito flotante - Siempre visible por encima de todo */
+        .carrito-flotante {
+            position: fixed !important;
+            top: 180px !important;
+            right: 30px !important;
+            z-index: 999999 !important;
+            pointer-events: all !important;
+            isolation: isolate !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 10px !important;
+        }
+        
+        #btnVaciarCarritoCatalogo {
+            transition: all 0.3s ease !important;
+        }
+        
+        #btnVaciarCarritoCatalogo:hover {
+            transform: scale(1.05) !important;
+            box-shadow: 0 8px 20px rgba(220, 53, 69, 0.5) !important;
+        }
+
+        .btn-carrito {
+            width: 70px !important;
+            height: 70px !important;
+            border-radius: 50% !important;
+            background: linear-gradient(45deg, #48bb78, #38a169) !important;
+            border: none !important;
+            box-shadow: 0 10px 30px rgba(72, 187, 120, 0.4) !important;
+            color: white !important;
+            font-size: 1.5rem !important;
+            position: relative !important;
+            transition: all 0.3s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-decoration: none !important;
+            cursor: pointer !important;
+            z-index: 999999 !important;
+        }
+
+        .btn-carrito:hover {
+            transform: scale(1.1) !important;
+            box-shadow: 0 15px 40px rgba(72, 187, 120, 0.5) !important;
+            color: white !important;
+            text-decoration: none !important;
+        }
+
+        .carrito-badge {
+            position: absolute !important;
+            top: -5px !important;
+            right: -5px !important;
+            background: #e53e3e !important;
+            color: white !important;
+            border-radius: 50% !important;
+            width: 28px !important;
+            height: 28px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            border: 3px solid white !important;
+            z-index: 1000000 !important;
+        }
+
+        /* Estados especiales */
+        .sin-stock {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .sin-resultados {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .sin-resultados i {
+            font-size: 5rem;
+            color: #cbd5e0;
+            margin-bottom: 1rem;
+        }
+
+        /* Animación de carga */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .libro-card {
+                margin-bottom: 1.5rem;
+            }
+
+            .catalogo-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .carrito-flotante {
+                top: 170px !important;
+                right: 15px !important;
+                z-index: 999999 !important;
+            }
+            
+            #btnVaciarCarritoCatalogo {
+                font-size: 0.7rem !important;
+                padding: 6px !important;
+            }
+
+            .btn-carrito {
+                width: 60px !important;
+                height: 60px !important;
+                font-size: 1.25rem !important;
+            }
+            
+            .libro-image {
+                height: 130px !important;
+                min-height: 130px !important;
+                max-height: 130px !important;
+                padding: 0 !important;
+            }
+            
+            .libro-image img {
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+            }
+            
+            .carrito-badge {
+                width: 24px !important;
+                height: 24px !important;
+                font-size: 0.65rem !important;
+            }
+        }
+        
+        @media (min-width: 769px) and (max-width: 991px) {
+            .libro-image {
+                height: 140px !important;
+                min-height: 140px !important;
+                max-height: 140px !important;
+                padding: 0 !important;
+            }
+            
+            .libro-image img {
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .libro-image {
+                height: 150px !important;
+                min-height: 150px !important;
+                max-height: 150px !important;
+                padding: 0 !important;
+            }
+            
+            .libro-image img {
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+            }
+        }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .libro-card {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        /* Override de estilos que puedan estar interfiriendo */
+        main {
+            position: relative !important;
+            z-index: auto !important;
+        }
+        
+        /* Asegurar que container-fluid no interfiera */
+        .container-fluid {
+            position: relative !important;
+            z-index: auto !important;
+        }
+        
+        /* Asegurar que el grid no tenga overflow */
+        #librosGrid {
+            overflow: visible !important;
+        }
+        
+        /* CRÍTICO: Forzar contención de imágenes */
+        .libro-card .libro-image {
+            contain: layout size style !important;
+        }
+        
+        .libro-card .libro-image img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+        
+        /* Prevenir cualquier desbordamiento */
+        .libro-card, 
+        .libro-card * {
+            box-sizing: border-box !important;
+        }
+        
+        /* Forzar que las columnas mantengan su ancho */
+        .col-lg-3, .col-md-4, .col-sm-6 {
+            max-width: 100% !important;
+            flex-shrink: 0 !important;
+        }
+    </style>
 </head>
 <body>
-    <div th:fragment="content">
-        <!-- Header de la página -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
-                <p class="text-muted">Panel de control del sistema de libros SIVIL</p>
-            </div>
-        </div>
-
-        <!-- Mensaje de construcción -->
-        <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
-            <div class="text-center">
-                <i class="bi bi-tools display-1 text-primary mb-4"></i>
-                <h3 class="text-muted mb-3">Dashboard en Construcción</h3>
-                <p class="text-muted lead">
-                    Estamos trabajando en mostrar el catálogo completo de libros 
-                    disponibles en nuestra librería.
-                </p>
-                <div class="mt-4">
-                    <div class="spinner-border text-primary me-2" role="status" style="animation-duration: 10s;">
-                        <span class="visually-hidden">Cargando...</span>
+<div th:fragment="content">
+    <!-- Header del Catálogo -->
+    <div class="catalogo-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="mb-2">
+                        <i class="bi bi-book-half me-3"></i>
+                        Catálogo de Libros
+                    </h1>
+                    <p class="mb-0 fs-5 opacity-90">
+                        Descubre nuestra colección de <span th:text="${totalLibros}">0</span> libros disponibles
+                    </p>
+                </div>
+                <div class="col-lg-3 mt-3 mt-lg-0">
+                    <div class="d-flex justify-content-start gap-3">
+                        <div class="text-center">
+                            <div class="fs-2 fw-bold" th:text="${totalLibros}">0</div>
+                            <small>Libros</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="fs-2 fw-bold" th:text="${#lists.size(autores)}">0</div>
+                            <small>Autores</small>
+                        </div>
                     </div>
-                    <span class="text-muted">Próximamente disponible...</span>
+                </div>
+                <div class="col-lg-3">
+                    <!-- Espacio reservado para el carrito -->
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Barra de Búsqueda y Filtros -->
+    <div class="filtros-container">
+        <form method="get" action="/" id="filtrosForm">
+            <div class="row g-3">
+                <!-- Búsqueda -->
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-search me-2"></i>Buscar por título
+                    </label>
+                    <input 
+                        type="text" 
+                        name="busqueda" 
+                        class="form-control" 
+                        placeholder="Mínimo 3 caracteres..."
+                        th:value="${busqueda}"
+                        minlength="3">
+                    <small class="text-muted">Presiona Enter para buscar</small>
+                </div>
+
+                <!-- Filtro por Autor -->
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-person me-2"></i>Filtrar por autor
+                    </label>
+                    <select name="autor" class="form-select" onchange="this.form.submit()">
+                        <option value="todos" th:selected="${autorSeleccionado == 'todos'}">Todos</option>
+                        <option 
+                            th:each="autor : ${autores}" 
+                            th:value="${autor}" 
+                            th:text="${autor}"
+                            th:selected="${autor == autorSeleccionado}">
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Ordenamiento -->
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-sort-down me-2"></i>Ordenar por
+                    </label>
+                    <select name="orden" class="form-select" onchange="this.form.submit()">
+                        <option value="titulo-asc" th:selected="${ordenSeleccionado == 'titulo-asc'}">
+                            Título (A-Z)
+                        </option>
+                        <option value="titulo-desc" th:selected="${ordenSeleccionado == 'titulo-desc'}">
+                            Título (Z-A)
+                        </option>
+                        <option value="precio-asc" th:selected="${ordenSeleccionado == 'precio-asc'}">
+                            Precio (Menor a Mayor)
+                        </option>
+                        <option value="precio-desc" th:selected="${ordenSeleccionado == 'precio-desc'}">
+                            Precio (Mayor a Menor)
+                        </option>
+                        <option value="stock-desc" th:selected="${ordenSeleccionado == 'stock-desc'}">
+                            Mayor Disponibilidad
+                        </option>
+                        <option value="stock-asc" th:selected="${ordenSeleccionado == 'stock-asc'}">
+                            Menor Disponibilidad
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Botón Limpiar -->
+                <div class="col-lg-3 col-md-6 d-flex align-items-end">
+                    <a href="/" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Limpiar Filtros
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Grid de Libros -->
+    <div class="row g-4" id="librosGrid">
+        <!-- Mensaje si no hay resultados -->
+        <div class="col-12 sin-resultados" th:if="${#lists.isEmpty(libros)}">
+            <i class="bi bi-inbox"></i>
+            <h3 class="text-muted">No se encontraron libros</h3>
+            <p class="text-muted">
+                Intenta ajustar tus filtros de búsqueda o 
+                <a href="/" class="text-decoration-none">ver todos los libros</a>
+            </p>
+        </div>
+
+        <!-- Cards de Libros -->
+        <div class="col-lg-3 col-md-4 col-sm-6" th:each="libro : ${libros}">
+            <div class="libro-card card">
+                <!-- Imagen -->
+                <div class="libro-image">
+                    <img th:if="${libro.imagen_url != null and !libro.imagen_url.isEmpty()}" 
+                         th:src="${libro.imagen_url}" 
+                         th:alt="${libro.titulo}"
+                         style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                    <i th:if="${libro.imagen_url == null or libro.imagen_url.isEmpty()}" 
+                       class="bi bi-book libro-placeholder"></i>
+                    
+                    <!-- Badge de stock -->
+                    <span class="libro-badge">
+                        <i class="bi bi-box-seam me-1"></i>
+                        <span th:text="${libro.cantidad_stock}">0</span> disponibles
+                    </span>
+                </div>
+
+                <!-- Información -->
+                <div class="card-body">
+                    <h5 class="libro-titulo" th:text="${libro.titulo}">Título del Libro</h5>
+                    <p class="libro-autor">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span th:text="${libro.autor}">Autor</span>
+                    </p>
+
+                    <!-- Editorial y Año -->
+                    <p class="text-muted mb-2" style="font-size: 0.85rem;">
+                        <span th:if="${libro.editorial != null}">
+                            <i class="bi bi-building me-1"></i>
+                            <span th:text="${libro.editorial}"></span>
+                        </span>
+                        <span th:if="${libro.año_publicacion != null}" class="ms-2">
+                            <i class="bi bi-calendar me-1"></i>
+                            <span th:text="${libro.año_publicacion}"></span>
+                        </span>
+                    </p>
+
+                    <div class="libro-precio">
+                        $<span th:text="${#numbers.formatDecimal(libro.precio, 1, 2)}">0.00</span>
+                    </div>
+
+                    <!-- Botones -->
+                    <button type="button" 
+                            class="btn btn-ver-detalle w-100" 
+                            th:data-libro-id="${libro.id_libro}"
+                            onclick="verDetalleLibro(this.dataset.libroId)">
+                        <i class="bi bi-eye me-2"></i>Ver Detalles
+                    </button>
+
+                    <button type="button" 
+                            class="btn btn-agregar w-100" 
+                            th:data-libro-id="${libro.id_libro}"
+                            th:data-libro-titulo="${libro.titulo}"
+                            th:data-libro-stock="${libro.cantidad_stock}"
+                            onclick="agregarAlCarrito(this.dataset.libroId, this.dataset.libroTitulo, this.dataset.libroStock)">
+                        <i class="bi bi-cart-plus me-2"></i>Agregar al Carrito
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    <nav th:if="${totalPaginas > 1}" class="mt-5">
+        <ul class="pagination">
+            <!-- Primera página -->
+            <li class="page-item" th:classappend="${paginaActual == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/(busqueda=${busqueda}, autor=${autorSeleccionado}, orden=${ordenSeleccionado}, pagina=0)}">
+                    <i class="bi bi-chevron-double-left"></i>
+                </a>
+            </li>
+
+            <!-- Página anterior -->
+            <li class="page-item" th:classappend="${paginaActual == 0} ? 'disabled'">
+                <a class="page-link" 
+                   th:href="@{/(busqueda=${busqueda}, autor=${autorSeleccionado}, orden=${ordenSeleccionado}, pagina=${paginaActual - 1})}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+
+            <!-- Páginas numeradas -->
+            <li class="page-item" 
+                th:each="i : ${#numbers.sequence(0, totalPaginas - 1)}"
+                th:if="${i >= paginaActual - 2 && i <= paginaActual + 2}"
+                th:classappend="${i == paginaActual} ? 'active'">
+                <a class="page-link" 
+                   th:href="@{/(busqueda=${busqueda}, autor=${autorSeleccionado}, orden=${ordenSeleccionado}, pagina=${i})}"
+                   th:text="${i + 1}">1</a>
+            </li>
+
+            <!-- Página siguiente -->
+            <li class="page-item" th:classappend="${paginaActual >= totalPaginas - 1} ? 'disabled'">
+                <a class="page-link" 
+                   th:href="@{/(busqueda=${busqueda}, autor=${autorSeleccionado}, orden=${ordenSeleccionado}, pagina=${paginaActual + 1})}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+
+            <!-- Última página -->
+            <li class="page-item" th:classappend="${paginaActual >= totalPaginas - 1} ? 'disabled'">
+                <a class="page-link" 
+                   th:href="@{/(busqueda=${busqueda}, autor=${autorSeleccionado}, orden=${ordenSeleccionado}, pagina=${totalPaginas - 1})}">
+                    <i class="bi bi-chevron-double-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Botón Carrito Flotante -->
+    <div class="carrito-flotante" style="position: fixed !important; top: 180px !important; right: 30px !important; z-index: 999999 !important;">
+        <a th:href="@{/compra-online/crear}" class="btn btn-carrito" title="Ver Carrito y Proceder al Pago" 
+           style="position: relative !important; z-index: 999999 !important; display: flex !important; width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(45deg, #48bb78, #38a169); color: white; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 10px 30px rgba(72, 187, 120, 0.4);">
+            <i class="bi bi-cart3"></i>
+            <span class="carrito-badge" 
+                  th:if="${totalItemsCarrito > 0}" 
+                  th:text="${totalItemsCarrito}"
+                  style="position: absolute !important; top: -5px !important; right: -5px !important; display: flex !important; width: 28px; height: 28px; border-radius: 50%; background: #e53e3e; color: white; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; border: 3px solid white; z-index: 1000000 !important;">0</span>
+        </a>
+        
+        <!-- Botón Vaciar Carrito (siempre presente, controlado por JS) -->
+        <button type="button" 
+                id="btnVaciarCarritoCatalogo"
+                class="btn btn-danger btn-sm mt-2" 
+                title="Vaciar todo el carrito"
+                style="position: relative !important; z-index: 999999 !important; width: 70px; align-items: center; justify-content: center; font-size: 0.75rem; padding: 8px; border-radius: 10px; box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);"
+                th:style="${totalItemsCarrito > 0} ? 'display: flex !important;' : 'display: none !important;'">
+            <i class="bi bi-trash3"></i>
+        </button>
+    </div>
+
+    <!-- Modal de Detalles del Libro -->
+    <div class="modal fade" id="detalleLibroModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-book me-2"></i>
+                        Detalles del Libro
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detalleLibroContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script th:inline="javascript">
+        // Verificar y controlar visibilidad de badge y botón vaciar
+        document.addEventListener('DOMContentLoaded', function() {
+            const totalItems = /*[[${totalItemsCarrito}]]*/ 0;
+            const badge = document.querySelector('.carrito-badge');
+            const btnVaciar = document.getElementById('btnVaciarCarritoCatalogo');
+            
+            // Controlar badge
+            if (totalItems === 0 && badge) {
+                badge.style.display = 'none';
+                badge.remove(); // Eliminarlo completamente del DOM
+            } else if (totalItems > 0 && badge) {
+                badge.textContent = totalItems;
+                badge.style.display = 'flex';
+            }
+            
+            // Controlar botón vaciar
+            if (btnVaciar) {
+                if (totalItems > 0) {
+                    btnVaciar.style.display = 'flex';
+                } else {
+                    btnVaciar.style.display = 'none';
+                }
+            }
+        });
+        
+        // Función para ver detalles del libro
+        function verDetalleLibro(libroId) {
+            const modal = new bootstrap.Modal(document.getElementById('detalleLibroModal'));
+            const content = document.getElementById('detalleLibroContent');
+            
+            // Mostrar loading
+            content.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            `;
+            
+            modal.show();
+            
+            // Obtener detalles del libro
+            fetch(`/api/libro/${libroId}`)
+                .then(response => response.json())
+                .then(libro => {
+                    content.innerHTML = `
+                        <div class="row">
+                            <div class="col-md-4">
+                                ${libro.imagenUrl ? 
+                                    `<div style="max-height: 400px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                        <img src="${libro.imagenUrl}" class="img-fluid rounded" alt="${libro.titulo}" 
+                                             style="max-width: 100%; max-height: 400px; width: auto; height: auto; object-fit: contain; display: block; margin: auto;">
+                                    </div>` :
+                                    `<div class="text-center p-5 bg-light rounded">
+                                        <i class="bi bi-book" style="font-size: 5rem; color: #cbd5e0;"></i>
+                                    </div>`
+                                }
+                            </div>
+                            <div class="col-md-8">
+                                <h4 class="fw-bold mb-3">${libro.titulo}</h4>
+                                <p class="text-muted mb-3">
+                                    <i class="bi bi-person-circle me-2"></i><strong>Autor:</strong> ${libro.autor}
+                                </p>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <p class="mb-2">
+                                            <i class="bi bi-building me-2"></i>
+                                            <strong>Editorial:</strong> ${libro.editorial || 'N/A'}
+                                        </p>
+                                    </div>
+                                    <div class="col-6">
+                                        <p class="mb-2">
+                                            <i class="bi bi-calendar me-2"></i>
+                                            <strong>Año:</strong> ${libro.año || 'N/A'}
+                                        </p>
+                                    </div>
+                                    <div class="col-6">
+                                        <p class="mb-2">
+                                            <i class="bi bi-tag me-2"></i>
+                                            <strong>Categoría:</strong> ${libro.categoria || 'N/A'}
+                                        </p>
+                                    </div>
+                                    <div class="col-6">
+                                        <p class="mb-2">
+                                            <i class="bi bi-box-seam me-2"></i>
+                                            <strong>Stock:</strong> ${libro.stock} unidades
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <strong><i class="bi bi-file-text me-2"></i>Descripción:</strong>
+                                    <p class="mt-2">${libro.descripcion || 'Sin descripción disponible.'}</p>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mt-4">
+                                    <div class="fs-2 fw-bold text-primary">
+                                        $${parseFloat(libro.precio).toFixed(2)}
+                                    </div>
+                                    <button 
+                                        class="btn btn-agregar btn-lg"
+                                        onclick="agregarAlCarrito(${libro.id}, '${libro.titulo}', ${libro.stock}); bootstrap.Modal.getInstance(document.getElementById('detalleLibroModal')).hide();">
+                                        <i class="bi bi-cart-plus me-2"></i>Agregar al Carrito
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    content.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Error al cargar los detalles del libro.
+                        </div>
+                    `;
+                });
+        }
+
+        // Función para agregar al carrito
+        function agregarAlCarrito(libroId, titulo, stock) {
+            // Crear formulario para enviar datos
+            const formData = new FormData();
+            formData.append('libroId', libroId);
+            formData.append('cantidad', 1);
+
+            // Obtener token CSRF
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+            fetch('/catalogo/agregar-carrito', {
+                method: 'POST',
+                headers: {
+                    [csrfHeader]: csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Actualizar badge del carrito
+                    let badge = document.querySelector('.carrito-badge');
+                    const btnVaciar = document.getElementById('btnVaciarCarritoCatalogo');
+                    
+                    if (badge) {
+                        badge.textContent = data.totalItemsCarrito;
+                        badge.style.display = data.totalItemsCarrito > 0 ? 'flex' : 'none';
+                    } else if (data.totalItemsCarrito > 0) {
+                        // Crear badge si no existe
+                        const btnCarrito = document.querySelector('.btn-carrito');
+                        const newBadge = document.createElement('span');
+                        newBadge.className = 'carrito-badge';
+                        newBadge.style.display = 'flex';
+                        newBadge.textContent = data.totalItemsCarrito;
+                        newBadge.style.cssText = 'position: absolute !important; top: -5px !important; right: -5px !important; display: flex !important; width: 28px; height: 28px; border-radius: 50%; background: #e53e3e; color: white; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; border: 3px solid white; z-index: 1000000 !important;';
+                        btnCarrito.appendChild(newBadge);
+                    }
+                    
+                    // Mostrar/ocultar botón vaciar
+                    if (btnVaciar) {
+                        btnVaciar.style.display = data.totalItemsCarrito > 0 ? 'flex' : 'none';
+                    }
+
+                    // Mostrar mensaje de éxito
+                    mostrarNotificacion('success', 'Libro agregado al carrito exitosamente');
+                } else {
+                    mostrarNotificacion('danger', data.mensaje || 'Error al agregar al carrito');
+                }
+            })
+            .catch(error => {
+                mostrarNotificacion('danger', 'Error al procesar la solicitud');
+            });
+    }
+    
+    // Verificar si viene de limpiar carrito
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('limpiado') === 'true') {
+            mostrarNotificacion('success', 'Carrito limpiado exitosamente');
+            
+            // Limpiar el parámetro de la URL
+            window.history.replaceState({}, document.title, '/');
+        }
+    });
+
+    // Función para mostrar notificaciones
+        function mostrarNotificacion(tipo, mensaje) {
+            const alerta = document.createElement('div');
+            alerta.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
+            alerta.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alerta.innerHTML = `
+                <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alerta);
+            setTimeout(() => alerta.remove(), 3000);
+        }
+
+        // Validación de búsqueda (mínimo 3 caracteres)
+        document.querySelector('input[name="busqueda"]').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const valor = this.value.trim();
+                if (valor.length > 0 && valor.length < 3) {
+                    e.preventDefault();
+                    mostrarNotificacion('warning', 'La búsqueda debe tener al menos 3 caracteres');
+                }
+            }
+        });
+        
+        // Función para vaciar carrito desde el catálogo
+        const btnVaciarCarrito = document.getElementById('btnVaciarCarritoCatalogo');
+        if (btnVaciarCarrito) {
+            btnVaciarCarrito.addEventListener('click', async function() {
+                if (confirm('⚠️ ¿Estás seguro de que deseas ELIMINAR TODOS los libros del carrito?\n\nEsta acción no se puede deshacer.')) {
+                    try {
+                        // Obtener CSRF token
+                        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+                        
+                        // Limpiar carrito en el servidor
+                        const response = await fetch('/carrito/limpiar', {
+                            method: 'POST',
+                            headers: {
+                                [csrfHeader]: csrfToken
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            // Forzar recarga sin caché
+                            const timestamp = new Date().getTime();
+                            window.location.href = '/?limpiado=true&t=' + timestamp;
+                        } else {
+                            mostrarNotificacion('danger', 'Error al vaciar el carrito');
+                        }
+                    } catch (error) {
+                        console.error('Error al vaciar carrito:', error);
+                        mostrarNotificacion('danger', 'Error al procesar la solicitud');
+                    }
+                }
+            });
+        }
+    </script>
+</div>
 </body>
 </html>
