@@ -50,7 +50,7 @@ INSERT INTO libros (
     ('LIB005', 'The Art of Computer Programming', 'Donald Knuth', 1968, 55.00, 19, 'Programación', 
      'Addison-Wesley', 
      'Serie monumental sobre algoritmos y programación considerada la biblia de la ciencia de la computación. Escrita por Donald Knuth, ganador del Premio Turing.',
-     'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1387741681i/112239.jpg'),
+     'https://archive.org/services/img/artofcomputerpro0000drur/full/pct:200/0/default.jpg'),
     
     ('LIB006', 'Clean Code', 'Robert C. Martin', 2008, 29.99, 10, 'Programación', 
      'Prentice Hall', 
@@ -80,17 +80,17 @@ INSERT INTO libros (
     ('LIB011', 'The Mythical Man-Month', 'Frederick Brooks', 1975, 28.50, 2, 'Ingeniería de Software', 
      'Addison-Wesley', 
      'Ensayos sobre ingeniería de software y gestión de proyectos basados en la experiencia de Brooks en IBM. Incluye la famosa ley de Brooks sobre cómo añadir personas a proyectos retrasados.',
-     'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1348430425i/13629.jpg'),
+     'https://images.pangobooks.com/images/6d54041b-070d-4354-953a-db8a5dfaa6e2?width=800&quality=85&crop=1%3A1'),
     
     ('LIB012', 'C Programming Language', 'Brian W. Kernighan and Dennis M. Ritchie', 1978, 25.00, 9, 'Programación', 
      'Prentice Hall', 
      'El libro definitivo sobre el lenguaje C escrito por los creadores del lenguaje. Conocido como K&R, es la referencia estándar para aprender programación en C.',
-     'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1391032527i/515601.jpg'),
+     'https://m.media-amazon.com/images/I/51EyaJeebHL._AC_UF1000,1000_QL80_.jpg'),
     
     ('LIB013', 'Godel, Escher, Bach: an Eternal Golden Braid', 'Douglas Hofstadter', 1979, 33.20, 5, 'Matemáticas', 
      'Basic Books', 
      'Exploración de la conciencia, el pensamiento y la inteligencia artificial a través de las obras de Gödel, Escher y Bach. Ganador del Premio Pulitzer de No Ficción.',
-     'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1528367139i/24113.jpg'),
+     'https://sterlingvintagebooks.com/cdn/shop/files/il_fullxfull.6608379184_pkka.jpg?v=1738264118&width=1920'),
     
     ('LIB014', 'The Design of Everyday Things', 'Don Norman', 1988, 20.00, 12, 'Diseño', 
      'Basic Books', 
@@ -100,7 +100,7 @@ INSERT INTO libros (
     ('LIB015', 'Structures: Or Why Things Don''t Fall Down', 'J.E. Gordon', 1978, 22.50, 10, 'Ingeniería', 
      'Penguin Books', 
      'Introducción accesible a la ciencia de estructuras y materiales. Explica por qué las cosas se mantienen en pie y ocasionalmente se caen, desde puentes hasta huesos.',
-     'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1320562005i/245344.jpg'),
+     'https://m.media-amazon.com/images/I/81wBpkY6ktL._UF1000,1000_QL80_.jpg'),
     
     ('LIB016', 'Física universitaria con Física Moderna', 'Hugh D. Young y Roger A. Freedman', 2009, 25, 0, 'Física', 
      'Pearson Educación', 
