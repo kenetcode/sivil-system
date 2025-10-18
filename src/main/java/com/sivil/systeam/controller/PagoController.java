@@ -5,6 +5,7 @@ import com.sivil.systeam.dto.VentaTemporalDTO;
 import com.sivil.systeam.entity.Pago;
 import com.sivil.systeam.entity.Usuario;
 import com.sivil.systeam.service.PagoService;
+import com.sivil.systeam.service.UsuarioService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,9 +18,11 @@ import java.math.BigDecimal;
 public class PagoController {
 
     private final PagoService pagoService;
+    private final UsuarioService usuarioService;
 
-    public PagoController(PagoService pagoService) {
+    public PagoController(PagoService pagoService, UsuarioService usuarioService) {
         this.pagoService = pagoService;
+        this.usuarioService = usuarioService;
     }
 
     /* ==============================
@@ -159,8 +162,8 @@ public class PagoController {
                                     @RequestParam(value = "observaciones", required = false) String observaciones) {
 
         try {
-            // Recuperar vendedor (ajústalo a cómo lo guardas tú)
-            Usuario vendedor = (Usuario) model.getAttribute("currentUser");
+            // Recuperar vendedor actual del sistema de autenticación
+            Usuario vendedor = usuarioService.getUsuarioActual();
             String emailVendedor = vendedor != null ? vendedor.getEmail() : null;
 
             // 1) Venta ya existente
@@ -183,7 +186,7 @@ public class PagoController {
                     model.addAttribute("error", "La sesión de venta ha expirado. Vuelve a iniciar la venta.");
                     model.addAttribute("montoAPagar", montoRecibido);
                     model.addAttribute("ventaPendiente", true);
-                    return "pago/pago-efectivo";
+                    return "pago/pago-efectivo-venta";
                 }
 
                 Pago pago = pagoService.procesarPagoEfectivoVentaPendiente(
