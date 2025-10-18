@@ -169,4 +169,46 @@ public class UsuarioService {
         
         return usuarioRepository.save(usuario);
     }
+    
+    /**
+     * Busca usuarios según el criterio y tipo especificado
+     * @param criterio Término de búsqueda
+     * @param tipoBusqueda Tipo de búsqueda: "nombre", "email", "tipo" o "todos"
+     * @return Lista de usuarios que coinciden con el criterio
+     * @throws RuntimeException si los parámetros son inválidos
+     */
+    public List<Usuario> buscarUsuarios(String criterio, String tipoBusqueda) {
+        // Validar que el criterio no esté vacío
+        if (criterio == null || criterio.trim().isEmpty()) {
+            throw new RuntimeException("El criterio de búsqueda no puede estar vacío");
+        }
+        
+        // Validar que el tipo de búsqueda sea válido
+        if (tipoBusqueda == null || tipoBusqueda.trim().isEmpty()) {
+            throw new RuntimeException("Debe seleccionar un tipo de búsqueda");
+        }
+        
+        criterio = criterio.trim();
+        tipoBusqueda = tipoBusqueda.trim().toLowerCase();
+        
+        // Realizar la búsqueda según el tipo
+        switch (tipoBusqueda) {
+            case "nombre":
+                return usuarioRepository.buscarPorNombre(criterio);
+            case "email":
+                return usuarioRepository.buscarPorEmail(criterio);
+            case "tipo":
+                // Validar que el tipo de usuario sea válido
+                try {
+                    TipoUsuario tipoUsuario = TipoUsuario.valueOf(criterio.toLowerCase());
+                    return usuarioRepository.buscarPorTipoUsuario(tipoUsuario);
+                } catch (IllegalArgumentException e) {
+                    throw new RuntimeException("Tipo de usuario inválido. Use: admin, vendedor o comprador");
+                }
+            case "todos":
+                return usuarioRepository.buscarPorCriterioGeneral(criterio);
+            default:
+                throw new RuntimeException("Tipo de búsqueda inválido");
+        }
+    }
 }

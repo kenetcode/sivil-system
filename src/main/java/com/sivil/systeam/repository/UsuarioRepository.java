@@ -24,4 +24,20 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     @Query("SELECT u FROM Usuario u WHERE u.nombre_usuario = :username")
     Optional<Usuario> findByNombreUsuario(@Param("username") String username);
 
+    // Métodos de búsqueda por diferentes criterios
+    @Query("SELECT u FROM Usuario u WHERE " +
+           "LOWER(u.nombre_completo) LIKE LOWER(CONCAT('%', :criterio, '%')) OR " +
+           "LOWER(u.nombre_usuario) LIKE LOWER(CONCAT('%', :criterio, '%')) OR " +
+           "LOWER(u.email) LIKE LOWER(CONCAT('%', :criterio, '%'))")
+    java.util.List<Usuario> buscarPorCriterioGeneral(@Param("criterio") String criterio);
+    
+    @Query("SELECT u FROM Usuario u WHERE LOWER(u.nombre_completo) LIKE LOWER(CONCAT('%', :nombre, '%'))")
+    java.util.List<Usuario> buscarPorNombre(@Param("nombre") String nombre);
+    
+    @Query("SELECT u FROM Usuario u WHERE LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))")
+    java.util.List<Usuario> buscarPorEmail(@Param("email") String email);
+    
+    @Query("SELECT u FROM Usuario u WHERE u.tipo_usuario = :tipoUsuario")
+    java.util.List<Usuario> buscarPorTipoUsuario(@Param("tipoUsuario") com.sivil.systeam.enums.TipoUsuario tipoUsuario);
+
 }
