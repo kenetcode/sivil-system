@@ -83,6 +83,14 @@
                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="alert('Funcionalidad en desarrollo')">
                         <i class="bi bi-search"></i> Buscar
                     </button>
+
+                    <!-- Botón Inactivar (solo si está ACTIVA) -->
+                    <a th:if="${venta.estado.name() == 'activa'}"
+                       th:href="@{|/ventas/inactivar/${venta.numero_factura}|}"
+                       class="btn btn-sm btn-outline-danger" title="Inactivar venta">
+                        <i class="bi bi-slash-circle"></i> Inactivar
+                    </a>
+
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(ventas)}">

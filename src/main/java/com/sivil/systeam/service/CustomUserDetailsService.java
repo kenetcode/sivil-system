@@ -20,16 +20,18 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // Buscar usuario por su email (coincide con el input 'username' del formulario)
         Usuario usuario = usuarioRepository.findByEmail(email)
-            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
 
-        // Crear autoridad basada en el tipo de usuario
+        // Asignar rol basado en el tipo_usuario (por ejemplo: ADMIN, VENDEDOR, COMPRADOR)
         String authority = "ROLE_" + usuario.getTipo_usuario().name().toUpperCase();
 
+        // Construir objeto UserDetails para Spring Security
         return User.builder()
-            .username(usuario.getEmail())
-            .password(usuario.getContraseña()) // Sin encriptar como pediste
-            .authorities(Collections.singletonList(new SimpleGrantedAuthority(authority)))
-            .build();
+                .username(usuario.getEmail())              // Email como identificador principal
+                .password(usuario.getContraseña())         // Contraseña sin encriptar (NoOpPasswordEncoder)
+                .authorities(Collections.singletonList(new SimpleGrantedAuthority(authority)))
+                .build();
     }
 }

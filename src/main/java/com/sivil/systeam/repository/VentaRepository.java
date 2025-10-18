@@ -8,22 +8,32 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface VentaRepository extends JpaRepository<Venta, Integer> {
 
+    // Listar por estado (método derivado válido)
     List<Venta> findByEstado(EstadoVenta estado);
 
+    // ¿Existe una venta con ese número de factura?
     @Query("SELECT COUNT(v) > 0 FROM Venta v WHERE v.numero_factura = :numeroFactura")
-    boolean existsByNumero_Factura(@Param("numeroFactura") String numeroFactura);
+    boolean existsByNumeroFactura(@Param("numeroFactura") String numeroFactura);
 
-    @Query("SELECT v.numero_factura FROM Venta v WHERE v.numero_factura LIKE :prefijo% ORDER BY v.numero_factura DESC")
+    // Últimos números de factura por prefijo (corrige el LIKE con CONCAT)
+    @Query("SELECT v.numero_factura FROM Venta v " +
+            "WHERE v.numero_factura LIKE CONCAT(:prefijo, '%') " +
+            "ORDER BY v.numero_factura DESC")
     List<String> findTopByNumeroFacturaStartingWith(@Param("prefijo") String prefijo);
 
-
+    // Listar por estado ordenado por fecha de venta desc
     @Query("SELECT v FROM Venta v WHERE v.estado = :estado ORDER BY v.fecha_venta DESC")
     List<Venta> findByEstadoOrderByFechaVentaDesc(@Param("estado") EstadoVenta estado);
 
+    // Buscar una venta por su número de factura (sin underscores en el nombre del método)
+    @Query("SELECT v FROM Venta v WHERE v.numero_factura = :numeroFactura")
+    Optional<Venta> findByNumeroFactura(@Param("numeroFactura") String numeroFactura);
 
-
+    @Query("SELECT v FROM Venta v WHERE v.estado <> com.sivil.systeam.enums.EstadoVenta.inactiva ORDER BY v.fecha_venta DESC")
+    List<Venta> findAllVisiblesOrderByFechaVentaDesc();
 }
