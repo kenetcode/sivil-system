@@ -7,7 +7,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+                <ul class="navbar-nav mx-auto">
                     <li class="nav-item me-2">
                         <a class="nav-link btn btn-outline-primary rounded-pill px-3 py-2" th:href="@{/}" 
                            style="text-decoration: none;"
@@ -57,14 +57,6 @@
                             </a></li>
                         </ul>
                     </li>
-                    <li class="nav-item me-2" th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
-                        <a class="nav-link btn btn-outline-warning rounded-pill px-3 py-2" th:href="@{/pago/seleccion-metodo-pago}"
-                           style="text-decoration: none;"
-                           onmouseover="this.style.backgroundColor='#ffc107'; this.style.borderColor='#ffc107'; this.style.color='black';"
-                           onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#ffc107'; this.style.color='#ffc107';">
-                            <i class="bi bi-credit-card me-1"></i> Gestión de Pagos
-                        </a>
-                    </li>
                     <li class="nav-item me-2"
                         th:if="${currentUser != null and (currentUser.tipo_usuario.name() == 'admin' or currentUser.tipo_usuario.name() == 'vendedor')}">
                         <a class="nav-link btn btn-outline-secondary rounded-pill px-3 py-2"
@@ -93,14 +85,6 @@
                         </a>
                     </li>
                 </ul>
-                <div class="d-flex">
-                    <form class="d-flex">
-                        <input class="form-control form-control-sm me-1" type="search" placeholder="Buscar..." id="searchInput" style="width: 200px;">
-                        <button class="btn btn-outline-primary btn-sm" type="button" onclick="buscarLibros()">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </form>
-                </div>
             </div>
         </div>
     </nav>
