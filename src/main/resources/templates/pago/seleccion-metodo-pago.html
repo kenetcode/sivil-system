@@ -47,6 +47,12 @@
             align-items: stretch;
         }
 
+        /* Cuando solo hay una opción (compras online), centrarla */
+        .payment-options:has(> :only-child) {
+            max-width: 400px;
+            grid-template-columns: 1fr;
+        }
+
         /* Mobile-first approach */
         @media (max-width: 320px) {
             .payment-options {
@@ -550,8 +556,14 @@
                     </a>
 
                     <div class="payment-title fade-in">
-                        <h2><i class="bi bi-credit-card-2-front"></i> Procesamiento de Pago - Sistema Interno</h2>
-                        <p>Selecciona el método de pago para procesar la transacción del cliente</p>
+                        <h2 th:if="${compraPendiente}">
+                            <i class="bi bi-cart-check"></i> Procesamiento de Compra Online
+                        </h2>
+                        <h2 th:unless="${compraPendiente}">
+                            <i class="bi bi-credit-card-2-front"></i> Procesamiento de Pago - Sistema Interno
+                        </h2>
+                        <p th:if="${compraPendiente}">Completa tu compra con pago seguro mediante tarjeta</p>
+                        <p th:unless="${compraPendiente}">Selecciona el método de pago para procesar la transacción del cliente</p>
                     </div>
 
                     <!-- Radio buttons para selección -->
@@ -583,8 +595,8 @@
                             </ul>
                         </label>
 
-                        <!-- Opción Pago en Efectivo -->
-                        <label for="efectivo" class="payment-card payment-card-efectivo">
+                        <!-- Opción Pago en Efectivo (solo para ventas presenciales) -->
+                        <label for="efectivo" class="payment-card payment-card-efectivo" th:unless="${compraPendiente}">
                             <div class="selected-indicator">
                                 <i class="bi bi-check-lg"></i>
                             </div>
@@ -609,15 +621,22 @@
                     </div>
                     
                     <!-- Formulario para pago con tarjeta -->
-                    <form action="/pago/pago-tarjeta" method="get" class="payment-form">
+                    <form action="/pago/tarjeta" method="get" class="payment-form">
+                        <input type="hidden" name="monto" th:value="${montoAPagar}">
+                        <input type="hidden" name="idVenta" th:if="${idVenta != null}" th:value="${idVenta}">
+                        <input type="hidden" name="ventaPendiente" th:if="${ventaPendiente}" value="true">
+                        <input type="hidden" name="compraPendiente" th:if="${compraPendiente}" value="true">
                         <button type="submit" class="continue-button tarjeta-button">
                             <i class="bi bi-arrow-right-circle"></i> Procesar con Tarjeta
                         </button>
                     </form>
                     
-                    <!-- Formulario para efectivo (en desarrollo) -->
-                    <form class="payment-form">
-                        <button type="button" class="continue-button efectivo-button" onclick="alert('⚠️ Funcionalidad de pago en efectivo en desarrollo.\n\nPróximamente estará disponible.')">
+                    <!-- Formulario para efectivo (solo para ventas presenciales) -->
+                    <form action="/pago/efectivo" method="get" class="payment-form" th:unless="${compraPendiente}">
+                        <input type="hidden" name="monto" th:value="${montoAPagar}">
+                        <input type="hidden" name="idVenta" th:if="${idVenta != null}" th:value="${idVenta}">
+                        <input type="hidden" name="ventaPendiente" th:if="${ventaPendiente}" value="true">
+                        <button type="submit" class="continue-button efectivo-button">
                             <i class="bi bi-arrow-right-circle"></i> Procesar en Efectivo
                         </button>
                     </form>

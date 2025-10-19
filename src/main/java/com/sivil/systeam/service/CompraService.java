@@ -18,6 +18,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -172,4 +175,13 @@ public class CompraService {
     public List<DetalleCompra> obtenerDetallesCompra(Integer idCompra) {
         return detalleCompraRepository.findByCompraIdCompra(idCompra);
     }
+
+    public List<CompraOnline> listarOrdenado(Sort order) {
+        return compraOnlineRepository.findAll(order);
+    }
+    /** Lista SOLO las compras del usuario, con orden dinámico (por fecha/total/cliente). */
+    public List<CompraOnline> listarPorUsuarioOrdenado(Integer idUsuario, Sort order) {
+        return compraOnlineRepository.findAllByComprador(idUsuario, order);
+    }
+
 }

@@ -13,6 +13,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpSession;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -73,7 +75,15 @@ public class VentaController {
 
     @GetMapping("/listar")
     public String listarVentas(Model model) {
-        List<Venta> ventas = ventaService.listarVentasFinalizadas();
+        // Listar TODAS las ventas (incluyendo inactivas)
+        List<Venta> ventas = ventaRepository.findAll();
+        // Ordenar por fecha de venta descendente
+        ventas.sort((v1, v2) -> {
+            if (v1.getFecha_venta() == null && v2.getFecha_venta() == null) return 0;
+            if (v1.getFecha_venta() == null) return 1;
+            if (v2.getFecha_venta() == null) return -1;
+            return v2.getFecha_venta().compareTo(v1.getFecha_venta());
+        });
         model.addAttribute("ventas", ventas);
         model.addAttribute("totalVentas", ventas.size());
         model.addAttribute("ventasActivas", 0);
@@ -81,8 +91,6 @@ public class VentaController {
         model.addAttribute("promedioVenta", 0);
         return "venta/listar-ventas";
     }
-
-
 
     @GetMapping("/{id}/modificar")
     public String mostrarFormularioModificacion(@PathVariable("id") Integer id, Model model) {
@@ -100,7 +108,7 @@ public class VentaController {
             model.addAttribute("libros", libros);
             model.addAttribute("modoEdicion", true);
 
-            return "venta/modificar-venta"; // Asegúrate que este sea el nombre correcto de tu template
+            return "venta/modificar-venta";
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -109,13 +117,12 @@ public class VentaController {
         }
     }
 
-
-
     @PostMapping("/{id}/modificar")
     public String actualizarVenta(
             @PathVariable("id") Integer id,
             @ModelAttribute("venta") Venta ventaActualizada,
             @RequestParam Map<String, String> requestParams,
+            @RequestParam(value = "descuento_aplicado", required = false, defaultValue = "0") BigDecimal descuentoAplicado,
             Model model) {
 
         try {
@@ -140,7 +147,7 @@ public class VentaController {
 
             BigDecimal subtotal = BigDecimal.ZERO;
             List<DetalleVenta> detallesAEliminar = new ArrayList<>();
-            Map<Integer, Integer> cambiosStock = new HashMap<>(); // Para trackear cambios de stock
+            Map<Integer, Integer> cambiosStock = new HashMap<>();
 
             // Procesar cada detalle de venta
             for (DetalleVenta detalle : ventaExistente.getDetallesVenta()) {
@@ -165,7 +172,7 @@ public class VentaController {
 
                         // Validar stock antes de actualizar
                         Libro libro = detalle.getLibro();
-                        int stockDisponible = libro.getCantidad_stock() + cantidadOriginal; // Stock + cantidad original
+                        int stockDisponible = libro.getCantidad_stock() + cantidadOriginal;
 
                         if (cantidadNueva > stockDisponible) {
                             model.addAttribute("error", "Stock insuficiente para: " + libro.getTitulo() +
@@ -187,6 +194,9 @@ public class VentaController {
 
                         subtotal = subtotal.add(subtotalItem);
 
+                        // GUARDAR EL DETALLE ACTUALIZADO EN LA BASE DE DATOS
+                        detalleVentaRepository.save(detalle);
+
                     } catch (NumberFormatException e) {
                         subtotal = subtotal.add(detalle.getSubtotal_item());
                     }
@@ -207,11 +217,25 @@ public class VentaController {
                 return "redirect:/ventas/" + id + "/modificar";
             }
 
-            // Recalcular totales
-            BigDecimal impuestos = subtotal.multiply(new BigDecimal("0.13"));
-            BigDecimal total = subtotal.add(impuestos);
+            // VALIDAR QUE EL DESCUENTO NO SEA MAYOR AL SUBTOTAL
+            if (descuentoAplicado.compareTo(subtotal) > 0) {
+                model.addAttribute("error", "El descuento no puede ser mayor al subtotal de la venta.");
+                return "redirect:/ventas/" + id + "/modificar";
+            }
+
+            // VALIDAR QUE EL DESCUENTO NO SEA NEGATIVO
+            if (descuentoAplicado.compareTo(BigDecimal.ZERO) < 0) {
+                model.addAttribute("error", "El descuento no puede ser negativo.");
+                return "redirect:/ventas/" + id + "/modificar";
+            }
+
+            // RECALCULAR TOTALES CONSIDERANDO DESCUENTO
+            BigDecimal baseImponible = subtotal.subtract(descuentoAplicado);
+            BigDecimal impuestos = baseImponible.multiply(new BigDecimal("0.13"));
+            BigDecimal total = baseImponible.add(impuestos);
 
             ventaExistente.setSubtotal(subtotal);
+            ventaExistente.setDescuento_aplicado(descuentoAplicado);
             ventaExistente.setImpuestos(impuestos);
             ventaExistente.setTotal(total);
 
@@ -246,13 +270,12 @@ public class VentaController {
         }
     }
 
-
-
-
     @PostMapping("/crear")
     public String procesarFormularioCrearVenta(
             @ModelAttribute("venta") Venta venta,
             @RequestParam("librosData") String librosDataJson,
+            @RequestParam("tipo_pago") String tipoPago,
+            @RequestParam(value = "descuento_aplicado", required = false, defaultValue = "0") BigDecimal descuentoAplicado,
             HttpSession session,
             Model model) {
 
@@ -299,8 +322,24 @@ public class VentaController {
                 subtotalVenta = subtotalVenta.add(subtotalItem);
             }
 
-            BigDecimal impuestos = subtotalVenta.multiply(new BigDecimal("0.13"));
-            BigDecimal totalVenta = subtotalVenta.add(impuestos);
+            // VALIDAR QUE EL DESCUENTO NO SEA MAYOR AL SUBTOTAL
+            if (descuentoAplicado.compareTo(subtotalVenta) > 0) {
+                model.addAttribute("error", "El descuento no puede ser mayor al subtotal de la venta.");
+                model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
+                return "venta/crear-venta";
+            }
+
+            // VALIDAR QUE EL DESCUENTO NO SEA NEGATIVO
+            if (descuentoAplicado.compareTo(BigDecimal.ZERO) < 0) {
+                model.addAttribute("error", "El descuento no puede ser negativo.");
+                model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(com.sivil.systeam.enums.Estado.activo, 0));
+                return "venta/crear-venta";
+            }
+
+            // CALCULAR BASE IMPONIBLE CONSIDERANDO DESCUENTO
+            BigDecimal baseImponible = subtotalVenta.subtract(descuentoAplicado);
+            BigDecimal impuestos = baseImponible.multiply(new BigDecimal("0.13"));
+            BigDecimal totalVenta = baseImponible.add(impuestos);
 
             VentaTemporalDTO ventaTemporal = new VentaTemporalDTO();
             ventaTemporal.setNumeroFactura(numeracionService.generarNumeroFactura(ventaRepository));
@@ -309,10 +348,14 @@ public class VentaController {
             ventaTemporal.setContactoCliente(venta.getContacto_cliente());
             ventaTemporal.setIdentificacionCliente(venta.getIdentificacion_cliente());
             ventaTemporal.setSubtotal(subtotalVenta);
-            ventaTemporal.setDescuentoAplicado(BigDecimal.ZERO);
+            ventaTemporal.setDescuentoAplicado(descuentoAplicado);
             ventaTemporal.setImpuestos(impuestos);
             ventaTemporal.setTotal(totalVenta);
-            ventaTemporal.setTipoPago(com.sivil.systeam.enums.MetodoPago.tarjeta);
+            // Establecer el tipo de pago según lo seleccionado en el formulario
+            com.sivil.systeam.enums.MetodoPago metodoPago = tipoPago.equals("efectivo") 
+                ? com.sivil.systeam.enums.MetodoPago.efectivo 
+                : com.sivil.systeam.enums.MetodoPago.tarjeta;
+            ventaTemporal.setTipoPago(metodoPago);
             ventaTemporal.setEstado(com.sivil.systeam.enums.EstadoVenta.activa);
             ventaTemporal.setFechaVenta(LocalDateTime.now());
 
@@ -332,7 +375,12 @@ public class VentaController {
 
             session.setAttribute("ventaPendiente", ventaTemporal);
 
-            return "redirect:/pago/tarjeta?monto=" + totalVenta + "&ventaPendiente=true";
+            // Redirigir según el método de pago seleccionado
+            if (tipoPago.equals("efectivo")) {
+                return "redirect:/pago/efectivo?monto=" + totalVenta + "&ventaPendiente=true";
+            } else {
+                return "redirect:/pago/tarjeta?monto=" + totalVenta + "&ventaPendiente=true";
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -360,5 +408,42 @@ public class VentaController {
 
         public Integer getCantidad() { return cantidad; }
         public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
+    }
+
+
+    // Confirmación (pide motivo)
+    @GetMapping("/inactivar/{numeroFactura}")
+// @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')") // <- activa si ya tienes Spring Security
+    public String confirmarInactivacion(@PathVariable String numeroFactura, Model model) {
+        model.addAttribute("numeroFactura", numeroFactura);
+        return "venta/confirmar-inactivacion"; // template en /templates/venta/
+    }
+
+    // Ejecutar inactivación
+    @PostMapping("/inactivar")
+// @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')")
+    public String inactivar(@RequestParam String numeroFactura,
+                            @RequestParam String motivo,
+                            RedirectAttributes ra) {
+        try {
+            ventaService.inactivarPorNumeroFactura(numeroFactura, motivo);
+            ra.addFlashAttribute("ok", "Venta " + numeroFactura + " inactivada y stock restaurado.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/ventas/listar";
+    }
+
+    // Reactivar venta
+    @GetMapping("/reactivar/{numeroFactura}")
+// @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')")
+    public String reactivar(@PathVariable String numeroFactura, RedirectAttributes ra) {
+        try {
+            ventaService.reactivarPorNumeroFactura(numeroFactura);
+            ra.addFlashAttribute("ok", "Venta " + numeroFactura + " reactivada exitosamente. Stock descontado nuevamente.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Error al reactivar venta: " + e.getMessage());
+        }
+        return "redirect:/ventas/listar";
     }
 }

@@ -122,6 +122,34 @@
             margin: 2rem 0;
             border-radius: 2px;
         }
+
+        /* Estilos para los descuentos */
+        .descuento-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .descuento-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #007bff;
+        }
+
+        .descuento-card.border-primary {
+            border-color: #007bff !important;
+            background-color: #f8f9fa !important;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .input-group-text {
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
 <body>
@@ -222,19 +250,16 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="bi bi-credit-card me-2"></i>Tipo de pago:
+                                <i class="bi bi-credit-card me-2"></i>Tipo de pago: <span class="text-danger">*</span>
                             </label>
-                         <!--   <select th:field="*{tipo_pago}" class="form-select" readonly>
-                                <option value="tarjeta" selected>💳 Pago con Tarjeta</option>
-                            </select>-->
                             <select class="form-select" id="tipoPago" name="tipo_pago" required>
-                                <option value="tarjeta" selected>Pago con Tarjeta</option>
-                                <option value="efectivo">Pago en Efectivo</option>
+                                <option value="" disabled selected>Seleccione un método de pago</option>
+                                <option value="tarjeta">💳 Pago con Tarjeta</option>
+                                <option value="efectivo">💵 Pago en Efectivo</option>
                             </select>
-
-                           <!-- <small class="text-muted">
-                                <i class="bi bi-info-circle me-1"></i>Solo se acepta pago con tarjeta
-                            </small>-->
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>Seleccione el método con el que el cliente realizará el pago
+                            </small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">
@@ -246,7 +271,16 @@
                             <label class="form-label">
                                 <i class="bi bi-percent me-2"></i>Descuento:
                             </label>
-                            <input type="number" step="0.01" th:field="*{descuento_aplicado}" class="form-control" readonly id="descuentoInput">
+                            <div class="input-group">
+                                <input type="number" step="0.01" th:field="*{descuento_aplicado}"
+                                       class="form-control" readonly id="descuentoInput" name="descuento_aplicado">
+                                <button type="button" class="btn btn-outline-primary" id="btnAbrirModalDescuentos">
+                                    <i class="bi bi-tag"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted" id="motivoDescuentoText">
+                                <!-- Aquí se mostrará el motivo del descuento -->
+                            </small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">
@@ -327,6 +361,9 @@
             </div>
         </div>
 
+        <!-- Incluir modal de descuentos -->
+        <div th:replace="fragments/descuentos-modal :: modal-descuentos"></div>
+
         <div class="mt-4 text-center">
             <button type="submit" class="btn btn-success btn-lg me-3">
                 <i class="bi bi-check-circle me-2"></i>Crear Venta
@@ -352,6 +389,8 @@
 
             let librosAgregados = [];
 
+            // ========== LÓGICA PRINCIPAL DE VENTAS ==========
+
             // Función para verificar stock
             async function verificarStock(idLibro, cantidad) {
                 try {
@@ -373,26 +412,31 @@
                 }
             }
 
-            function actualizarTotales() {
+            // Función actualizada para calcular totales con descuento
+            function actualizarTotalesConDescuento() {
                 let subtotal = 0;
-
-                // Calcular subtotal sumando todos los libros
                 librosAgregados.forEach(libro => {
                     subtotal += libro.precio * libro.cantidad;
                 });
 
-                // Aplicar solo IVA del 13% (El Salvador)
-                const descuento = 0;
-                const impuestos = subtotal * 0.13;
-                const total = subtotal + impuestos;
+                const descuento = parseFloat(descuentoInput.value) || 0;
+                const baseImponible = Math.max(0, subtotal - descuento); // No puede ser negativo
+                const impuestos = baseImponible * 0.13;
+                const total = baseImponible + impuestos;
 
-                // Actualizar los campos
                 subtotalInput.value = subtotal.toFixed(2);
-                descuentoInput.value = descuento.toFixed(2);
                 impuestosInput.value = impuestos.toFixed(2);
                 totalInput.value = total.toFixed(2);
+            }
 
-                // Actualizar el campo oculto con los datos de los libros
+            function actualizarTotales() {
+                let subtotal = 0;
+                librosAgregados.forEach(libro => {
+                    subtotal += libro.precio * libro.cantidad;
+                });
+
+                subtotalInput.value = subtotal.toFixed(2);
+                actualizarTotalesConDescuento();
                 librosDataInput.value = JSON.stringify(librosAgregados);
             }
 
@@ -472,79 +516,91 @@
                 renderTabla();
             });
 
-            // Prevenir envío del formulario si no hay libros agregados
+            // Prevenir envío del formulario si no hay libros agregados o no se seleccionó método de pago
             ventaForm.addEventListener('submit', function(e) {
                 if (librosAgregados.length === 0) {
                     e.preventDefault();
                     alert('Debe agregar al menos un libro para realizar la venta.');
+                    return;
+                }
+                
+                const tipoPago = document.getElementById('tipoPago').value;
+                if (!tipoPago) {
+                    e.preventDefault();
+                    alert('Debe seleccionar un método de pago.');
+                    return;
                 }
             });
 
-                   // Agregar validación en tiempo real de la cantidad
-        cantidadInput.addEventListener('change', async function() {
-            const id = libroSelect.value;
-            const cantidad = parseInt(this.value);
+            // Agregar validación en tiempo real de la cantidad
+            cantidadInput.addEventListener('change', async function() {
+                const id = libroSelect.value;
+                const cantidad = parseInt(this.value);
 
-            if (id && cantidad > 0) {
-                const stockDisponible = await verificarStock(id, cantidad);
-                if (!stockDisponible) {
-                    this.value = '1';
+                if (id && cantidad > 0) {
+                    const stockDisponible = await verificarStock(id, cantidad);
+                    if (!stockDisponible) {
+                        this.value = '1';
+                    }
                 }
+            });
+
+            function limpiarFormulario() {
+                // Limpiar campos del formulario principal
+                document.getElementById('ventaForm').reset();
+
+                // Limpiar tabla de libros agregados
+                librosAgregados = [];
+                renderTabla();
+
+                // Limpiar campos calculados
+                subtotalInput.value = '0.00';
+                descuentoInput.value = '0.00';
+                impuestosInput.value = '0.00';
+                totalInput.value = '0.00';
+                librosDataInput.value = '';
+
+                // Restablecer el select de libros
+                libroSelect.selectedIndex = 0;
+                cantidadInput.value = '1';
+
+                // Limpiar descuento aplicado
+                const motivoText = document.getElementById('motivoDescuentoText');
+                motivoText.textContent = '';
+                motivoText.className = 'text-muted';
+
+                // Cerrar alertas si están abiertas
+                const alertas = document.querySelectorAll('.alert');
+                alertas.forEach(alerta => {
+                    const bsAlert = new bootstrap.Alert(alerta);
+                    bsAlert.close();
+                });
             }
+
+            // Event listener para el botón limpiar
+            document.getElementById('limpiarFormulario').addEventListener('click', limpiarFormulario);
         });
 
-
-        function limpiarFormulario() {
-            // Limpiar campos del formulario principal
-            document.getElementById('ventaForm').reset();
-
-            // Limpiar tabla de libros agregados
-            librosAgregados = [];
-            renderTabla();
-
-            // Limpiar campos calculados
-            subtotalInput.value = '0.00';
-            descuentoInput.value = '0.00';
-            impuestosInput.value = '0.00';
-            totalInput.value = '0.00';
-            librosDataInput.value = '';
-
-            // Restablecer el select de libros
-            libroSelect.selectedIndex = 0;
-            cantidadInput.value = '1';
-
-            // Cerrar alertas si están abiertas
-            const alertas = document.querySelectorAll('.alert');
-            alertas.forEach(alerta => {
-                const bsAlert = new bootstrap.Alert(alerta);
-                bsAlert.close();
-            });
-
-
+        // Funciones para formatear contacto y DUI
+        function formatearContacto(input) {
+            let value = input.value.replace(/\D/g, ''); // Solo números
+            if (value.length > 4) {
+                value = value.substring(0, 4) + '-' + value.substring(4, 8);
+            }
+            input.value = value;
         }
 
-        // AGREGAR EVENT LISTENER PARA EL BOTÓN
-        document.getElementById('limpiarFormulario').addEventListener('click', limpiarFormulario);
-
-    });
-
-    // Funciones para formatear contacto y DUI
-    function formatearContacto(input) {
-        let value = input.value.replace(/\D/g, ''); // Solo números
-        if (value.length > 4) {
-            value = value.substring(0, 4) + '-' + value.substring(4, 8);
+        function formatearDUI(input) {
+            let value = input.value.replace(/\D/g, ''); // Solo números
+            if (value.length > 8) {
+                value = value.substring(0, 8) + '-' + value.substring(8, 9);
+            }
+            input.value = value;
         }
-        input.value = value;
-    }
-
-    function formatearDUI(input) {
-        let value = input.value.replace(/\D/g, ''); // Solo números
-        if (value.length > 8) {
-            value = value.substring(0, 8) + '-' + value.substring(8, 9);
-        }
-        input.value = value;
-    }
     </script>
+
+    <!-- Incluir script de descuentos -->
+    <div th:replace="fragments/descuentos-script :: script-descuentos"></div>
 </div>
 </body>
-</html>,
+</html>

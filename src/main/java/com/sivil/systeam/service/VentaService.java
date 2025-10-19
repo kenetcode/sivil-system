@@ -38,7 +38,6 @@ public class VentaService {
     /** Listar ventas VISIBLES (excluye INACTIVAS) para búsquedas/listados generales */
     public List<Venta> listarVentasVisibles() {
         return ventaRepository.findAllVisiblesOrderByFechaVentaDesc();
-
     }
 
     /** Obtener venta por ID */
@@ -60,10 +59,6 @@ public class VentaService {
         if (venta.getEstado() == EstadoVenta.inactiva) {
             throw new IllegalStateException("La venta ya está inactiva.");
         }
-        // Si NO quieres permitir inactivar finalizadas, deja este check:
-        if (venta.getEstado() == EstadoVenta.finalizada) {
-            throw new IllegalStateException("No se puede inactivar una venta finalizada.");
-        }
 
         // Restaurar stock por cada detalle
         List<DetalleVenta> detalles = detalleVentaRepository.findByVentaIdWithLibro(venta.getId_venta());
@@ -77,6 +72,41 @@ public class VentaService {
         // Marcar venta y guardar motivo
         venta.setEstado(EstadoVenta.inactiva);
         venta.setMotivo_inactivacion(motivo);
+        ventaRepository.save(venta);
+    }
+
+    /** Reactivar venta inactiva + descontar inventario nuevamente */
+    @Transactional
+    public void reactivarPorNumeroFactura(String numeroFactura) {
+        Venta venta = ventaRepository.findByNumeroFactura(numeroFactura)
+                .orElseThrow(() -> new IllegalArgumentException("No existe la venta con factura " + numeroFactura));
+
+        if (venta.getEstado() != EstadoVenta.inactiva) {
+            throw new IllegalStateException("Solo se pueden reactivar ventas inactivas.");
+        }
+
+        // Verificar stock disponible antes de reactivar
+        List<DetalleVenta> detalles = detalleVentaRepository.findByVentaIdWithLibro(venta.getId_venta());
+        for (DetalleVenta d : detalles) {
+            Libro libro = d.getLibro();
+            int stockActual = (libro.getCantidad_stock() == null) ? 0 : libro.getCantidad_stock();
+            if (stockActual < d.getCantidad()) {
+                throw new IllegalStateException("Stock insuficiente para reactivar. Libro: " + libro.getTitulo() + 
+                        ". Stock disponible: " + stockActual + ". Cantidad requerida: " + d.getCantidad());
+            }
+        }
+
+        // Descontar stock por cada detalle
+        for (DetalleVenta d : detalles) {
+            Libro libro = d.getLibro();
+            int stockActual = (libro.getCantidad_stock() == null) ? 0 : libro.getCantidad_stock();
+            libro.setCantidad_stock(stockActual - d.getCantidad());
+            libroRepository.save(libro);
+        }
+
+        // Reactivar venta como finalizada
+        venta.setEstado(EstadoVenta.finalizada);
+        venta.setMotivo_inactivacion(null); // Limpiar motivo
         ventaRepository.save(venta);
     }
 
