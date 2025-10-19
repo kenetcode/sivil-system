@@ -90,20 +90,13 @@ public class VentaController {
             String numFacturaBusqueda = (numeroFactura != null && !numeroFactura.trim().isEmpty()) ? numeroFactura.trim() : null;
             String nombreClienteBusqueda = (nombreCliente != null && !nombreCliente.trim().isEmpty()) ? nombreCliente.trim() : null;
             
-            // Realizar búsqueda con criterios
+            // Realizar búsqueda con criterios (con vendedor cargado para evitar lazy loading)
             ventas = ventaRepository.buscarPorCriterios(numFacturaBusqueda, nombreClienteBusqueda);
             
             model.addAttribute("searchActive", true);
         } else {
-            // Listar TODAS las ventas (incluyendo inactivas)
-            ventas = ventaRepository.findAll();
-            // Ordenar por fecha de venta descendente
-            ventas.sort((v1, v2) -> {
-                if (v1.getFecha_venta() == null && v2.getFecha_venta() == null) return 0;
-                if (v1.getFecha_venta() == null) return 1;
-                if (v2.getFecha_venta() == null) return -1;
-                return v2.getFecha_venta().compareTo(v1.getFecha_venta());
-            });
+            // Listar TODAS las ventas (incluyendo inactivas) con vendedor cargado para evitar lazy loading
+            ventas = ventaRepository.findAllWithVendedor();
         }
         
         // Agregar los valores de búsqueda al modelo para mantenerlos en el formulario
