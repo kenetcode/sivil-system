@@ -222,19 +222,16 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="bi bi-credit-card me-2"></i>Tipo de pago:
+                                <i class="bi bi-credit-card me-2"></i>Tipo de pago: <span class="text-danger">*</span>
                             </label>
-                         <!--   <select th:field="*{tipo_pago}" class="form-select" readonly>
-                                <option value="tarjeta" selected>💳 Pago con Tarjeta</option>
-                            </select>-->
                             <select class="form-select" id="tipoPago" name="tipo_pago" required>
-                                <option value="tarjeta" selected>Pago con Tarjeta</option>
-                                <option value="efectivo">Pago en Efectivo</option>
+                                <option value="" disabled selected>Seleccione un método de pago</option>
+                                <option value="tarjeta">💳 Pago con Tarjeta</option>
+                                <option value="efectivo">💵 Pago en Efectivo</option>
                             </select>
-
-                           <!-- <small class="text-muted">
-                                <i class="bi bi-info-circle me-1"></i>Solo se acepta pago con tarjeta
-                            </small>-->
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>Seleccione el método con el que el cliente realizará el pago
+                            </small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">
@@ -472,11 +469,19 @@
                 renderTabla();
             });
 
-            // Prevenir envío del formulario si no hay libros agregados
+            // Prevenir envío del formulario si no hay libros agregados o no se seleccionó método de pago
             ventaForm.addEventListener('submit', function(e) {
                 if (librosAgregados.length === 0) {
                     e.preventDefault();
                     alert('Debe agregar al menos un libro para realizar la venta.');
+                    return;
+                }
+                
+                const tipoPago = document.getElementById('tipoPago').value;
+                if (!tipoPago) {
+                    e.preventDefault();
+                    alert('Debe seleccionar un método de pago.');
+                    return;
                 }
             });
 

@@ -263,6 +263,7 @@ public class VentaController {
     public String procesarFormularioCrearVenta(
             @ModelAttribute("venta") Venta venta,
             @RequestParam("librosData") String librosDataJson,
+            @RequestParam("tipo_pago") String tipoPago,
             HttpSession session,
             Model model) {
 
@@ -322,7 +323,11 @@ public class VentaController {
             ventaTemporal.setDescuentoAplicado(BigDecimal.ZERO);
             ventaTemporal.setImpuestos(impuestos);
             ventaTemporal.setTotal(totalVenta);
-            ventaTemporal.setTipoPago(com.sivil.systeam.enums.MetodoPago.tarjeta);
+            // Establecer el tipo de pago según lo seleccionado en el formulario
+            com.sivil.systeam.enums.MetodoPago metodoPago = tipoPago.equals("efectivo") 
+                ? com.sivil.systeam.enums.MetodoPago.efectivo 
+                : com.sivil.systeam.enums.MetodoPago.tarjeta;
+            ventaTemporal.setTipoPago(metodoPago);
             ventaTemporal.setEstado(com.sivil.systeam.enums.EstadoVenta.activa);
             ventaTemporal.setFechaVenta(LocalDateTime.now());
 
@@ -342,7 +347,12 @@ public class VentaController {
 
             session.setAttribute("ventaPendiente", ventaTemporal);
 
-            return "redirect:/pago/tarjeta?monto=" + totalVenta + "&ventaPendiente=true";
+            // Redirigir según el método de pago seleccionado
+            if (tipoPago.equals("efectivo")) {
+                return "redirect:/pago/efectivo?monto=" + totalVenta + "&ventaPendiente=true";
+            } else {
+                return "redirect:/pago/tarjeta?monto=" + totalVenta + "&ventaPendiente=true";
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -306,7 +306,11 @@ public class PagoService {
                     ") es menor al total de la venta (" + venta.getTotal() + ")");
         }
 
-        // 3. Crear el pago en efectivo
+        // 3. Actualizar el estado de la venta a finalizada
+        venta.setEstado(EstadoVenta.finalizada);
+        ventaRepository.save(venta);
+
+        // 4. Crear el pago en efectivo
         Pago pago = new Pago();
         pago.setMonto(venta.getTotal());
         pago.setMetodo_pago(MetodoPago.efectivo);
@@ -314,7 +318,7 @@ public class PagoService {
         pago.setReferencia_transaccion("EFE-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         pago.setVenta(venta);
 
-        // 4. Guardar información adicional si existe
+        // 5. Guardar información adicional si existe
         if (observaciones != null && !observaciones.trim().isEmpty()) {
             pago.setDatos_tarjeta_encriptados("Observaciones: " + observaciones);
         }
@@ -367,7 +371,7 @@ public class PagoService {
         nuevaVenta.setImpuestos(ventaTemporal.getImpuestos());
         nuevaVenta.setTotal(ventaTemporal.getTotal());
         nuevaVenta.setTipo_pago(MetodoPago.efectivo);
-        nuevaVenta.setEstado(ventaTemporal.getEstado());
+        nuevaVenta.setEstado(EstadoVenta.finalizada); // Venta finalizada al procesar el pago en efectivo
         nuevaVenta.setFecha_venta(ventaTemporal.getFechaVenta());
 
         Venta ventaGuardada = ventaRepository.save(nuevaVenta);
