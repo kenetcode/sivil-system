@@ -74,16 +74,42 @@ public class VentaController {
     }
 
     @GetMapping("/listar")
-    public String listarVentas(Model model) {
-        // Listar TODAS las ventas (incluyendo inactivas)
-        List<Venta> ventas = ventaRepository.findAll();
-        // Ordenar por fecha de venta descendente
-        ventas.sort((v1, v2) -> {
-            if (v1.getFecha_venta() == null && v2.getFecha_venta() == null) return 0;
-            if (v1.getFecha_venta() == null) return 1;
-            if (v2.getFecha_venta() == null) return -1;
-            return v2.getFecha_venta().compareTo(v1.getFecha_venta());
-        });
+    public String listarVentas(
+            @RequestParam(value = "numeroFactura", required = false) String numeroFactura,
+            @RequestParam(value = "nombreCliente", required = false) String nombreCliente,
+            Model model) {
+        
+        List<Venta> ventas;
+        
+        // Verificar si hay algún criterio de búsqueda
+        boolean tieneFiltros = (numeroFactura != null && !numeroFactura.trim().isEmpty()) ||
+                               (nombreCliente != null && !nombreCliente.trim().isEmpty());
+        
+        if (tieneFiltros) {
+            // Convertir strings vacíos a null para la búsqueda
+            String numFacturaBusqueda = (numeroFactura != null && !numeroFactura.trim().isEmpty()) ? numeroFactura.trim() : null;
+            String nombreClienteBusqueda = (nombreCliente != null && !nombreCliente.trim().isEmpty()) ? nombreCliente.trim() : null;
+            
+            // Realizar búsqueda con criterios
+            ventas = ventaRepository.buscarPorCriterios(numFacturaBusqueda, nombreClienteBusqueda);
+            
+            model.addAttribute("searchActive", true);
+        } else {
+            // Listar TODAS las ventas (incluyendo inactivas)
+            ventas = ventaRepository.findAll();
+            // Ordenar por fecha de venta descendente
+            ventas.sort((v1, v2) -> {
+                if (v1.getFecha_venta() == null && v2.getFecha_venta() == null) return 0;
+                if (v1.getFecha_venta() == null) return 1;
+                if (v2.getFecha_venta() == null) return -1;
+                return v2.getFecha_venta().compareTo(v1.getFecha_venta());
+            });
+        }
+        
+        // Agregar los valores de búsqueda al modelo para mantenerlos en el formulario
+        model.addAttribute("numeroFactura", numeroFactura != null ? numeroFactura : "");
+        model.addAttribute("nombreCliente", nombreCliente != null ? nombreCliente : "");
+        
         model.addAttribute("ventas", ventas);
         model.addAttribute("totalVentas", ventas.size());
         model.addAttribute("ventasActivas", 0);

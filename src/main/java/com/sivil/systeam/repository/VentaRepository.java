@@ -36,4 +36,14 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
 
     @Query("SELECT v FROM Venta v WHERE v.estado <> com.sivil.systeam.enums.EstadoVenta.inactiva ORDER BY v.fecha_venta DESC")
     List<Venta> findAllVisiblesOrderByFechaVentaDesc();
+
+    // Búsqueda por número de factura y/o nombre de cliente
+    @Query("SELECT v FROM Venta v WHERE " +
+            "(:numeroFactura IS NULL OR LOWER(v.numero_factura) LIKE LOWER(CONCAT('%', :numeroFactura, '%'))) AND " +
+            "(:nombreCliente IS NULL OR LOWER(v.nombre_cliente) LIKE LOWER(CONCAT('%', :nombreCliente, '%'))) " +
+            "ORDER BY v.fecha_venta DESC NULLS LAST")
+    List<Venta> buscarPorCriterios(
+            @Param("numeroFactura") String numeroFactura,
+            @Param("nombreCliente") String nombreCliente
+    );
 }
