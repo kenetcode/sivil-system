@@ -40,4 +40,14 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
     // Listar todas las ventas con vendedor cargado (JOIN FETCH) para evitar problemas de lazy loading
     @Query("SELECT v FROM Venta v LEFT JOIN FETCH v.vendedor ORDER BY v.fecha_venta DESC")
     List<Venta> findAllWithVendedor();
+
+    // Búsqueda por número de factura y/o nombre de cliente con vendedor cargado (JOIN FETCH)
+    @Query("SELECT v FROM Venta v LEFT JOIN FETCH v.vendedor WHERE " +
+            "(:numeroFactura IS NULL OR LOWER(v.numero_factura) LIKE LOWER(CONCAT('%', :numeroFactura, '%'))) AND " +
+            "(:nombreCliente IS NULL OR LOWER(v.nombre_cliente) LIKE LOWER(CONCAT('%', :nombreCliente, '%'))) " +
+            "ORDER BY v.fecha_venta DESC NULLS LAST")
+    List<Venta> buscarPorCriterios(
+            @Param("numeroFactura") String numeroFactura,
+            @Param("nombreCliente") String nombreCliente
+    );
 }
