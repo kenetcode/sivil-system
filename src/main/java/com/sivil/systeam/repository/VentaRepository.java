@@ -36,4 +36,8 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
 
     @Query("SELECT v FROM Venta v WHERE v.estado <> com.sivil.systeam.enums.EstadoVenta.inactiva ORDER BY v.fecha_venta DESC")
     List<Venta> findAllVisiblesOrderByFechaVentaDesc();
+
+    // Listar todas las ventas con vendedor cargado (JOIN FETCH) para evitar problemas de lazy loading
+    @Query("SELECT v FROM Venta v LEFT JOIN FETCH v.vendedor ORDER BY v.fecha_venta DESC")
+    List<Venta> findAllWithVendedor();
 }

@@ -75,15 +75,8 @@ public class VentaController {
 
     @GetMapping("/listar")
     public String listarVentas(Model model) {
-        // Listar TODAS las ventas (incluyendo inactivas)
-        List<Venta> ventas = ventaRepository.findAll();
-        // Ordenar por fecha de venta descendente
-        ventas.sort((v1, v2) -> {
-            if (v1.getFecha_venta() == null && v2.getFecha_venta() == null) return 0;
-            if (v1.getFecha_venta() == null) return 1;
-            if (v2.getFecha_venta() == null) return -1;
-            return v2.getFecha_venta().compareTo(v1.getFecha_venta());
-        });
+        // Listar TODAS las ventas (incluyendo inactivas) con vendedor cargado para evitar lazy loading
+        List<Venta> ventas = ventaRepository.findAllWithVendedor();
         model.addAttribute("ventas", ventas);
         model.addAttribute("totalVentas", ventas.size());
         model.addAttribute("ventasActivas", 0);

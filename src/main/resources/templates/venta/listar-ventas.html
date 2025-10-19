@@ -61,7 +61,7 @@
                 <td th:text="${venta.numero_factura}">FAC-001</td>
                 <td th:text="${venta.fecha_venta != null} ? ${#temporals.format(venta.fecha_venta, 'dd/MM/yyyy HH:mm')} : '-'">01/01/2023</td>
                 <td th:text="${venta.nombre_cliente}">Cliente Ejemplo</td>
-                <td th:text="${venta.vendedor?.nombre_completo}">Vendedor</td>
+                <td th:text="${venta.vendedor != null ? venta.vendedor.nombre_completo : 'N/A'}">Vendedor</td>
                 <td class="text-end" th:text="${'$' + #numbers.formatDecimal(venta.subtotal, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
                 <td class="text-end" th:text="${'$' + #numbers.formatDecimal(venta.impuestos, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
                 <td class="text-end fw-bold" th:text="${'$' + #numbers.formatDecimal(venta.total, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
