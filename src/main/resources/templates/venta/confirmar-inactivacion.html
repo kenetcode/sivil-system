@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmar inactivación</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+</head>
+<body class="container py-4">
+<h4 class="mb-3" th:text="'Inactivar venta: ' + ${numeroFactura}"></h4>
+
+<div class="alert alert-warning">
+    Esta acción no elimina la venta. No aparecerá en las búsquedas y se restaurará el inventario.
+</div>
+
+<form th:action="@{/ventas/inactivar}" method="post" class="mt-3">
+    <input type="hidden" name="numeroFactura" th:value="${numeroFactura}">
+    <div class="mb-3">
+        <label class="form-label">Motivo de inactivación</label>
+        <textarea class="form-control" name="motivo" rows="3" required
+                  placeholder="error de registro, cancelación por cliente, producto no disponible"></textarea>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-warning">Confirmar</button>
+        <a th:href="@{/ventas/listar}" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+</body>
+</html>

@@ -80,21 +80,27 @@
                     <i class="bi bi-person-check me-1"></i> Datos para confirmar
                 </div>
                 <div class="card-body">
-                    <form class="row g-3">
+                    <form class="row g-3" novalidate>
                         <div class="col-12 col-md-6">
                             <label class="form-label">Comprador ID</label>
-                            <input id="compradorId" type="number" class="form-control" value="1"/>
+                            <input id="compradorId" type="number" class="form-control" value="1" min="1" required />
+                            <div class="invalid-feedback">Ingrese un ID válido (mayor a 0).</div>
                         </div>
+
                         <div class="col-12 col-md-6">
                             <label class="form-label">Método de pago</label>
-                            <select id="metodoPago" class="form-select">
-                                <option value="tarjeta" selected>Tarjeta</option>
+                            <select id="metodoPago" class="form-select" required>
+                                <option value="" selected disabled>Seleccione…</option>
+                                <option value="tarjeta">Tarjeta</option>
                                 <option value="efectivo">Efectivo</option>
                             </select>
+                            <div class="invalid-feedback">Seleccione un método de pago.</div>
                         </div>
+
                         <div class="col-12">
                             <label class="form-label">Dirección de entrega</label>
-                            <textarea id="direccion" rows="2" class="form-control" placeholder="Dirección completa"></textarea>
+                            <textarea id="direccion" rows="2" class="form-control" placeholder="Dirección completa" required></textarea>
+                            <div class="invalid-feedback">La dirección es obligatoria.</div>
                         </div>
                     </form>
                 </div>
@@ -169,16 +175,52 @@
             msg.innerHTML = "";
             btnConfirmar.disabled = true;
 
+          msg.innerHTML = "";
+btnConfirmar.disabled = true;
+
+// --- Validación de campos obligatorios ---
+const compradorIdInput = $("#compradorId");
+const metodoPagoInput  = $("#metodoPago");
+const direccionInput   = $("#direccion");
+
+// limpiar estados previos
+[compradorIdInput, metodoPagoInput, direccionInput].forEach(el => el.classList.remove("is-invalid"));
+
+const compradorId = parseInt(compradorIdInput.value, 10);
+const metodoPago  = (metodoPagoInput.value || "").trim();
+const direccion   = (direccionInput.value || "").trim();
+
+let hayError = false;
+if (!Number.isFinite(compradorId) || compradorId <= 0) {
+  compradorIdInput.classList.add("is-invalid");
+  hayError = true;
+}
+if (!metodoPago) {
+  metodoPagoInput.classList.add("is-invalid");
+  hayError = true;
+}
+if (!direccion) {
+  direccionInput.classList.add("is-invalid");
+  hayError = true;
+}
+
+if (hayError) {
+  toast('warn', 'Complete los campos obligatorios.');
+  btnConfirmar.disabled = false;
+  return;
+}
+
+
             const itemsRes = await fetch(URL_ITEMS, { headers: withCsrf() });
             const items = itemsRes.ok ? await itemsRes.json() : [];
             if (!items.length) { toast('warn', 'El carrito está vacío.'); return; }
 
-            const body = {
-              compradorId: parseInt($("#compradorId").value, 10),
-              direccionEntrega: $("#direccion").value,
-              metodoPago: $("#metodoPago").value,
-              items
-            };
+         const body = {
+         compradorId,
+         direccionEntrega: direccion,
+         metodoPago,
+         items
+};
 
             const res = await fetch(URL_CHECKOUT, {
               method: "POST",
@@ -202,7 +244,7 @@
     const match = err.message.match(regex);
     if (match) {
       const max = parseInt(match[1], 10);
-      toast('info', `La cantidad seleccionada excede la cantidad solicitada,Se ajustó automáticamente la cantidad al máximo disponible: ${max}.`);
+      toast('info', `La cantidad seleccionada excede la cantidad solicitada,la cantidad al máximo disponible es: ${max}.`);
       await loadCart(); // recarga el carrito
     }
     return; // salir sin éxito

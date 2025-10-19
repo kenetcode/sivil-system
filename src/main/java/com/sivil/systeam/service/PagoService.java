@@ -91,7 +91,7 @@ public class PagoService {
         validarDatosTarjeta(numeroTarjeta, fechaVencimiento, cvv, nombreTitular, email);
 
         // 2. Verificar que el número de factura no exista
-        if (ventaRepository.existsByNumero_Factura(ventaTemporal.getNumeroFactura())) {
+        if (ventaRepository.existsByNumeroFactura(ventaTemporal.getNumeroFactura())) {
             throw new IllegalArgumentException("El número de factura ya existe: " + ventaTemporal.getNumeroFactura());
         }
 
@@ -122,7 +122,7 @@ public class PagoService {
         nuevaVenta.setImpuestos(ventaTemporal.getImpuestos());
         nuevaVenta.setTotal(ventaTemporal.getTotal());
         nuevaVenta.setTipo_pago(ventaTemporal.getTipoPago());
-        nuevaVenta.setEstado(ventaTemporal.getEstado());
+        nuevaVenta.setEstado(EstadoVenta.finalizada); // Venta finalizada al procesar el pago
         nuevaVenta.setFecha_venta(ventaTemporal.getFechaVenta());
 
         Venta ventaGuardada = ventaRepository.save(nuevaVenta);
@@ -287,5 +287,127 @@ public class PagoService {
         // Por ahora solo guardamos los últimos 4 dígitos y ocultamos el resto
         String ultimosCuatroDigitos = numeroTarjeta.substring(numeroTarjeta.length() - 4);
         return "****-****-****-" + ultimosCuatroDigitos + "|" + fechaVencimiento + "|***";
+    }
+
+    /**
+     * Procesa pago en efectivo para una venta ya existente
+     */
+    @Transactional
+    public Pago procesarPagoEfectivoVenta(Integer idVenta, BigDecimal montoRecibido,
+                                         String observaciones, String emailVendedor) {
+
+        // 1. Buscar la venta
+        Venta venta = ventaRepository.findById(idVenta)
+                .orElseThrow(() -> new IllegalArgumentException("Venta no encontrada con ID: " + idVenta));
+
+        // 2. Validar que el monto recibido sea suficiente
+        if (montoRecibido.compareTo(venta.getTotal()) < 0) {
+            throw new IllegalArgumentException("El monto recibido (" + montoRecibido +
+                    ") es menor al total de la venta (" + venta.getTotal() + ")");
+        }
+
+        // 3. Actualizar el estado de la venta a finalizada
+        venta.setEstado(EstadoVenta.finalizada);
+        ventaRepository.save(venta);
+
+        // 4. Crear el pago en efectivo
+        Pago pago = new Pago();
+        pago.setMonto(venta.getTotal());
+        pago.setMetodo_pago(MetodoPago.efectivo);
+        pago.setEstado_pago(EstadoPago.completado);
+        pago.setReferencia_transaccion("EFE-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        pago.setVenta(venta);
+
+        // 5. Guardar información adicional si existe
+        if (observaciones != null && !observaciones.trim().isEmpty()) {
+            pago.setDatos_tarjeta_encriptados("Observaciones: " + observaciones);
+        }
+
+        return pagoRepository.save(pago);
+    }
+
+    /**
+     * Procesa pago en efectivo y crea la venta desde datos temporales almacenados en sesión
+     */
+    @Transactional
+    public Pago procesarPagoEfectivoVentaPendiente(VentaTemporalDTO ventaTemporal, BigDecimal montoRecibido,
+                                                  String observaciones, String emailVendedor) {
+
+        // 1. Validar que el monto recibido sea suficiente
+        if (montoRecibido.compareTo(ventaTemporal.getTotal()) < 0) {
+            throw new IllegalArgumentException("El monto recibido (" + montoRecibido +
+                    ") es menor al total de la venta (" + ventaTemporal.getTotal() + ")");
+        }
+
+        // 2. Verificar que el número de factura no exista
+        if (ventaRepository.existsByNumeroFactura(ventaTemporal.getNumeroFactura())) {
+            throw new IllegalArgumentException("El número de factura ya existe: " + ventaTemporal.getNumeroFactura());
+        }
+
+        // 3. Verificar stock disponible para todos los libros antes de crear la venta
+        for (VentaTemporalDTO.DetalleVentaTemporalDTO detalleTemporal : ventaTemporal.getDetallesVenta()) {
+            Optional<Libro> libroOpt = libroRepository.findById(detalleTemporal.getIdLibro());
+            if (libroOpt.isEmpty()) {
+                throw new IllegalArgumentException("Libro no encontrado: " + detalleTemporal.getIdLibro());
+            }
+
+            Libro libro = libroOpt.get();
+            if (libro.getCantidad_stock() < detalleTemporal.getCantidad()) {
+                throw new IllegalArgumentException("Stock insuficiente para: " + libro.getTitulo() +
+                        ". Stock disponible: " + libro.getCantidad_stock() +
+                        ". Cantidad solicitada: " + detalleTemporal.getCantidad());
+            }
+        }
+
+        // 4. Crear la venta en la base de datos
+        Venta nuevaVenta = new Venta();
+        nuevaVenta.setNumero_factura(ventaTemporal.getNumeroFactura());
+        nuevaVenta.setVendedor(ventaTemporal.getVendedor());
+        nuevaVenta.setNombre_cliente(ventaTemporal.getNombreCliente());
+        nuevaVenta.setContacto_cliente(ventaTemporal.getContactoCliente());
+        nuevaVenta.setIdentificacion_cliente(ventaTemporal.getIdentificacionCliente());
+        nuevaVenta.setSubtotal(ventaTemporal.getSubtotal());
+        nuevaVenta.setDescuento_aplicado(ventaTemporal.getDescuentoAplicado());
+        nuevaVenta.setImpuestos(ventaTemporal.getImpuestos());
+        nuevaVenta.setTotal(ventaTemporal.getTotal());
+        nuevaVenta.setTipo_pago(MetodoPago.efectivo);
+        nuevaVenta.setEstado(EstadoVenta.finalizada); // Venta finalizada al procesar el pago en efectivo
+        nuevaVenta.setFecha_venta(ventaTemporal.getFechaVenta());
+
+        Venta ventaGuardada = ventaRepository.save(nuevaVenta);
+
+        // 5. Crear detalles de venta y actualizar stock
+        for (VentaTemporalDTO.DetalleVentaTemporalDTO detalleTemporal : ventaTemporal.getDetallesVenta()) {
+            Libro libro = libroRepository.findById(detalleTemporal.getIdLibro()).get();
+
+            // Crear detalle de venta
+            DetalleVenta detalle = new DetalleVenta();
+            detalle.setVenta(ventaGuardada);
+            detalle.setLibro(libro);
+            detalle.setCantidad(detalleTemporal.getCantidad());
+            detalle.setPrecio_unitario(detalleTemporal.getPrecioUnitario());
+            detalle.setSubtotal_item(detalleTemporal.getSubtotalItem());
+
+            detalleVentaRepository.save(detalle);
+
+            // Actualizar stock del libro
+            libro.setCantidad_stock(libro.getCantidad_stock() - detalleTemporal.getCantidad());
+            libroRepository.save(libro);
+        }
+
+        // 6. Procesar el pago en efectivo
+        Pago pago = new Pago();
+        pago.setMonto(ventaGuardada.getTotal());
+        pago.setMetodo_pago(MetodoPago.efectivo);
+        pago.setEstado_pago(EstadoPago.completado);
+        pago.setReferencia_transaccion("EFE-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        pago.setVenta(ventaGuardada);
+
+        // 7. Guardar información adicional si existe
+        if (observaciones != null && !observaciones.trim().isEmpty()) {
+            pago.setDatos_tarjeta_encriptados("Observaciones: " + observaciones);
+        }
+
+        return pagoRepository.save(pago);
     }
 }

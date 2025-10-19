@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -67,8 +68,39 @@ public class UsuarioController {
     }
     
     @GetMapping("/usuarios")
-    public String mostrarUsuarios(Model model) {
-        model.addAttribute("usuarios", usuarioService.obtenerTodosLosUsuarios());
+    public String mostrarUsuarios(
+            @RequestParam(value = "criterio", required = false) String criterio,
+            @RequestParam(value = "tipoBusqueda", required = false) String tipoBusqueda,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        
+        List<Usuario> usuarios;
+        
+        // Si hay criterio de búsqueda, buscar; de lo contrario, mostrar todos
+        if (criterio != null && !criterio.trim().isEmpty() && tipoBusqueda != null && !tipoBusqueda.trim().isEmpty()) {
+            try {
+                usuarios = usuarioService.buscarUsuarios(criterio, tipoBusqueda);
+                model.addAttribute("criterio", criterio);
+                model.addAttribute("tipoBusqueda", tipoBusqueda);
+                
+                // Si no hay resultados, mostrar mensaje
+                if (usuarios.isEmpty()) {
+                    model.addAttribute("sinResultados", true);
+                    model.addAttribute("mensajeBusqueda", 
+                        String.format("No se encontraron usuarios que coincidan con '%s' en %s", 
+                        criterio, 
+                        tipoBusqueda.equals("todos") ? "todos los campos" : tipoBusqueda));
+                }
+            } catch (RuntimeException e) {
+                // En caso de error en la búsqueda, mostrar todos y mensaje de error
+                usuarios = usuarioService.obtenerTodosLosUsuarios();
+                model.addAttribute("error", e.getMessage());
+            }
+        } else {
+            usuarios = usuarioService.obtenerTodosLosUsuarios();
+        }
+        
+        model.addAttribute("usuarios", usuarios);
         
         // Configurar columnas para la tabla
         List<Object> columnas = Arrays.asList(
@@ -107,6 +139,38 @@ public class UsuarioController {
             model.addAttribute("usuario", usuario); // Preservar los datos
             model.addAttribute("tiposUsuario", TipoUsuario.values());
             return "usuario/registro-interno-sistema"; // Volver al formulario sin redirect
+        }
+    }
+    
+    @GetMapping("/usuarios/{id}/editar")
+    public String mostrarEditarUsuario(@PathVariable("id") Integer id, Model model) {
+        Usuario usuario = usuarioService.obtenerUsuarioPorId(id);
+        if (usuario == null) {
+            model.addAttribute("error", "Usuario no encontrado");
+            return "redirect:/usuarios";
+        }
+        
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("tiposUsuario", TipoUsuario.values());
+        return "usuario/editar-usuario";
+    }
+    
+    @PostMapping("/usuarios/{id}/editar")
+    public String procesarEditarUsuario(@PathVariable("id") Integer id,
+                                       @ModelAttribute Usuario usuario,
+                                       RedirectAttributes redirectAttributes,
+                                       Model model) {
+        try {
+            usuario.setId_usuario(id); // Asegurar que el ID sea correcto
+            usuarioService.actualizarUsuario(usuario);
+            redirectAttributes.addFlashAttribute("mensaje", "Usuario actualizado exitosamente");
+            return "redirect:/usuarios";
+        } catch (RuntimeException e) {
+            // En caso de error, volver a mostrar el formulario con los datos
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("usuario", usuario);
+            model.addAttribute("tiposUsuario", TipoUsuario.values());
+            return "usuario/editar-usuario";
         }
     }
 }

@@ -25,6 +25,52 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
+        <!-- Formulario de búsqueda -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="bi bi-search"></i> Buscar Usuarios
+                </h5>
+                <form method="get" th:action="@{/usuarios}" id="formBusqueda">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="tipoBusqueda" class="form-label">Buscar por:</label>
+                            <select class="form-select" id="tipoBusqueda" name="tipoBusqueda" required>
+                                <option value="">Seleccione una opción</option>
+                                <option value="todos" th:selected="${tipoBusqueda == 'todos'}">Todos los campos</option>
+                                <option value="nombre" th:selected="${tipoBusqueda == 'nombre'}">Nombre completo</option>
+                                <option value="email" th:selected="${tipoBusqueda == 'email'}">Email</option>
+                                <option value="tipo" th:selected="${tipoBusqueda == 'tipo'}">Tipo de usuario</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label for="criterio" class="form-label">Criterio de búsqueda:</label>
+                            <input type="text" class="form-control" id="criterio" name="criterio" 
+                                   th:value="${criterio}" 
+                                   placeholder="Ingrese el término a buscar" required>
+                            <div class="form-text" id="tipoBusquedaHelp">
+                                Ingrese al menos 1 carácter para buscar
+                            </div>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bi bi-search"></i> Buscar
+                            </button>
+                            <a th:href="@{/usuarios}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-clockwise"></i> Limpiar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Mensaje de búsqueda sin resultados -->
+        <div th:if="${sinResultados}" class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle"></i> <span th:text="${mensajeBusqueda}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
         <!-- Tabla de usuarios personalizada -->
         <div class="card">
             <!-- Header de la tabla -->
@@ -74,8 +120,7 @@
                                 <td th:text="${usuario.nombre_completo}">Administrador</td>
                                 <td>
                                     <span class="badge" 
-                                          th:classappend="${usuario.tipo_usuario.name() == 'admin' ? 'bg-danger' : 
-                                                          usuario.tipo_usuario.name() == 'vendedor' ? 'bg-warning' : 'bg-primary'}"
+                                          th:classappend="${usuario.tipo_usuario.name() == 'admin' ? 'bg-danger' : (usuario.tipo_usuario.name() == 'vendedor' ? 'bg-warning' : 'bg-primary')}"
                                           th:text="${#strings.capitalize(usuario.tipo_usuario.name())}">Admin</span>
                                 </td>
                                 <td>
@@ -83,24 +128,11 @@
                                           th:classappend="${usuario.estado.name() == 'activo' ? 'bg-success' : 'bg-danger'}"
                                           th:text="${#strings.capitalize(usuario.estado.name())}">Activo</span>
                                 </td>
-                                <td th:text="${usuario.telefono ?: '-'}">-</td>
+                                <td th:text="${usuario.telefono != null ? usuario.telefono : '-'}">-</td>
                                 <td class="text-center">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <!-- Ver detalles -->
-                                        <button class="btn btn-outline-info" title="Ver detalles">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        
-                                        <!-- Editar -->
-                                        <button class="btn btn-outline-primary" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        
-                                        <!-- Eliminar -->
-                                        <button class="btn btn-outline-danger" title="Eliminar">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary" disabled title="Próximamente">Ver</button>
+                                    <a th:href="@{|/usuarios/${usuario.id_usuario}/editar|}" class="btn btn-sm btn-outline-warning">Editar</a>
+                                    <button class="btn btn-sm btn-outline-danger" disabled title="Próximamente">Eliminar</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -109,5 +141,83 @@
             </div>
         </div>
     </div>
+
+    <!-- Script de validación de búsqueda -->
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const formBusqueda = document.getElementById('formBusqueda');
+            const tipoBusqueda = document.getElementById('tipoBusqueda');
+            const criterio = document.getElementById('criterio');
+            const helpText = document.getElementById('tipoBusquedaHelp');
+            
+            // Actualizar mensaje de ayuda según el tipo de búsqueda
+            tipoBusqueda.addEventListener('change', function() {
+                if (this.value === 'tipo') {
+                    helpText.textContent = 'Ingrese: admin, vendedor o comprador';
+                    criterio.placeholder = 'Ej: admin, vendedor, comprador';
+                } else if (this.value === 'email') {
+                    helpText.textContent = 'Ingrese parte del email a buscar';
+                    criterio.placeholder = 'Ej: admin@sivil.com';
+                } else if (this.value === 'nombre') {
+                    helpText.textContent = 'Ingrese parte del nombre a buscar';
+                    criterio.placeholder = 'Ej: Juan Pérez';
+                } else if (this.value === 'todos') {
+                    helpText.textContent = 'Busca en nombre, email y usuario';
+                    criterio.placeholder = 'Ingrese el término a buscar';
+                } else {
+                    helpText.textContent = 'Ingrese al menos 1 carácter para buscar';
+                    criterio.placeholder = 'Ingrese el término a buscar';
+                }
+            });
+            
+            // Validación del formulario
+            formBusqueda.addEventListener('submit', function(e) {
+                const criterioValor = criterio.value.trim();
+                const tipoBusquedaValor = tipoBusqueda.value.trim();
+                
+                // Validar que el tipo de búsqueda esté seleccionado
+                if (!tipoBusquedaValor) {
+                    e.preventDefault();
+                    tipoBusqueda.classList.add('is-invalid');
+                    alert('Por favor, seleccione un tipo de búsqueda');
+                    return false;
+                } else {
+                    tipoBusqueda.classList.remove('is-invalid');
+                }
+                
+                // Validar que el criterio no esté vacío
+                if (!criterioValor) {
+                    e.preventDefault();
+                    criterio.classList.add('is-invalid');
+                    alert('Por favor, ingrese un criterio de búsqueda');
+                    return false;
+                } else {
+                    criterio.classList.remove('is-invalid');
+                }
+                
+                // Validación especial para tipo de usuario
+                if (tipoBusquedaValor === 'tipo') {
+                    const tiposValidos = ['admin', 'vendedor', 'comprador'];
+                    if (!tiposValidos.includes(criterioValor.toLowerCase())) {
+                        e.preventDefault();
+                        criterio.classList.add('is-invalid');
+                        alert('Tipo de usuario inválido. Use: admin, vendedor o comprador');
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // Limpiar estilos de error al escribir
+            criterio.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+            });
+            
+            tipoBusqueda.addEventListener('change', function() {
+                this.classList.remove('is-invalid');
+            });
+        });
+    </script>
 </body>
 </html>

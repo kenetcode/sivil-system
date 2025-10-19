@@ -4,14 +4,17 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sivil.systeam.entity.*;
 import com.sivil.systeam.repository.*;
+import com.sivil.systeam.service.CompraService;
 import com.sivil.systeam.service.NumeracionFacturaService;
 import com.sivil.systeam.dto.CompraTemporalDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import jakarta.servlet.http.HttpSession;
 import java.math.BigDecimal;
@@ -25,6 +28,9 @@ import java.util.ArrayList;
 @Controller
 @RequestMapping("/compra-online")
 public class CompraOnlineController {
+
+    @Autowired
+    private CompraService compraService; // inyección por constructor (Lombok)
 
     @Autowired
     private LibroRepository libroRepository;
@@ -41,13 +47,22 @@ public class CompraOnlineController {
     @Autowired
     private ObjectMapper objectMapper;
 
+
     @Autowired
     private NumeracionFacturaService numeracionService;
 
     @GetMapping("/crear")
-    public String mostrarFormularioComprarLibros(Model model) {
-        // Avisar que es temporal mientras se implementa el catálogo
-        model.addAttribute("avisoTemporal", true);
+    public String mostrarFormularioComprarLibros(Model model, HttpSession session) {
+        // Obtener carrito de la sesión
+        @SuppressWarnings("unchecked")
+        List<com.sivil.systeam.controller.CatalogoController.ItemCarrito> carrito = 
+            (List<com.sivil.systeam.controller.CatalogoController.ItemCarrito>) session.getAttribute("carrito");
+        
+        // Si hay items en el carrito, los pasamos al modelo
+        if (carrito != null && !carrito.isEmpty()) {
+            model.addAttribute("itemsCarrito", carrito);
+        }
+        
         model.addAttribute("libros", libroRepository.findByEstadoAndCantidad_stockGreaterThan(
             com.sivil.systeam.enums.Estado.activo, 0));
         return "compra-online/crear-compra";
@@ -163,8 +178,11 @@ public class CompraOnlineController {
 
             // 6. Guardar en sesión
             session.setAttribute("compraPendiente", compraTemporal);
+            
+            // 7. Limpiar carrito de la sesión después de procesar
+            session.removeAttribute("carrito");
 
-            // 7. Redirigir a pago con tarjeta
+            // 8. Redirigir a pago con tarjeta
             return "redirect:/pago/tarjeta?monto=" + totalCompra + "&compraPendiente=true";
 
         } catch (Exception e) {
@@ -178,18 +196,26 @@ public class CompraOnlineController {
     }
 
     // Endpoint para obtener historial de compras del usuario
+    // en el controller que tiene @RequestMapping("/compra-online") a nivel de clase
     @GetMapping("/mis-compras")
-    public String mostrarMisCompras(Model model) {
-        // Obtener usuario actual del modelo (agregado por GlobalControllerAdvice)
-        Usuario usuarioActual = (Usuario) model.getAttribute("currentUser");
-        if (usuarioActual == null) {
-            return "redirect:/login";
-        }
+    public String mostrarMisCompras(@ModelAttribute("currentUser") Usuario usuarioActual,
+                                    @RequestParam(value = "q", required = false) String q,
+                                    Model model) {
+        if (usuarioActual == null) return "redirect:/login";
 
-        List<CompraOnline> compras = compraOnlineRepository.findByCompradorIdOrderByFechaDesc(usuarioActual.getId_usuario());
+        String query = (q == null) ? "" : q.trim();
+        Sort sort = Sort.unsorted(); // porque tu repo lo pide
+
+        List<CompraOnline> compras = query.isEmpty()
+                ? compraOnlineRepository.findAllByComprador(usuarioActual.getId_usuario(), sort)
+                : compraOnlineRepository.findAllByCompradorAndNumero(usuarioActual.getId_usuario(), query, sort);
+
         model.addAttribute("compras", compras);
+        model.addAttribute("q", query);
         return "compra-online/mis-compras";
     }
+
+
 
     // Clase interna para mapear el JSON del frontend
     public static class LibroCompraRequest {
@@ -211,4 +237,7 @@ public class CompraOnlineController {
         public Integer getCantidad() { return cantidad; }
         public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
     }
+
+
+
 }

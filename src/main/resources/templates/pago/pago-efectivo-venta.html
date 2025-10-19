@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Pago en Efectivo</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { max-width: 600px; margin: 2rem auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h3 class="mt-4 mb-3 text-center text-primary">
+        <i class="bi bi-cash-stack"></i> Pago en Efectivo
+    </h3>
+
+    <!-- Mensaje de error -->
+    <div th:if="${error}" class="alert alert-danger text-center" th:text="${error}"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <form th:action="@{/pago/efectivo/confirmar}" method="post">
+                <!-- Token CSRF (necesario si usas Spring Security) -->
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <!-- Campos ocultos obligatorios -->
+                <input type="hidden" name="monto" th:value="${montoAPagar}"/>
+                <input type="hidden" name="idVenta" th:if="${idVenta}" th:value="${idVenta}"/>
+                <input type="hidden" name="ventaPendiente" th:if="${ventaPendiente}" value="true"/>
+
+                <!-- Monto visible -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Monto a cobrar</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input class="form-control" type="number" step="0.01" min="0.01"
+                               th:value="${montoAPagar}" readonly>
+                    </div>
+                    <small class="text-muted">Este monto proviene del total de la venta.</small>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Observaciones (opcional)</label>
+                    <textarea class="form-control" name="observaciones" rows="2"
+                              placeholder="Ej: billetes recibidos, caja #, cambio entregado, etc."></textarea>
+                </div>
+
+                <!-- Botones -->
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success btn-lg" type="submit">
+                        <i class="bi bi-check2-circle"></i> Confirmar pago en efectivo
+                    </button>
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

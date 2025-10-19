@@ -18,10 +18,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -147,4 +152,36 @@ public class CompraService {
                 LocalDateTime.now()
         );
     }
+
+    @Transactional(readOnly = true)
+    public Optional<CompraOnline> findCompraById(Integer idCompra) {
+        return compraOnlineRepository.findById(idCompra);
+    }
+
+    public CompraOnline actualizarDireccionCompra(Integer idCompra, String nuevaDireccion) {
+        CompraOnline compra = compraOnlineRepository.findById(idCompra)
+                .orElseThrow(() -> new IllegalArgumentException("Compra no encontrada con ID: " + idCompra));
+
+        if (nuevaDireccion == null || nuevaDireccion.trim().isEmpty()) {
+            throw new IllegalArgumentException("La dirección de entrega no puede estar vacía.");
+        }
+
+        compra.setDireccion_entrega(nuevaDireccion);
+
+        return compraOnlineRepository.save(compra);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DetalleCompra> obtenerDetallesCompra(Integer idCompra) {
+        return detalleCompraRepository.findByCompraIdCompra(idCompra);
+    }
+
+    public List<CompraOnline> listarOrdenado(Sort order) {
+        return compraOnlineRepository.findAll(order);
+    }
+    /** Lista SOLO las compras del usuario, con orden dinámico (por fecha/total/cliente). */
+    public List<CompraOnline> listarPorUsuarioOrdenado(Integer idUsuario, Sort order) {
+        return compraOnlineRepository.findAllByComprador(idUsuario, order);
+    }
+
 }
