@@ -75,7 +75,15 @@ public class VentaController {
 
     @GetMapping("/listar")
     public String listarVentas(Model model) {
-        List<Venta> ventas = ventaService.listarVentasFinalizadas();
+        // Listar TODAS las ventas (incluyendo inactivas)
+        List<Venta> ventas = ventaRepository.findAll();
+        // Ordenar por fecha de venta descendente
+        ventas.sort((v1, v2) -> {
+            if (v1.getFecha_venta() == null && v2.getFecha_venta() == null) return 0;
+            if (v1.getFecha_venta() == null) return 1;
+            if (v2.getFecha_venta() == null) return -1;
+            return v2.getFecha_venta().compareTo(v1.getFecha_venta());
+        });
         model.addAttribute("ventas", ventas);
         model.addAttribute("totalVentas", ventas.size());
         model.addAttribute("ventasActivas", 0);
@@ -83,16 +91,6 @@ public class VentaController {
         model.addAttribute("promedioVenta", 0);
         return "venta/listar-ventas";
     }
-
-  // VentasController prueba
-  /*@GetMapping("/listar")
-  public String listarVentas(Model model){
-      List<Venta> ventas = ventaService.listarVentasVisibles(); // incluye ACTIVA y FINALIZADA
-      model.addAttribute("ventas", ventas);
-      model.addAttribute("totalVentas", ventas.size());
-      return "venta/listar-ventas";
-  }
-*/
 
 
 
@@ -394,6 +392,19 @@ public class VentaController {
             ra.addFlashAttribute("ok", "Venta " + numeroFactura + " inactivada y stock restaurado.");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/ventas/listar";
+    }
+
+    // Reactivar venta
+    @GetMapping("/reactivar/{numeroFactura}")
+// @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR')")
+    public String reactivar(@PathVariable String numeroFactura, RedirectAttributes ra) {
+        try {
+            ventaService.reactivarPorNumeroFactura(numeroFactura);
+            ra.addFlashAttribute("ok", "Venta " + numeroFactura + " reactivada exitosamente. Stock descontado nuevamente.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Error al reactivar venta: " + e.getMessage());
         }
         return "redirect:/ventas/listar";
     }

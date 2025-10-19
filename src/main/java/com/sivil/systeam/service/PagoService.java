@@ -122,7 +122,7 @@ public class PagoService {
         nuevaVenta.setImpuestos(ventaTemporal.getImpuestos());
         nuevaVenta.setTotal(ventaTemporal.getTotal());
         nuevaVenta.setTipo_pago(ventaTemporal.getTipoPago());
-        nuevaVenta.setEstado(ventaTemporal.getEstado());
+        nuevaVenta.setEstado(EstadoVenta.finalizada); // Venta finalizada al procesar el pago
         nuevaVenta.setFecha_venta(ventaTemporal.getFechaVenta());
 
         Venta ventaGuardada = ventaRepository.save(nuevaVenta);

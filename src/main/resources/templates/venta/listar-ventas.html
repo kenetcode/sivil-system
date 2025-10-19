@@ -10,7 +10,7 @@
         <div class="col-12 d-flex justify-content-between align-items-center">
             <div>
                 <h2><i class="bi bi-receipt"></i> Gestión de Ventas</h2>
-                <p class="text-muted">Listado de ventas finalizadas en el sistema</p>
+                <p class="text-muted">Listado completo de todas las ventas del sistema</p>
             </div>
             <a th:href="@{/ventas/crear}" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Nueva Venta
@@ -75,26 +75,40 @@
                     <span class="badge bg-primary" th:if="${venta.estado.name() == 'finalizada'}">Finalizada</span>
                 </td>
                 <td class="text-center">
-                    <!-- Botón Modificar -->
-                    <a th:href="@{|/ventas/${venta.id_venta}/modificar|}" class="btn btn-sm btn-outline-warning">
+                    <!-- Botón Modificar (solo para ventas no inactivas) -->
+                    <a th:if="${venta.estado.name() != 'inactiva'}"
+                       th:href="@{|/ventas/${venta.id_venta}/modificar|}" 
+                       class="btn btn-sm btn-outline-warning">
                         <i class="bi bi-pencil"></i> Modificar
                     </a>
-                    <!-- Botón Buscar en desarrollo -->
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="alert('Funcionalidad en desarrollo')">
-                        <i class="bi bi-search"></i> Buscar
-                    </button>
 
-                    <!-- Botón Inactivar (solo si está ACTIVA) -->
-                    <a th:if="${venta.estado.name() == 'activa'}"
+                    <!-- Botón Inactivar (solo para ventas activas y finalizadas) -->
+                    <a th:if="${venta.estado.name() != 'inactiva'}"
                        th:href="@{|/ventas/inactivar/${venta.numero_factura}|}"
                        class="btn btn-sm btn-outline-danger" title="Inactivar venta">
                         <i class="bi bi-slash-circle"></i> Inactivar
                     </a>
+                    
+                    <!-- Botón Reactivar (solo para ventas inactivas) -->
+                    <a th:if="${venta.estado.name() == 'inactiva'}"
+                       th:href="@{|/ventas/reactivar/${venta.numero_factura}|}"
+                       class="btn btn-sm btn-outline-success" title="Reactivar venta">
+                        <i class="bi bi-arrow-clockwise"></i> Reactivar
+                    </a>
+                    
+                    <!-- Mostrar motivo de inactivación si está inactiva -->
+                    <button th:if="${venta.estado.name() == 'inactiva' && venta.motivo_inactivacion != null}"
+                            type="button" class="btn btn-sm btn-outline-secondary" 
+                            th:attr="data-motivo=${venta.motivo_inactivacion}"
+                            onclick="alert('Motivo de inactivación:\n\n' + this.getAttribute('data-motivo'))"
+                            title="Ver motivo de inactivación">
+                        <i class="bi bi-info-circle"></i> Motivo
+                    </button>
 
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(ventas)}">
-                <td colspan="10" class="text-center text-muted">No hay ventas finalizadas registradas</td>
+                <td colspan="10" class="text-center text-muted">No hay ventas registradas</td>
             </tr>
             </tbody>
         </table>
