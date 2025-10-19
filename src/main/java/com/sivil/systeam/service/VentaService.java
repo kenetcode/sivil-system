@@ -38,7 +38,6 @@ public class VentaService {
     /** Listar ventas VISIBLES (excluye INACTIVAS) para búsquedas/listados generales */
     public List<Venta> listarVentasVisibles() {
         return ventaRepository.findAllVisiblesOrderByFechaVentaDesc();
-
     }
 
     /** Obtener venta por ID */
