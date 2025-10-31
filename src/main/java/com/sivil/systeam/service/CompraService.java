@@ -6,10 +6,7 @@ import com.sivil.systeam.entity.Libro;
 import com.sivil.systeam.entity.Usuario;
 import com.sivil.systeam.enums.EstadoCompra;
 import com.sivil.systeam.enums.MetodoPago;
-import com.sivil.systeam.repository.CompraOnlineRepository;
-import com.sivil.systeam.repository.DetalleCompraRepository;
-import com.sivil.systeam.repository.LibroRepository;
-import com.sivil.systeam.repository.UsuarioRepository;
+import com.sivil.systeam.repository.*;
 import com.sivil.systeam.service.dto.CartItemDTO;
 import com.sivil.systeam.service.dto.CheckoutRequest;
 import com.sivil.systeam.service.dto.CheckoutResponse;
@@ -21,7 +18,8 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Sort;
-
+import com.sivil.systeam.entity.Pago;
+import com.sivil.systeam.enums.EstadoPago;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -36,6 +34,7 @@ public class CompraService {
     @Autowired private UsuarioRepository usuarioRepository;
     @Autowired private LibroRepository libroRepository;
     @Autowired private DetalleCompraRepository detalleCompraRepository;
+    @Autowired private PagoRepository pagoRepository;
 
     private static final BigDecimal IVA = new BigDecimal("0.13");
 
@@ -152,6 +151,46 @@ public class CompraService {
                 LocalDateTime.now()
         );
     }
+
+
+
+
+
+
+    @Transactional
+    public void inactivarPorNumeroOrden(String numeroOrden) {
+        CompraOnline compra = compraOnlineRepository.findByNumeroOrden(numeroOrden)
+                .orElseThrow(() -> new IllegalArgumentException("No existe la compra con orden " + numeroOrden));
+
+        if (compra.getEstado_compra() == EstadoCompra.cancelada) {
+            throw new IllegalStateException("La compra ya está cancelada.");
+        }
+
+        // Restaurar stock por cada detalle
+        List<DetalleCompra> detalles = detalleCompraRepository.findByCompraIdCompra(compra.getId_compra());
+        for (DetalleCompra detalle : detalles) {
+            Libro libro = detalle.getLibro();
+            int stockActual = (libro.getCantidad_stock() == null) ? 0 : libro.getCantidad_stock();
+            libro.setCantidad_stock(stockActual + detalle.getCantidad());
+            libroRepository.save(libro);
+        }
+
+        // Cancelar pago asociado (si existe)
+        List<Pago> pagos = pagoRepository.findByCompra(compra);
+        for (Pago pago : pagos) {
+            pago.setEstado_pago(EstadoPago.cancelado);
+            pagoRepository.save(pago);
+        }
+
+        // Marcar compra como cancelada
+        compra.setEstado_compra(EstadoCompra.cancelada);
+        compraOnlineRepository.save(compra);
+    }
+
+
+
+
+
 
     @Transactional(readOnly = true)
     public Optional<CompraOnline> findCompraById(Integer idCompra) {
