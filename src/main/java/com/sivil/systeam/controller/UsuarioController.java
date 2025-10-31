@@ -29,6 +29,8 @@ public class UsuarioController {
             model.addAttribute("error", "Email o contraseña incorrectos");
         } else if ("sistema".equals(error)) {
             model.addAttribute("error", "Error en el sistema");
+        } else if ("inactivo".equals(error)) {
+            model.addAttribute("error", "Su cuenta ha sido inactivada. Por favor, contacte con soporte para verificar su problema.");
         }
         return "login/login";
     }

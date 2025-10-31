@@ -108,6 +108,15 @@
                                    class="btn btn-outline-warning btn-sm">
                                     <i class="bi bi-pencil me-1"></i>Editar
                                 </a>
+                                <!-- Botón Cancelar - solo muestra para pendiente y procesada -->
+                                <form th:if="${compra.estado_compra.name() == 'pendiente' or compra.estado_compra.name() == 'procesada'}"
+                                      th:action="@{/compras/inactivar/{numero}(numero=${compra.numero_orden})}"
+                                      method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm"
+                                            onclick="return confirm('¿Estás seguro de que quieres cancelar esta compra? Se restaurará el stock de los libros.')">
+                                        <i class="bi bi-slash-circle me-1"></i>Cancelar
+                                    </button>
+                                </form>
                             </div>
                         </div>
 

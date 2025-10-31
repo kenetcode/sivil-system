@@ -40,9 +40,9 @@ public class VentaService {
         return ventaRepository.findAllVisiblesOrderByFechaVentaDesc();
     }
 
-    /** Obtener venta por ID */
+    /** Obtener venta por ID con todos los detalles cargados (evita lazy loading) */
     public Optional<Venta> obtenerVentaPorId(Integer id) {
-        return ventaRepository.findById(id);
+        return ventaRepository.findByIdWithDetails(id);
     }
 
     /** Guardar/actualizar */

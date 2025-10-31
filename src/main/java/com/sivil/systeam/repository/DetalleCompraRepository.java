@@ -11,4 +11,6 @@ public interface DetalleCompraRepository extends JpaRepository<DetalleCompra, In
     
     @Query("SELECT d FROM DetalleCompra d JOIN FETCH d.libro WHERE d.compra.id_compra = :idCompra")
     List<DetalleCompra> findByCompraIdCompra(@Param("idCompra") Integer idCompra);
+
+
 }

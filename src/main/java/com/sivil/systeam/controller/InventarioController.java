@@ -36,15 +36,48 @@ public class InventarioController {
     // INVENTARIO (LISTADO)
     // ============================================================
     @GetMapping("/stock")
-    public String mostrarInventario(Model model) {
+    public String mostrarInventario(
+            @RequestParam(value = "q", required = false) String q,
+            Model model
+    ) {
         try {
-            List<Libro> libros = inventarioService.obtenerTodosLosLibros();
+            List<Libro> libros;
+
+            if (q != null && !q.trim().isEmpty()) {
+                String termino = q.trim();
+
+                // 1) Intento por CÓDIGO exacto
+                Libro porCodigo = inventarioService.buscarPorCodigoLibro(termino);
+                if (porCodigo != null) {
+                    libros = List.of(porCodigo);
+                } else {
+                    // 2) Por TÍTULO (mín. 3 caracteres; insensible a mayúsculas)
+                    if (termino.length() < 3) {
+                        model.addAttribute("error", "Ingresa al menos 3 caracteres para buscar por título");
+                        libros = inventarioService.obtenerLibrosActivos();
+                    } else {
+                        libros = inventarioService.buscarPorTitulo(termino)
+                                .stream()
+                                .sorted(java.util.Comparator.comparing(
+                                        Libro::getTitulo, String.CASE_INSENSITIVE_ORDER))
+                                .limit(20) // máximo 20 resultados
+                                .toList();
+
+                        if (libros.isEmpty()) {
+                            model.addAttribute("error", "Libro no encontrado");
+                        }
+                    }
+                }
+                model.addAttribute("q", termino); // para re-mostrar el término en la vista
+            } else {
+                // Sin búsqueda: listado normal
+                libros = inventarioService.obtenerTodosLosLibros();
+            }
+
             model.addAttribute("libros", libros);
             model.addAttribute("totalLibros", libros.size());
 
-            long librosStockBajo = libros.stream()
-                    .filter(Libro::tieneStockBajo)
-                    .count();
+            long librosStockBajo = libros.stream().filter(Libro::tieneStockBajo).count();
             model.addAttribute("librosStockBajo", librosStockBajo);
 
             return "stock/inventario";
@@ -53,6 +86,7 @@ public class InventarioController {
             return "stock/inventario";
         }
     }
+
 
     // ============================================================
     // HU013: NUEVO LIBRO

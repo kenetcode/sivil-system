@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -38,7 +39,22 @@ public class SecurityConfig {
                         .loginPage("/login") // Página de login personalizada
                         .loginProcessingUrl("/login") // URL que procesa el login
                         .defaultSuccessUrl("/", true) // Redirigir al home tras login exitoso
-                        .failureUrl("/login?error=credenciales") // Redirigir si falla
+                        .failureHandler((request, response, exception) -> {
+                            // Manejar diferentes tipos de errores de autenticación
+                            String errorParam = "credenciales";
+                            
+                            // Verificar el tipo de excepción o su causa
+                            if (exception instanceof DisabledException) {
+                                errorParam = "inactivo";
+                            } else if (exception.getCause() instanceof DisabledException) {
+                                errorParam = "inactivo";
+                            } else if (exception.getMessage() != null && 
+                                      exception.getMessage().contains("inactivada")) {
+                                errorParam = "inactivo";
+                            }
+                            
+                            response.sendRedirect("/login?error=" + errorParam);
+                        })
                         .permitAll()
                 )
                 .logout(logout -> logout
