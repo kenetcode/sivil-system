@@ -4,5 +4,7 @@ public enum EstadoCompra {
     pendiente,
     procesada,
     enviada,
-    entregada
+    entregada,
+    cancelada
+
 }

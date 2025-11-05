@@ -132,6 +132,20 @@ public class CompraController {
         }
     }
 
+    /** Cancelar compra */
+    @PostMapping("/compras/inactivar/{numeroOrden}")
+    public String inactivarCompra(@PathVariable String numeroOrden, RedirectAttributes ra) {
+        try {
+            compraService.inactivarPorNumeroOrden(numeroOrden);
+            ra.addFlashAttribute("ok", "Compra " + numeroOrden + " cancelada exitosamente. Stock restaurado y pago cancelado.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/compra-online/mis-compras";
+    }
+
+
+
     // Clases DTO para evitar problemas de serialización
     public static class CompraDetalleResponse {
         private CompraDTO compra;

@@ -30,10 +30,44 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
     @Query("SELECT v FROM Venta v WHERE v.estado = :estado ORDER BY v.fecha_venta DESC")
     List<Venta> findByEstadoOrderByFechaVentaDesc(@Param("estado") EstadoVenta estado);
 
-    // Buscar una venta por su número de factura (sin underscores en el nombre del método)
-    @Query("SELECT v FROM Venta v WHERE v.numero_factura = :numeroFactura")
+    // Buscar una venta por su número de factura con datos completos cargados (JOIN FETCH)
+    @Query("SELECT DISTINCT v FROM Venta v " +
+           "LEFT JOIN FETCH v.vendedor " +
+           "LEFT JOIN FETCH v.detallesVenta dv " +
+           "LEFT JOIN FETCH dv.libro " +
+           "WHERE v.numero_factura = :numeroFactura")
     Optional<Venta> findByNumeroFactura(@Param("numeroFactura") String numeroFactura);
 
     @Query("SELECT v FROM Venta v WHERE v.estado <> com.sivil.systeam.enums.EstadoVenta.inactiva ORDER BY v.fecha_venta DESC")
     List<Venta> findAllVisiblesOrderByFechaVentaDesc();
+
+    // Listar todas las ventas con vendedor, detalles y libros cargados (JOIN FETCH) para evitar problemas de lazy loading
+    @Query("SELECT DISTINCT v FROM Venta v " +
+           "LEFT JOIN FETCH v.vendedor " +
+           "LEFT JOIN FETCH v.detallesVenta dv " +
+           "LEFT JOIN FETCH dv.libro " +
+           "ORDER BY v.fecha_venta DESC")
+    List<Venta> findAllWithVendedor();
+
+    // Búsqueda por número de factura y/o nombre de cliente con vendedor, detalles y libros cargados (JOIN FETCH)
+    @Query("SELECT DISTINCT v FROM Venta v " +
+           "LEFT JOIN FETCH v.vendedor " +
+           "LEFT JOIN FETCH v.detallesVenta dv " +
+           "LEFT JOIN FETCH dv.libro " +
+           "WHERE " +
+           "(:numeroFactura IS NULL OR LOWER(v.numero_factura) LIKE LOWER(CONCAT('%', :numeroFactura, '%'))) AND " +
+           "(:nombreCliente IS NULL OR LOWER(v.nombre_cliente) LIKE LOWER(CONCAT('%', :nombreCliente, '%'))) " +
+           "ORDER BY v.fecha_venta DESC NULLS LAST")
+    List<Venta> buscarPorCriterios(
+            @Param("numeroFactura") String numeroFactura,
+            @Param("nombreCliente") String nombreCliente
+    );
+
+    // Buscar venta por ID con datos completos cargados (JOIN FETCH)
+    @Query("SELECT DISTINCT v FROM Venta v " +
+           "LEFT JOIN FETCH v.vendedor " +
+           "LEFT JOIN FETCH v.detallesVenta dv " +
+           "LEFT JOIN FETCH dv.libro " +
+           "WHERE v.id_venta = :id")
+    Optional<Venta> findByIdWithDetails(@Param("id") Integer id);
 }
