@@ -67,7 +67,7 @@ COMPRAS_ONLINE
 ├── impuestos (DECIMAL(10,2), DEFAULT 0)
 ├── total (DECIMAL(10,2), NOT NULL)
 ├── direccion_entrega (TEXT)
-├── estado_compra (ENUM('pendiente', 'procesada', 'enviada', 'entregada'), DEFAULT 'pendiente')
+├── estado_compra (ENUM('pendiente', 'procesada', 'enviada', 'entregada', 'cancelada'), DEFAULT 'pendiente')
 ├── metodo_pago (VARCHAR(50), DEFAULT 'tarjeta')
 ├── fecha_compra (DATETIME, DEFAULT CURRENT_TIMESTAMP)
 └── fecha_modificacion (DATETIME, ON UPDATE CURRENT_TIMESTAMP)
@@ -103,7 +103,7 @@ PAGOS
 ├── id_venta (FK → ventas.id_venta, NULL)
 ├── metodo_pago (ENUM('tarjeta', 'efectivo'), NOT NULL)
 ├── monto (DECIMAL(10,2), NOT NULL)
-├── estado_pago (ENUM('pendiente', 'completado', 'fallido'), DEFAULT 'pendiente')
+├── estado_pago (ENUM('pendiente', 'completado', 'fallido', 'cancelado'), DEFAULT 'pendiente')
 ├── datos_tarjeta_encriptados (TEXT) -- Solo para tarjeta
 ├── fecha_pago (DATETIME, DEFAULT CURRENT_TIMESTAMP)
 └── referencia_transaccion (VARCHAR(100), UNIQUE)
@@ -203,9 +203,9 @@ CREATE DATABASE sivil_db;
 CREATE TYPE tipo_usuario_enum AS ENUM ('comprador', 'vendedor', 'admin');
 CREATE TYPE estado_enum AS ENUM ('activo', 'inactivo');
 CREATE TYPE estado_venta_enum AS ENUM ('activa', 'inactiva', 'finalizada');
-CREATE TYPE estado_compra_enum AS ENUM ('pendiente', 'procesada', 'enviada', 'entregada');
+CREATE TYPE estado_compra_enum AS ENUM ('pendiente', 'procesada', 'enviada', 'entregada', 'cancelada');
 CREATE TYPE metodo_pago_enum AS ENUM ('tarjeta', 'efectivo');
-CREATE TYPE estado_pago_enum AS ENUM ('pendiente', 'completado', 'fallido');
+CREATE TYPE estado_pago_enum AS ENUM ('pendiente', 'completado', 'fallido', 'cancelado');
 
 -- =========================================
 -- TABLA: USUARIOS
